@@ -5,1406 +5,1270 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HVAC 부하계산서 + 용량계산서</title>
 <style>
-:root {
-  --bg:#f1f5f9; --surface:#fff; --navy:#1e3a5f; --navy2:#2d5a8e;
-  --red:#dc2626; --blue:#2563eb; --blue-bg:#eff6ff; --green:#16a34a;
-  --gray:#64748b; --gl:#e2e8f0; --glr:#f8fafc; --border:#cbd5e1;
-  --text:#1e293b; --tsm:#475569; --r:6px; --sh:0 1px 3px rgba(0,0,0,.12);
+:root{
+  --bg:#f1f5f9;--sur:#fff;--nv:#1e3a5f;--nv2:#2d5a8e;
+  --red:#dc2626;--bl:#2563eb;--blbg:#eff6ff;--gr:#16a34a;
+  --gray:#64748b;--gl:#e2e8f0;--glr:#f8fafc;--bdr:#cbd5e1;
+  --tx:#1e293b;--tsm:#475569;--r:5px;--sh:0 1px 3px rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
-
+body{font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--tx);font-size:12px}
 /* TAB BAR */
-#tab-bar{display:flex;background:var(--navy);padding:0 16px;gap:2px}
-.tab-btn{padding:12px 20px;color:rgba(255,255,255,.65);cursor:pointer;border:none;background:none;font-size:13px;font-family:inherit;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
-.tab-btn.active{color:#fff;border-bottom-color:#60a5fa}
-.tab-btn:hover{color:#fff}
-
+#tab-bar{display:flex;background:var(--nv);padding:0 12px;gap:2px}
+.tb{padding:11px 18px;color:rgba(255,255,255,.6);cursor:pointer;border:none;background:none;font-size:12px;font-family:inherit;border-bottom:3px solid transparent;white-space:nowrap}
+.tb.on{color:#fff;border-bottom-color:#60a5fa}.tb:hover{color:#fff}
 /* TOOLBAR */
-#toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
-#toolbar .proj-name{font-weight:700;color:var(--navy);font-size:14px;flex:1}
-.btn{padding:6px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s}
-.btn:hover{background:var(--bg)}
-.btn-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
-.btn-primary:hover{background:var(--navy2)}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-sm{padding:3px 10px;font-size:11px}
-
+#tbar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--sur);border-bottom:1px solid var(--bdr);flex-wrap:wrap}
+#tbar .pname{font-weight:700;color:var(--nv);font-size:13px;flex:1}
+.btn{padding:5px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--sur);color:var(--tx);cursor:pointer;font-size:11px;font-family:inherit}
+.btn:hover{background:var(--bg)}.btP{background:var(--nv);color:#fff;border-color:var(--nv)}.btP:hover{background:var(--nv2)}
+.btS{font-size:10px;padding:3px 8px}
 /* PANELS */
-.tab-panel{display:none;height:calc(100vh - 88px);overflow:auto;padding:16px}
-.tab-panel.active{display:block}
-
+.tp{display:none;height:calc(100vh - 84px);overflow:auto;padding:12px}
+.tp.on{display:block}
 /* CARDS */
-.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);margin-bottom:12px}
-.card-header{padding:10px 14px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;font-size:13px}
-.card-body{padding:14px}
-
-/* FORM GRID */
-.fg{display:grid;gap:10px}
-.col2{grid-template-columns:1fr 1fr}
-.col3{grid-template-columns:1fr 1fr 1fr}
-.col4{grid-template-columns:1fr 1fr 1fr 1fr}
-.form-group{display:flex;flex-direction:column;gap:4px}
-.form-group label{font-size:11px;color:var(--tsm);font-weight:600}
-.form-group input,.form-group select,.form-group textarea{padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-family:inherit;color:var(--text);background:#fff}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--blue)}
-.form-group input.auto{background:var(--blue-bg);color:var(--blue);font-weight:600}
-.form-group input[readonly]{background:var(--glr);color:var(--tsm)}
-
-/* SPLIT LAYOUT */
-#tab1-wrap{display:flex;height:calc(100vh - 88px);gap:0}
-#room-list-panel{width:260px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
-#room-list-panel .ph{padding:10px 12px;background:var(--navy);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between}
-#room-list-scroll{flex:1;overflow-y:auto}
-.room-item{padding:8px 12px;border-bottom:1px solid var(--gl);cursor:pointer;transition:background .15s;display:flex;justify-content:space-between;align-items:center}
-.room-item:hover{background:var(--bg)}
-.room-item.selected{background:var(--blue-bg);border-left:3px solid var(--blue)}
-.room-item-name{font-weight:600;font-size:12px}
-.room-item-sub{font-size:11px;color:var(--tsm);margin-top:2px}
-.room-item-del{color:var(--red);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:3px}
-.room-item-del:hover{background:#fee2e2}
-#room-detail-panel{flex:1;overflow-y:auto;padding:16px}
-
+.card{background:var(--sur);border-radius:var(--r);border:1px solid var(--bdr);box-shadow:var(--sh);margin-bottom:10px}
+.ch{padding:9px 12px;border-bottom:1px solid var(--bdr);font-weight:700;color:var(--nv);display:flex;align-items:center;gap:6px;font-size:12px}
+.cb{padding:12px}
+/* FORM */
+.fg{display:grid;gap:8px}
+.c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:1fr 1fr 1fr}.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fg5{grid-template-columns:repeat(5,1fr)}
+.fg6{grid-template-columns:repeat(6,1fr)}
+.fgr{display:flex;gap:6px;align-items:center}
+.fv{display:flex;flex-direction:column;gap:3px}
+.fv label{font-size:10px;color:var(--tsm);font-weight:600}
+.fv input,.fv select{padding:5px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-size:11px;font-family:inherit;background:#fff;color:var(--tx)}
+.fv input:focus,.fv select:focus{outline:none;border-color:var(--bl)}
+.fv input.au{background:var(--blbg);color:var(--bl);font-weight:600}
+/* SPLIT */
+#t1w{display:flex;height:calc(100vh - 84px)}
+#rlp{width:250px;background:var(--sur);border-right:1px solid var(--bdr);display:flex;flex-direction:column}
+#rlp .rph{padding:9px 12px;background:var(--nv);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+#rls{flex:1;overflow-y:auto}
+.rgi{padding:5px 10px;background:#f0f4f8;font-weight:700;color:var(--nv);font-size:11px;border-bottom:1px solid var(--bdr)}
+.rfi{padding:3px 10px 3px 18px;font-size:10px;color:var(--gray);background:#f8fafc;border-bottom:1px solid var(--gl)}
+.ri{padding:7px 10px 7px 24px;border-bottom:1px solid var(--gl);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.ri:hover{background:var(--bg)}.ri.sel{background:var(--blbg);border-left:3px solid var(--bl)}
+.ri-n{font-weight:600;font-size:11px}.ri-s{font-size:10px;color:var(--tsm)}
+.ri-d{color:var(--red);cursor:pointer;padding:1px 4px;font-size:13px}.ri-d:hover{background:#fee2e2;border-radius:3px}
+#rdp{flex:1;overflow-y:auto;padding:12px}
 /* TABLES */
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:var(--navy);color:#fff;padding:7px 6px;text-align:center;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2}
-td{padding:5px 6px;border-bottom:1px solid var(--gl);text-align:right;vertical-align:middle}
-td.left{text-align:left}
-td.center{text-align:center}
+.tw{overflow-x:auto;margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:var(--nv);color:#fff;padding:6px 5px;text-align:center;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2}
+td{padding:4px 5px;border-bottom:1px solid var(--gl);text-align:right;vertical-align:middle}
+td.L{text-align:left}td.C{text-align:center}
 tr:hover td{background:#f8fafc}
-td.auto{background:var(--blue-bg);color:var(--blue);font-weight:600}
-td.sec{background:#f0f4f8;font-weight:700;color:var(--navy);text-align:left}
-td.tot{background:#dbeafe;font-weight:700;color:var(--navy)}
-td.max-cell{background:#fef9c3;color:#92400e;font-weight:700}
-td input,td select{border:1px solid var(--border);border-radius:4px;padding:3px 5px;font-size:11px;font-family:inherit;width:100%;background:#fff}
-td input:focus,td select:focus{outline:none;border-color:var(--blue)}
-
-/* SECTION TITLE */
-.stitle{font-size:13px;font-weight:700;color:var(--navy);padding:8px 0 6px;border-bottom:2px solid var(--navy);margin-bottom:10px;margin-top:14px}
-.stitle:first-child{margin-top:0}
-
-/* FLOOR LIST */
-.floor-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gl)}
-.floor-del{color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px}
-
-/* CAP SUB-TABS */
-#cap-subtabs{display:flex;gap:4px;padding:0 0 12px;flex-wrap:wrap}
-.csub-btn{padding:6px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit}
-.csub-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-
+td.au{background:var(--blbg);color:var(--bl);font-weight:600}
+td.s0{background:#e0e7ef;font-weight:700;color:var(--nv);text-align:left;font-size:10px;padding:3px 5px}
+td.tot{background:#dbeafe;font-weight:700}
+td.pk{background:#fef9c3;color:#92400e;font-weight:700}
+td.rsh{background:#dcfce7;color:#166534;font-weight:700}
+td.ht{background:#fee2e2;color:var(--red);font-weight:700}
+td input,td select{border:1px solid var(--bdr);border-radius:3px;padding:2px 4px;font-size:10px;font-family:inherit;width:100%;background:#fff}
+td input:focus,td select:focus{outline:none;border-color:var(--bl)}
+/* BUILDING TREE */
+.bcard{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px}
+.bhead{background:#f0f4f8;padding:7px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bdr)}
+.bbody{padding:10px 12px}
+.floor-row{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--gl)}
+/* CAP SUBTABS */
+#cst{display:flex;gap:3px;padding:0 0 10px;flex-wrap:wrap}
+.csb{padding:5px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--sur);color:var(--tx);cursor:pointer;font-size:11px;font-family:inherit}
+.csb.on{background:var(--nv);color:#fff;border-color:var(--nv)}
 /* LOAD ESTIMATE CARD */
-.le-card{background:var(--surface);border:2px solid var(--navy);border-radius:var(--r);margin-bottom:20px;break-inside:avoid}
-.le-header{background:var(--navy);color:#fff;padding:10px 14px}
-.le-header-title{font-size:15px;font-weight:700;letter-spacing:.5px}
-.le-header-info{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;font-size:11px}
-.le-header-info span{color:rgba(255,255,255,.85)}
-.le-header-info strong{color:#fff}
-.le-cond{background:#f0f7ff;padding:8px 14px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:20px;flex-wrap:wrap}
-.le-body{padding:14px}
-.le-no-cool{text-align:center;padding:20px;color:var(--gray);font-size:13px;border:2px dashed var(--border);border-radius:var(--r);margin-bottom:12px}
-.le-max-row td{background:#fef9c3 !important;color:#92400e !important;font-weight:700 !important}
-.le-design-row td{background:#dcfce7 !important;color:#166534 !important;font-weight:700 !important}
-.le-heat-section{background:#fff7f7;border:1px solid #fca5a5;border-radius:var(--r);padding:12px;margin-top:12px}
-.le-heat-title{font-weight:700;color:var(--red);margin-bottom:8px;font-size:12px}
-
-/* BADGE */
-.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700}
-.badge-blue{background:var(--blue-bg);color:var(--blue)}
-.badge-red{background:#fee2e2;color:var(--red)}
-.badge-green{background:#dcfce7;color:var(--green)}
-.badge-gray{background:var(--gl);color:var(--tsm)}
-.badge-orange{background:#fff7ed;color:#c2410c}
-
-.empty-msg{text-align:center;padding:40px;color:var(--tsm);font-size:13px}
-
+.lec{background:var(--sur);border:2px solid var(--nv);border-radius:var(--r);margin-bottom:20px}
+.leh{background:var(--nv);color:#fff;padding:9px 12px}
+.leh-t{font-size:14px;font-weight:700;letter-spacing:.5px}
+.leh-g{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:6px;font-size:10px}
+.leh-g span{color:rgba(255,255,255,.8)}.leh-g strong{color:#fff}
+.lec-d{background:#f0f7ff;padding:7px 12px;border-bottom:1px solid var(--bdr);font-size:10px;display:flex;flex-wrap:wrap;gap:12px}
+.lec-b{padding:10px 12px}
+.no-cool{text-align:center;padding:16px;color:var(--gray);font-size:12px;border:2px dashed var(--bdr);border-radius:var(--r);margin-bottom:10px}
+/* SECTION TITLE */
+.st{font-size:12px;font-weight:700;color:var(--nv);padding:7px 0 5px;border-bottom:2px solid var(--nv);margin-bottom:8px;margin-top:12px;display:flex;align-items:center;gap:8px}
+.st:first-child{margin-top:0}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700}
+.bg{background:var(--blbg);color:var(--bl)}.br{background:#fee2e2;color:var(--red)}.bgr{background:#dcfce7;color:var(--gr)}
+.empty{text-align:center;padding:32px;color:var(--tsm)}
 /* PRINT */
 @media print{
-  #tab-bar,#toolbar,.no-print{display:none !important}
-  .tab-panel{display:block !important;height:auto !important;overflow:visible !important;padding:0 !important}
-  body{background:#fff;font-size:9pt}
-  .le-card{break-after:page;border:1px solid #000}
-  .le-header{background:#1e3a5f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #tab-bar,#tbar,.no-print{display:none !important}
+  .tp{display:block !important;height:auto !important;overflow:visible !important;padding:0 !important}
+  #t1w{display:block !important;height:auto !important}
+  #rlp{display:none !important}
+  #rdp{padding:0 !important}
+  body{background:#fff;font-size:8pt}
+  .lec{break-after:page;border:1px solid #000;margin-bottom:0}
+  .leh{background:#1e3a5f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   th{background:#1e3a5f !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  td.auto{background:#eff6ff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  td.max-cell{background:#fef9c3 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  td.le-design-row{background:#dcfce7 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .card{box-shadow:none}
-  #cap-subtabs{display:none}
+  td.au{background:#eff6ff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td.pk{background:#fef9c3 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td.rsh{background:#dcfce7 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td.ht{background:#fee2e2 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td.s0{background:#e0e7ef !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A3 landscape;margin:10mm}
 }
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
 </style>
 </head>
 <body>
-
 <div id="tab-bar">
-  <button class="tab-btn active" onclick="switchTab(0)">① 프로젝트 설정</button>
-  <button class="tab-btn" onclick="switchTab(1)">② 실 목록 관리</button>
-  <button class="tab-btn" onclick="switchTab(2)">③ 부하계산서</button>
-  <button class="tab-btn" onclick="switchTab(3)">④ 용량계산서</button>
+  <button class="tb on" onclick="switchTab(0)">① 프로젝트 설정</button>
+  <button class="tb" onclick="switchTab(1)">② 실 목록 관리</button>
+  <button class="tb" onclick="switchTab(2)">③ 부하계산서</button>
+  <button class="tb" onclick="switchTab(3)">④ 용량계산서</button>
 </div>
-
-<div id="toolbar">
-  <span class="proj-name" id="proj-name-display">[ 프로젝트명 미설정 ]</span>
+<div id="tbar">
+  <span class="pname" id="pndisp">[ 프로젝트명 미설정 ]</span>
   <button class="btn" onclick="saveJSON()">JSON 저장</button>
-  <button class="btn" onclick="document.getElementById('file-in').click()">JSON 불러오기</button>
-  <input type="file" id="file-in" accept=".json" style="display:none" onchange="loadJSON(this)">
-  <button class="btn btn-primary" onclick="window.print()">PDF 출력</button>
+  <button class="btn" onclick="document.getElementById('fi').click()">JSON 불러오기</button>
+  <input type="file" id="fi" accept=".json" style="display:none" onchange="loadJSON(this)">
+  <button class="btn btP" onclick="window.print()">PDF 출력</button>
 </div>
 
 <!-- ① 프로젝트 설정 -->
-<div class="tab-panel active" id="tab0">
-  <div style="max-width:860px">
-    <div class="card">
-      <div class="card-header">기본 정보</div>
-      <div class="card-body">
-        <div class="fg col2">
-          <div class="form-group"><label>프로젝트명</label><input type="text" id="p-name" onchange="updateProj()"></div>
-          <div class="form-group"><label>발주처</label><input type="text" id="p-client" onchange="updateProj()"></div>
-          <div class="form-group"><label>설계사</label><input type="text" id="p-designer" onchange="updateProj()"></div>
-          <div class="form-group"><label>작성일</label><input type="date" id="p-date" onchange="updateProj()"></div>
-          <div class="form-group" style="grid-column:1/-1"><label>현장 주소</label><input type="text" id="p-address" onchange="updateProj()"></div>
-        </div>
+<div class="tp on" id="tab0">
+<div style="max-width:820px">
+  <div class="card">
+    <div class="ch">기본 정보</div>
+    <div class="cb">
+      <div class="fg c3">
+        <div class="fv"><label>프로젝트명</label><input type="text" id="p-name" onchange="updP()"></div>
+        <div class="fv"><label>과업번호 (JOB NO.)</label><input type="text" id="p-jobno" onchange="updP()"></div>
+        <div class="fv"><label>발주처</label><input type="text" id="p-client" onchange="updP()"></div>
+        <div class="fv"><label>설계사</label><input type="text" id="p-designer" onchange="updP()"></div>
+        <div class="fv"><label>작성일</label><input type="date" id="p-date" onchange="updP()"></div>
+        <div class="fv"><label>현장 주소</label><input type="text" id="p-addr" onchange="updP()"></div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">기상 조건</div>
-      <div class="card-body">
-        <div class="fg col3">
-          <div class="form-group">
-            <label>지역 선택</label>
-            <select id="p-location" onchange="onLocationChange()"></select>
-          </div>
-          <div class="form-group"><label>외기 냉방 설계온도 (℃ DB)</label><input type="number" id="p-out-cool-db" class="auto" readonly></div>
-          <div class="form-group"><label>외기 냉방 설계온도 (℃ WB)</label><input type="number" id="p-out-cool-wb" class="auto" readonly></div>
-          <div class="form-group"><label>외기 난방 설계온도 (℃)</label><input type="number" id="p-out-heat" class="auto" readonly></div>
-          <div class="form-group"><label>위도 (°)</label><input type="number" id="p-lat" class="auto" readonly></div>
-          <div class="form-group"><label>사용자 정의 외기온 (℃ DB, 선택)</label><input type="number" id="p-out-custom" placeholder="직접 입력 시 사용" onchange="updateProj()"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">건물 일반</div>
-      <div class="card-body">
-        <div class="fg col4">
-          <div class="form-group"><label>건물 용도</label>
-            <select id="p-usage" onchange="updateProj()">
-              <option value="office">업무시설</option><option value="factory">공장/산업</option>
-              <option value="hospital">의료시설</option><option value="school">교육연구</option>
-              <option value="hotel">숙박시설</option><option value="etc">기타</option>
-            </select>
-          </div>
-          <div class="form-group"><label>냉방 안전율</label><input type="number" id="p-sf-cool" value="1.10" step="0.01" onchange="updateProj()"></div>
-          <div class="form-group"><label>난방 안전율</label><input type="number" id="p-sf-heat" value="1.10" step="0.01" onchange="updateProj()"></div>
-          <div class="form-group"><label>비고</label><input type="text" id="p-note" onchange="updateProj()"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        층 구성
-        <button class="btn btn-primary btn-sm no-print" onclick="addFloor()" style="margin-left:auto">+ 층 추가</button>
-      </div>
-      <div class="card-body"><div id="floor-list"></div></div>
     </div>
   </div>
+  <div class="card">
+    <div class="ch">기상 조건</div>
+    <div class="cb">
+      <div class="fg c3">
+        <div class="fv"><label>지역 선택</label><select id="p-loc" onchange="onLocChange()"></select></div>
+        <div class="fv"><label>외기 냉방 DB (℃)</label><input type="number" id="p-cdb" class="au" readonly></div>
+        <div class="fv"><label>외기 냉방 WB (℃)</label><input type="number" id="p-cwb" class="au" readonly></div>
+        <div class="fv"><label>외기 난방 DB (℃)</label><input type="number" id="p-hdb" class="au" readonly></div>
+        <div class="fv"><label>위도 (°)</label><input type="number" id="p-lat" class="au" readonly></div>
+        <div class="fv"><label>외기온 직접입력 (℃ DB, 선택)</label><input type="number" id="p-cust" placeholder="직접 입력 시" onchange="updP()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      건물 / 층 구성
+      <button class="btn btP btS no-print" onclick="addBldg()" style="margin-left:auto">+ 건물 추가</button>
+    </div>
+    <div class="cb" id="bldg-tree"></div>
+  </div>
+</div>
 </div>
 
 <!-- ② 실 목록 관리 -->
-<div class="tab-panel" id="tab1">
-  <div id="tab1-wrap">
-    <div id="room-list-panel">
-      <div class="ph">
+<div class="tp" id="tab1">
+  <div id="t1w">
+    <div id="rlp">
+      <div class="rph">
         실 목록
-        <button onclick="addRoom()" style="background:#60a5fa;color:#fff;border:none;padding:4px 10px;font-size:11px;border-radius:4px;cursor:pointer">+ 추가</button>
+        <button onclick="addRoom()" style="background:#60a5fa;color:#fff;border:none;padding:3px 9px;font-size:10px;border-radius:3px;cursor:pointer">+ 추가</button>
       </div>
-      <div id="room-list-scroll"></div>
+      <div id="rls"></div>
     </div>
-    <div id="room-detail-panel">
-      <div id="room-detail-content"><div class="empty-msg">왼쪽 목록에서 실을 선택하거나 추가하세요.</div></div>
+    <div id="rdp">
+      <div id="rdc"><div class="empty">왼쪽에서 실을 선택하거나 추가하세요.</div></div>
     </div>
   </div>
 </div>
 
 <!-- ③ 부하계산서 -->
-<div class="tab-panel" id="tab2">
-  <div id="load-calc-content"><div class="empty-msg">실 목록을 먼저 설정하세요.</div></div>
+<div class="tp" id="tab2">
+  <div class="no-print" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--sur);padding:8px 12px;border-radius:var(--r);border:1px solid var(--bdr)">
+    <label style="font-weight:700;font-size:12px;color:var(--nv)">실 선택:</label>
+    <select id="le-room-sel" style="padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:12px" onchange="scrollToRoom(this.value)"></select>
+    <button class="btn btP btS" onclick="renderLoadCalc()">계산 새로고침</button>
+  </div>
+  <div id="lcc"><div class="empty">실 목록을 먼저 설정하세요.</div></div>
 </div>
 
 <!-- ④ 용량계산서 -->
-<div class="tab-panel" id="tab3">
-  <div id="cap-subtabs"></div>
-  <div id="cap-content"></div>
+<div class="tp" id="tab3">
+  <div id="cst"></div>
+  <div id="cc"></div>
 </div>
 
 <script>
 // ══════════════════════════════════════════════
 //  CONSTANTS
 // ══════════════════════════════════════════════
-
-const OUTDOOR_CONDITIONS = [
-  {name:"서울",    coolDB:31.2,coolWB:25.5,heat:-11.3,lat:37.6},
-  {name:"인천",    coolDB:30.5,coolWB:25.3,heat:-10.4,lat:37.5},
-  {name:"수원",    coolDB:31.4,coolWB:25.6,heat:-11.7,lat:37.3},
-  {name:"춘천",    coolDB:32.1,coolWB:25.4,heat:-14.3,lat:37.9},
-  {name:"강릉",    coolDB:30.9,coolWB:25.8,heat: -7.4,lat:37.8},
-  {name:"대전",    coolDB:32.0,coolWB:25.7,heat: -9.2,lat:36.4},
-  {name:"청주",    coolDB:32.1,coolWB:25.6,heat:-10.3,lat:36.6},
-  {name:"전주",    coolDB:32.0,coolWB:25.8,heat: -8.0,lat:35.8},
-  {name:"광주",    coolDB:31.8,coolWB:25.9,heat: -5.1,lat:35.2},
-  {name:"목포",    coolDB:31.1,coolWB:26.3,heat: -3.9,lat:34.8},
-  {name:"여수",    coolDB:30.5,coolWB:26.4,heat: -3.0,lat:34.7},
-  {name:"대구",    coolDB:34.2,coolWB:26.0,heat: -6.9,lat:35.9},
-  {name:"포항",    coolDB:32.2,coolWB:25.9,heat: -5.4,lat:36.0},
-  {name:"부산",    coolDB:31.5,coolWB:26.7,heat: -3.0,lat:35.1},
-  {name:"울산",    coolDB:32.3,coolWB:26.1,heat: -5.5,lat:35.5},
-  {name:"창원",    coolDB:31.9,coolWB:26.3,heat: -5.0,lat:35.2},
-  {name:"진주",    coolDB:32.7,coolWB:25.8,heat: -7.0,lat:35.2},
-  {name:"제주",    coolDB:31.2,coolWB:27.1,heat:  2.0,lat:33.5},
-  {name:"서귀포",  coolDB:30.6,coolWB:27.0,heat:  3.3,lat:33.3},
-  {name:"울릉도",  coolDB:28.7,coolWB:25.7,heat: -2.2,lat:37.5},
-  {name:"안동",    coolDB:32.9,coolWB:25.5,heat:-11.8,lat:36.6},
-  {name:"원주",    coolDB:32.2,coolWB:25.3,heat:-13.4,lat:37.3},
-  {name:"홍천",    coolDB:33.1,coolWB:25.3,heat:-15.8,lat:37.7},
-  {name:"속초",    coolDB:30.1,coolWB:25.7,heat: -8.3,lat:38.2},
-  {name:"군산",    coolDB:31.6,coolWB:26.0,heat: -7.4,lat:36.0},
-  {name:"순천",    coolDB:32.3,coolWB:25.6,heat: -5.3,lat:34.9},
-  {name:"익산",    coolDB:31.8,coolWB:25.7,heat: -8.1,lat:35.9},
-  {name:"천안",    coolDB:31.9,coolWB:25.5,heat:-11.1,lat:36.8},
-  {name:"기타",    coolDB:31.0,coolWB:25.5,heat: -8.0,lat:36.5},
+const OD = [ // outdoor conditions
+  {n:"서울",   cdb:31.2,cwb:25.5,hdb:-11.3,lat:37.6},
+  {n:"인천",   cdb:30.5,cwb:25.3,hdb:-10.4,lat:37.5},
+  {n:"수원",   cdb:31.4,cwb:25.6,hdb:-11.7,lat:37.3},
+  {n:"춘천",   cdb:32.1,cwb:25.4,hdb:-14.3,lat:37.9},
+  {n:"강릉",   cdb:30.9,cwb:25.8,hdb: -7.4,lat:37.8},
+  {n:"대전",   cdb:32.0,cwb:25.7,hdb: -9.2,lat:36.4},
+  {n:"청주",   cdb:32.1,cwb:25.6,hdb:-10.3,lat:36.6},
+  {n:"전주",   cdb:32.0,cwb:25.8,hdb: -8.0,lat:35.8},
+  {n:"광주",   cdb:31.8,cwb:25.9,hdb: -5.1,lat:35.2},
+  {n:"목포",   cdb:31.1,cwb:26.3,hdb: -3.9,lat:34.8},
+  {n:"대구",   cdb:34.2,cwb:26.0,hdb: -6.9,lat:35.9},
+  {n:"부산",   cdb:31.5,cwb:26.7,hdb: -3.0,lat:35.1},
+  {n:"울산",   cdb:32.3,cwb:26.1,hdb: -5.5,lat:35.5},
+  {n:"창원",   cdb:31.9,cwb:26.3,hdb: -5.0,lat:35.2},
+  {n:"제주",   cdb:31.2,cwb:27.1,hdb:  2.0,lat:33.5},
+  {n:"안동",   cdb:32.9,cwb:25.5,hdb:-11.8,lat:36.6},
+  {n:"춘천",   cdb:32.1,cwb:25.4,hdb:-14.3,lat:37.9},
+  {n:"속초",   cdb:30.1,cwb:25.7,hdb: -8.3,lat:38.2},
+  {n:"천안",   cdb:31.9,cwb:25.5,hdb:-11.1,lat:36.8},
+  {n:"기타",   cdb:31.0,cwb:25.5,hdb: -8.0,lat:36.5},
 ];
 
-// Room types: key, label, coolDB(null=없음), coolRH, heatDB(null=없음), heatRH,
-//             occDensity(인/m²), lightWm2, infACH, ventACH,
-//             coolEquip, heatEquip, ventEquip, occHeat
-const ROOM_TYPES = [
-  {key:'기계실류',            coolDB:null,coolRH:null,heatDB:5,   heatRH:null,occDensity:0,    lightWm2:15,infACH:1.0,ventACH:10, coolEquip:'없음',     heatEquip:'유니트히터', ventEquip:'인라인덕트팬', occHeat:'default'},
-  {key:'비상발전기실류',      coolDB:50,  coolRH:null,heatDB:5,   heatRH:null,occDensity:0,    lightWm2:15,infACH:0.5,ventACH:30, coolEquip:'없음',     heatEquip:'유니트히터', ventEquip:'루프팬',       occHeat:'default'},
-  {key:'전기실류',            coolDB:30,  coolRH:null,heatDB:null,heatRH:null,occDensity:0,    lightWm2:15,infACH:0.5,ventACH:12, coolEquip:'PAC',      heatEquip:'없음',       ventEquip:'인라인덕트팬', occHeat:'default'},
-  {key:'화장실류',            coolDB:null,coolRH:null,heatDB:22,  heatRH:null,occDensity:0.02, lightWm2:10,infACH:1.0,ventACH:15, coolEquip:'없음',     heatEquip:'유니트히터', ventEquip:'벽부형팬',     occHeat:'default'},
-  {key:'사무실/크레인조정실류',coolDB:26, coolRH:50,  heatDB:21,  heatRH:null,occDensity:0.05, lightWm2:15,infACH:0.5,ventACH:5,  coolEquip:'PAC',      heatEquip:'EHP',        ventEquip:'전열교환기',   occHeat:'office'},
-  {key:'중앙제어실/계측류',   coolDB:24,  coolRH:50,  heatDB:24,  heatRH:null,occDensity:0.05, lightWm2:15,infACH:0.5,ventACH:10, coolEquip:'EHP',      heatEquip:'EHP',        ventEquip:'전열교환기',   occHeat:'seated'},
-  {key:'창고류',              coolDB:null,coolRH:null,heatDB:null,heatRH:null,occDensity:0,    lightWm2:5, infACH:0.5,ventACH:3,  coolEquip:'없음',     heatEquip:'없음',       ventEquip:'없음',         occHeat:'default'},
-];
-
-const HUMAN_HEAT = {
-  seated:    {s:65, l:55},
-  office:    {s:70, l:60},
-  light_work:{s:75, l:90},
-  heavy_work:{s:170,l:255},
-  default:   {s:70, l:60},
+// Solar radiation W/m² at ~37°N, summer [10h,12h,14h,16h]
+const SR = {
+  N:[ 60, 80, 60, 60], E:[500,220, 50, 30],
+  S:[200,350,350,200], W:[ 30, 50,220,500],
 };
-
-// Solar radiation W/m² by direction, time index [10h,12h,14h,16h]
-const SOLAR_RADIATION = {
-  S: [200,350,350,200], SE:[420,280,120, 50], E:[500,220, 50, 30],
-  NE:[300,100, 30, 30], N:[ 60, 80, 60, 60], NW:[ 30, 30,100,300],
-  W:[ 30, 50,220,500],  SW:[ 50,120,280,420], H:[620,820,820,620],
-};
-
-const SC_VALUES = {
-  '일반 단판 유리':1.00,'반사 코팅 단판':0.65,'일반 복층유리':0.88,
-  'Low-E 복층유리':0.45,'삼중유리 Low-E':0.30,
-};
-
-const DIRS8 = ['S','SE','E','NE','N','NW','W','SW'];
 const TIME_SLOTS = [10,12,14,16];
 
-const COOL_EQUIPS = ['PAC','EHP','CTH','AHU','FCU','없음'];
-const HEAT_EQUIPS = ['EHP','유니트히터','라디에이터','없음'];
-const VENT_EQUIPS = ['전열교환기','인라인덕트팬','벽부형팬','루프팬','없음'];
+// Room type definitions
+const RT = {
+  mech:      {lb:'기계실류',           cdb:null,crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:1.0,va:10, ce:'없음', he:'없음',     ve:'인라인덕트팬'},
+  generator: {lb:'비상발전기실류',      cdb:50,  crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:0.5,va:30, ce:'없음', he:'유니트히터', ve:'벽부형팬'},
+  elec:      {lb:'전기실류',            cdb:30,  crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0.5,va:12, ce:'PAC',  he:'없음',     ve:'벽부형팬'},
+  toilet:    {lb:'화장실류',            cdb:null,crh:null,hdb:18,  hrh:null,od:0.02, lw:10,ia:1.0,va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},
+  office:    {lb:'사무실/크레인조정실류',cdb:26,  crh:50, hdb:21,  hrh:50, od:0.05, lw:15,ia:0.5,va:5,  ce:'EHP',  he:'EHP',      ve:'전열교환기'},
+  control:   {lb:'중앙제어실/계측류실', cdb:24,  crh:50, hdb:24,  hrh:50, od:0.05, lw:15,ia:0.5,va:10, ce:'PAC',  he:'PAC',      ve:'전열교환기'},
+  storage:   {lb:'창고류',              cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:5, ia:0.5,va:3,  ce:'없음', he:'없음',     ve:'벽부형팬'},
+};
+
+const BLDG_USAGE = ['사무/업무시설','공장/산업시설','의료시설','교육시설','숙박시설','판매/상업시설','창고/물류시설','기타'];
+const COOL_EQUIPS = ['PAC','EHP','CTH','없음'];
+const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','전기온수기','없음'];
+const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','없음'];
+
+// ══════════════════════════════════════════════
+//  PSYCHROMETRICS
+// ══════════════════════════════════════════════
+function pws(t){ return 610.78*Math.exp(17.27*t/(t+237.3)); }
+function omegaWB(tdb,twb){ const p=pws(twb),ws=0.622*p/(101325-p); return ws-0.00066*(tdb-twb)*(1+0.00115*twb); }
+function omegaRH(t,rh){ const p=(rh/100)*pws(t); return 0.622*p/(101325-p); }
+function RHfromWB(tdb,twb){ const w=omegaWB(tdb,twb),pw=101325*w/(0.622+w); return Math.round(Math.min(100,100*pw/pws(tdb))); }
+function dOmega(outDB,outWB,inDB,inRH){ return Math.max(0,omegaWB(outDB,outWB)-omegaRH(inDB,inRH||50)); }
 
 // ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
-
 let STATE = {
-  project:{
-    name:'',client:'',designer:'',date:'',address:'',
-    location:'서울',
-    outCoolDB:31.2,outCoolWB:25.5,outHeat:-11.3,lat:37.6,
-    outCustom:null, usage:'factory',
-    sfCool:1.10, sfHeat:1.10, note:'',
-  },
-  floors:[
-    {id:'F1',name:'1층',height:4.0},
-    {id:'F2',name:'2층',height:4.0},
+  project:{name:'',jobNo:'',client:'',designer:'',date:'',addr:'',
+    loc:'서울',cdb:31.2,cwb:25.5,hdb:-11.3,lat:37.6,cust:null},
+  buildings:[
+    {id:'B1',name:'건물1',usage:'공장/산업시설',
+     floors:[{id:'F1',name:'1층',height:4.0},{id:'F2',name:'2층',height:4.0}]}
   ],
   rooms:[],
-  _nextRoomId:1,
+  _nB:2,_nF:10,_nR:1,
 };
-
-let selectedRoomId = null;
-let capSubTab = 'PAC';
+let selRid = null;
+let capTab = 'PAC';
 
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
-
 function init(){
-  const sel = document.getElementById('p-location');
-  OUTDOOR_CONDITIONS.forEach(c=>{
-    const o = document.createElement('option');
-    o.value = c.name; o.textContent = c.name;
-    sel.appendChild(o);
-  });
-  loadStateToForm();
-  renderFloorList();
-  renderRoomList();
+  const s=document.getElementById('p-loc');
+  OD.forEach(c=>{const o=document.createElement('option');o.value=c.n;o.textContent=c.n;s.appendChild(o);});
+  loadPtoForm(); renderBldgTree(); renderRoomList();
 }
 
 // ══════════════════════════════════════════════
 //  TAB
 // ══════════════════════════════════════════════
-
-function switchTab(idx){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
-  document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
-  if(idx===2) renderLoadCalc();
-  if(idx===3) renderCapCalc();
+function switchTab(i){
+  document.querySelectorAll('.tb').forEach((b,j)=>b.classList.toggle('on',i===j));
+  document.querySelectorAll('.tp').forEach((p,j)=>p.classList.toggle('on',i===j));
+  if(i===2) renderLoadCalc();
+  if(i===3) renderCapCalc();
 }
 
 // ══════════════════════════════════════════════
 //  PROJECT FORM
 // ══════════════════════════════════════════════
-
-function loadStateToForm(){
-  const p = STATE.project;
-  document.getElementById('p-name').value = p.name;
-  document.getElementById('p-client').value = p.client;
-  document.getElementById('p-designer').value = p.designer;
-  document.getElementById('p-date').value = p.date;
-  document.getElementById('p-address').value = p.address;
-  document.getElementById('p-location').value = p.location;
-  document.getElementById('p-out-cool-db').value = p.outCoolDB;
-  document.getElementById('p-out-cool-wb').value = p.outCoolWB;
-  document.getElementById('p-out-heat').value = p.outHeat;
-  document.getElementById('p-lat').value = p.lat;
-  if(p.outCustom) document.getElementById('p-out-custom').value = p.outCustom;
-  document.getElementById('p-usage').value = p.usage;
-  document.getElementById('p-sf-cool').value = p.sfCool;
-  document.getElementById('p-sf-heat').value = p.sfHeat;
-  document.getElementById('p-note').value = p.note||'';
-  document.getElementById('proj-name-display').textContent = p.name||'[ 프로젝트명 미설정 ]';
+function loadPtoForm(){
+  const p=STATE.project;
+  document.getElementById('p-name').value=p.name;
+  document.getElementById('p-jobno').value=p.jobNo||'';
+  document.getElementById('p-client').value=p.client;
+  document.getElementById('p-designer').value=p.designer;
+  document.getElementById('p-date').value=p.date;
+  document.getElementById('p-addr').value=p.addr;
+  document.getElementById('p-loc').value=p.loc;
+  document.getElementById('p-cdb').value=p.cdb;
+  document.getElementById('p-cwb').value=p.cwb;
+  document.getElementById('p-hdb').value=p.hdb;
+  document.getElementById('p-lat').value=p.lat;
+  if(p.cust) document.getElementById('p-cust').value=p.cust;
+  document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
-
-function updateProj(){
-  const p = STATE.project;
-  p.name = document.getElementById('p-name').value;
-  p.client = document.getElementById('p-client').value;
-  p.designer = document.getElementById('p-designer').value;
-  p.date = document.getElementById('p-date').value;
-  p.address = document.getElementById('p-address').value;
-  p.outCustom = parseFloat(document.getElementById('p-out-custom').value)||null;
-  p.usage = document.getElementById('p-usage').value;
-  p.sfCool = parseFloat(document.getElementById('p-sf-cool').value)||1.10;
-  p.sfHeat = parseFloat(document.getElementById('p-sf-heat').value)||1.10;
-  p.note = document.getElementById('p-note').value;
-  document.getElementById('proj-name-display').textContent = p.name||'[ 프로젝트명 미설정 ]';
+function updP(){
+  const p=STATE.project;
+  p.name=document.getElementById('p-name').value;
+  p.jobNo=document.getElementById('p-jobno').value;
+  p.client=document.getElementById('p-client').value;
+  p.designer=document.getElementById('p-designer').value;
+  p.date=document.getElementById('p-date').value;
+  p.addr=document.getElementById('p-addr').value;
+  p.cust=parseFloat(document.getElementById('p-cust').value)||null;
+  document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
-
-function onLocationChange(){
-  const loc = document.getElementById('p-location').value;
-  const c = OUTDOOR_CONDITIONS.find(x=>x.name===loc);
-  if(!c) return;
-  STATE.project.location=loc;
-  STATE.project.outCoolDB=c.coolDB;
-  STATE.project.outCoolWB=c.coolWB;
-  STATE.project.outHeat=c.heat;
-  STATE.project.lat=c.lat;
-  document.getElementById('p-out-cool-db').value=c.coolDB;
-  document.getElementById('p-out-cool-wb').value=c.coolWB;
-  document.getElementById('p-out-heat').value=c.heat;
+function onLocChange(){
+  const v=document.getElementById('p-loc').value, c=OD.find(x=>x.n===v); if(!c)return;
+  Object.assign(STATE.project,{loc:v,cdb:c.cdb,cwb:c.cwb,hdb:c.hdb,lat:c.lat});
+  document.getElementById('p-cdb').value=c.cdb;
+  document.getElementById('p-cwb').value=c.cwb;
+  document.getElementById('p-hdb').value=c.hdb;
   document.getElementById('p-lat').value=c.lat;
 }
 
 // ══════════════════════════════════════════════
-//  FLOORS
+//  BUILDING / FLOOR TREE
 // ══════════════════════════════════════════════
-
-function renderFloorList(){
-  const el = document.getElementById('floor-list');
-  if(!STATE.floors.length){el.innerHTML='<div class="empty-msg">층이 없습니다.</div>';return;}
-  el.innerHTML = STATE.floors.map((f,i)=>`
-    <div class="floor-item">
-      <span style="min-width:28px;font-weight:700;color:var(--navy)">${i+1}</span>
-      <input type="text" value="${esc(f.name)}" placeholder="층 이름" style="flex:2"
-        onchange="STATE.floors[${i}].name=this.value">
-      <input type="number" value="${f.height}" step="0.1" style="flex:1;max-width:90px"
-        onchange="STATE.floors[${i}].height=parseFloat(this.value)||3.0">
-      <label style="font-size:11px;color:var(--tsm);white-space:nowrap">층고(m)</label>
-      <span class="floor-del no-print" onclick="delFloor(${i})">✕</span>
-    </div>`).join('');
+function renderBldgTree(){
+  const el=document.getElementById('bldg-tree');
+  if(!STATE.buildings.length){el.innerHTML='<div class="empty">건물이 없습니다.</div>';return;}
+  el.innerHTML = STATE.buildings.map((b,bi)=>`
+  <div class="bcard">
+    <div class="bhead">
+      <span style="font-weight:700;color:var(--nv);min-width:60px">[건물${bi+1}]</span>
+      <input type="text" value="${esc(b.name)}" placeholder="건물명" style="flex:2;padding:4px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:11px"
+        onchange="STATE.buildings[${bi}].name=this.value;renderRoomList()">
+      <select style="flex:1;padding:4px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:11px"
+        onchange="STATE.buildings[${bi}].usage=this.value">
+        ${BLDG_USAGE.map(u=>`<option value="${u}" ${u===b.usage?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <button class="btn btS no-print" onclick="addFloor(${bi})">+ 층 추가</button>
+      <button class="btn btS no-print" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="delBldg(${bi})">삭제</button>
+    </div>
+    <div class="bbody">
+      ${b.floors.length===0?'<div style="color:var(--gray);font-size:11px">층이 없습니다.</div>':
+        b.floors.map((f,fi)=>`
+        <div class="floor-row">
+          <span style="color:var(--tsm);font-size:10px;min-width:24px">${fi+1}</span>
+          <input type="text" value="${esc(f.name)}" placeholder="층명" style="flex:2;padding:3px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:11px"
+            onchange="STATE.buildings[${bi}].floors[${fi}].name=this.value;renderRoomList()">
+          <input type="number" value="${f.height}" step="0.1" style="width:70px;padding:3px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:11px"
+            onchange="STATE.buildings[${bi}].floors[${fi}].height=parseFloat(this.value)||3.0">
+          <label style="font-size:10px;color:var(--tsm);white-space:nowrap">층고(m)</label>
+          <span class="no-print" style="color:var(--red);cursor:pointer;padding:1px 5px;font-size:13px" onclick="delFloor(${bi},${fi})">✕</span>
+        </div>`).join('')
+      }
+    </div>
+  </div>`).join('');
 }
 
-function addFloor(){
-  STATE.floors.push({id:'F'+Date.now(),name:(STATE.floors.length+1)+'층',height:4.0});
-  renderFloorList();
+function addBldg(){
+  STATE.buildings.push({id:'B'+(STATE._nB++),name:'건물'+(STATE.buildings.length+1),usage:'공장/산업시설',floors:[]});
+  renderBldgTree();
 }
-
-function delFloor(idx){
-  if(!confirm('이 층을 삭제하시겠습니까?')) return;
-  const fid = STATE.floors[idx].id;
-  STATE.floors.splice(idx,1);
+function delBldg(bi){
+  if(!confirm('건물을 삭제하시겠습니까? 해당 건물의 실도 모두 삭제됩니다.'))return;
+  const bid=STATE.buildings[bi].id;
+  STATE.buildings.splice(bi,1);
+  STATE.rooms=STATE.rooms.filter(r=>r.bldgId!==bid);
+  if(selRid&&!STATE.rooms.find(r=>r.id===selRid))selRid=null;
+  renderBldgTree();renderRoomList();renderRoomDetail();
+}
+function addFloor(bi){
+  const b=STATE.buildings[bi];
+  b.floors.push({id:'F'+(STATE._nF++),name:(b.floors.length+1)+'층',height:4.0});
+  renderBldgTree();
+}
+function delFloor(bi,fi){
+  if(!confirm('층을 삭제하시겠습니까?'))return;
+  const fid=STATE.buildings[bi].floors[fi].id;
+  STATE.buildings[bi].floors.splice(fi,1);
   STATE.rooms.forEach(r=>{if(r.floorId===fid)r.floorId='';});
-  renderFloorList(); renderRoomList();
+  renderBldgTree();renderRoomList();
 }
 
 // ══════════════════════════════════════════════
 //  ROOM HELPERS
 // ══════════════════════════════════════════════
-
 function newRoom(){
-  const rt = ROOM_TYPES.find(t=>t.key==='사무실/크레인조정실류');
+  const b0=STATE.buildings[0], f0=b0?.floors[0];
   return {
-    id:'R'+(STATE._nextRoomId++),
-    name:'새 실',
-    floorId:STATE.floors[0]?.id||'',
-    type:'사무실/크레인조정실류',
-    width:0, depth:0, height:4.0,
-    coolDB:26, coolRH:50, heatDB:21, heatRH:null,
-    walls:[{dir:'S',length:0,uWall:0.24,isExt:true}],
-    windows:[{dir:'S',winWidth:0,winHeight:0,uWin:2.10,sc:'Low-E 복층유리'}],
-    roof:{area:0,uRoof:0.11,isExt:false},
-    occDensity:0.05, occHeat:'office',
-    lightWm2:15, lightFactor:1.08,
-    equipW:0,
+    id:'R'+(STATE._nR++), name:'새 실',
+    bldgId:b0?.id||'', floorId:f0?.id||'',
+    type:'office',
+    width:0, depth:0, height:f0?.height||4.0,
+    cdb:26, crh:50, hdb:21, hrh:50,
+    wallN:{en:false,len:0,u:0.24}, wallE:{en:false,len:0,u:0.24},
+    wallS:{en:true, len:0,u:0.24}, wallW:{en:false,len:0,u:0.24},
+    winN:{w:0,h:0,shgc:0.35,u:2.10}, winE:{w:0,h:0,shgc:0.35,u:2.10},
+    winS:{w:0,h:0,shgc:0.35,u:2.10}, winW:{w:0,h:0,shgc:0.35,u:2.10},
+    iw1:{len:0,u:2.08}, iw2:{len:0,u:2.08}, iw3:{len:0,u:2.08}, iw4:{len:0,u:2.08},
+    roofOn:false, roofA:0, roofU:0.11,
+    floorOn:false, floorU:2.08,
     infACH:0.5, ventACH:5,
-    coolEquip:'PAC', heatEquip:'EHP', ventEquip:'전열교환기',
-    capCool:{model:'',count:1,capacity:0,power:'',voltage:'',refrigerant:'',gasLine:'',liquidLine:'',note:''},
-    capHeat:{count:1,capacity:0,airflow:0,fanPower:'',voltage:'',note:''},
-    capVent:{count:1,fanNo:'',drive:'직결',airflow:0,staticPressure:0,motorPower:'',voltage:'',note:''},
-    coolLoadManual:null, heatLoadManual:null,
+    od:0.05, lw:15, eqKW:0,
+    ce:'EHP', he:'EHP', ve:'전열교환기',
+    capC:{model:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:''},
+    capEo:{model:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:''},
+    capH:{model:'',cnt:1,cap:0,capk:0,af:0,fp:'',volt:'',note:''},
+    capV:{model:'',cnt:1,fno:'',drv:'직결',saf:0,eaf:0,af:0,sp:0,mp:'',volt:'',note:''},
+    capHW:{model:'',cnt:1,lph:0,kw:0,volt:'',note:''},
     note:'',
   };
 }
-
-function getRoomArea(r){ return r.width * r.depth; }
-function getRoomVol(r){ return getRoomArea(r) * r.height; }
+function gA(r){return r.width*r.depth;}
+function gV(r){return r.width*r.depth*r.height;}
+function getBF(bldgId,floorId){
+  const b=STATE.buildings.find(x=>x.id===bldgId);
+  const f=b?.floors.find(x=>x.id===floorId);
+  return {b,f};
+}
+function getRi(){return STATE.rooms.findIndex(r=>r.id===selRid);}
 
 // ══════════════════════════════════════════════
 //  ROOM LIST
 // ══════════════════════════════════════════════
-
 function addRoom(){
-  const r = newRoom();
-  STATE.rooms.push(r);
-  selectedRoomId = r.id;
-  renderRoomList();
-  renderRoomDetail();
+  const r=newRoom(); STATE.rooms.push(r);
+  selRid=r.id; renderRoomList(); renderRoomDetail();
 }
-
 function delRoom(id){
-  if(!confirm('이 실을 삭제하시겠습니까?')) return;
-  STATE.rooms = STATE.rooms.filter(r=>r.id!==id);
-  if(selectedRoomId===id) selectedRoomId = STATE.rooms[0]?.id||null;
-  renderRoomList(); renderRoomDetail();
+  if(!confirm('삭제하시겠습니까?'))return;
+  STATE.rooms=STATE.rooms.filter(r=>r.id!==id);
+  if(selRid===id)selRid=STATE.rooms[0]?.id||null;
+  renderRoomList();renderRoomDetail();
 }
-
-function selectRoom(id){
-  selectedRoomId = id;
-  renderRoomList(); renderRoomDetail();
-}
+function selRoom(id){selRid=id;renderRoomList();renderRoomDetail();}
 
 function renderRoomList(){
-  const el = document.getElementById('room-list-scroll');
-  if(!STATE.rooms.length){el.innerHTML='<div class="empty-msg" style="padding:20px;font-size:12px">실이 없습니다.</div>';return;}
-  el.innerHTML = STATE.rooms.map(r=>{
-    const fl = STATE.floors.find(f=>f.id===r.floorId);
-    const area = fmt1(getRoomArea(r));
-    return `<div class="room-item ${r.id===selectedRoomId?'selected':''}" onclick="selectRoom('${r.id}')">
-      <div>
-        <div class="room-item-name">${esc(r.name)}</div>
-        <div class="room-item-sub">${fl?fl.name:'층미지정'} · ${area}m² · ${r.type}</div>
-      </div>
-      <span class="room-item-del no-print" onclick="event.stopPropagation();delRoom('${r.id}')">✕</span>
+  const el=document.getElementById('rls');
+  if(!STATE.rooms.length){el.innerHTML='<div class="empty" style="padding:16px;font-size:11px">실이 없습니다.</div>';return;}
+  let html='';
+  STATE.buildings.forEach(b=>{
+    const bRooms=STATE.rooms.filter(r=>r.bldgId===b.id);
+    if(!bRooms.length)return;
+    html+=`<div class="rgi">${esc(b.name)}</div>`;
+    b.floors.forEach(f=>{
+      const fRooms=bRooms.filter(r=>r.floorId===f.id);
+      if(!fRooms.length)return;
+      html+=`<div class="rfi">${esc(f.name)}</div>`;
+      fRooms.forEach(r=>{
+        html+=`<div class="ri ${r.id===selRid?'sel':''}" onclick="selRoom('${r.id}')">
+          <div><div class="ri-n">${esc(r.name)}</div><div class="ri-s">${f1(gA(r))} m² · ${RT[r.type]?.lb||r.type}</div></div>
+          <span class="ri-d no-print" onclick="event.stopPropagation();delRoom('${r.id}')">✕</span>
+        </div>`;
+      });
+    });
+    // unassigned to a floor
+    const uRooms=bRooms.filter(r=>!b.floors.find(f=>f.id===r.floorId));
+    uRooms.forEach(r=>{
+      html+=`<div class="ri ${r.id===selRid?'sel':''}" onclick="selRoom('${r.id}')">
+        <div><div class="ri-n">${esc(r.name)}</div><div class="ri-s">${f1(gA(r))} m² [층 미지정]</div></div>
+        <span class="ri-d no-print" onclick="event.stopPropagation();delRoom('${r.id}')">✕</span>
+      </div>`;
+    });
+  });
+  // completely unassigned
+  const u2=STATE.rooms.filter(r=>!STATE.buildings.find(b=>b.id===r.bldgId));
+  u2.forEach(r=>{
+    html+=`<div class="ri ${r.id===selRid?'sel':''}" onclick="selRoom('${r.id}')">
+      <div><div class="ri-n">${esc(r.name)}</div><div class="ri-s">${f1(gA(r))} m² [건물 미지정]</div></div>
+      <span class="ri-d no-print" onclick="event.stopPropagation();delRoom('${r.id}')">✕</span>
     </div>`;
-  }).join('');
+  });
+  el.innerHTML=html;
 }
-
-function getRi(){ return STATE.rooms.findIndex(r=>r.id===selectedRoomId); }
 
 // ══════════════════════════════════════════════
 //  ROOM DETAIL
 // ══════════════════════════════════════════════
+function sR(k,v){const i=getRi();if(i<0)return;STATE.rooms[i][k]=v;}
+function sRr(k,v){sR(k,v);renderRoomDetail();renderRoomList();}
+function sRd(k,v){sR(k,v);renderRoomDetail();}
+function sW(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['wall'+dir][k]=v;}
+function sWw(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['win'+dir][k]=v;}
+function sIW(n,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['iw'+n][k]=v;}
 
-function setR(key, val){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri][key]=val; }
-function setRRefresh(key, val){ setR(key,val); renderRoomList(); renderRoomDetail(); }
-function setWall(wi, key, val){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].walls[wi][key]=val; }
-function setWallRefresh(wi, key, val){ setWall(wi,key,val); renderRoomDetail(); }
-function setWin(wi, key, val){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].windows[wi][key]=val; }
-function setWinRefresh(wi, key, val){ setWin(wi,key,val); renderRoomDetail(); }
-
-function updateRoomType(typeKey){
-  const ri=getRi(); if(ri<0)return;
-  const rt = ROOM_TYPES.find(t=>t.key===typeKey);
-  if(!rt) return;
-  const r = STATE.rooms[ri];
-  r.type=typeKey;
-  r.coolDB=rt.coolDB; r.coolRH=rt.coolRH;
-  r.heatDB=rt.heatDB; r.heatRH=rt.heatRH;
-  r.occDensity=rt.occDensity; r.lightWm2=rt.lightWm2;
-  r.infACH=rt.infACH; r.ventACH=rt.ventACH;
-  r.coolEquip=rt.coolEquip; r.heatEquip=rt.heatEquip; r.ventEquip=rt.ventEquip;
-  r.occHeat=rt.occHeat;
-  renderRoomList(); renderRoomDetail();
+function setRoomType(tp){
+  const i=getRi();if(i<0)return;
+  const rt=RT[tp]; if(!rt)return;
+  const r=STATE.rooms[i];
+  r.type=tp; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
+  r.od=rt.od; r.lw=rt.lw; r.infACH=rt.ia; r.ventACH=rt.va;
+  r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve;
+  renderRoomDetail();renderRoomList();
 }
-
-function addWall(){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].walls.push({dir:'N',length:0,uWall:0.24,isExt:true}); renderRoomDetail(); }
-function delWall(wi){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].walls.splice(wi,1); renderRoomDetail(); }
-function addWin(){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].windows.push({dir:'S',winWidth:0,winHeight:0,uWin:2.10,sc:'Low-E 복층유리'}); renderRoomDetail(); }
-function delWin(wi){ const ri=getRi(); if(ri<0)return; STATE.rooms[ri].windows.splice(wi,1); renderRoomDetail(); }
-
-function toggleCoolDB(noCool){
-  const ri=getRi(); if(ri<0)return;
-  STATE.rooms[ri].coolDB = noCool ? null : 26;
-  renderRoomDetail();
+function onBldgChange(bid){
+  const i=getRi();if(i<0)return;
+  const b=STATE.buildings.find(x=>x.id===bid);
+  STATE.rooms[i].bldgId=bid;
+  if(b&&b.floors.length){
+    STATE.rooms[i].floorId=b.floors[0].id;
+    STATE.rooms[i].height=b.floors[0].height;
+  }else STATE.rooms[i].floorId='';
+  renderRoomDetail();renderRoomList();
 }
-function toggleHeatDB(noHeat){
-  const ri=getRi(); if(ri<0)return;
-  STATE.rooms[ri].heatDB = noHeat ? null : 5;
-  renderRoomDetail();
+function onFloorChange(fid){
+  const i=getRi();if(i<0)return;
+  STATE.rooms[i].floorId=fid;
+  const r=STATE.rooms[i];
+  const {f}=getBF(r.bldgId,fid);
+  if(f) STATE.rooms[i].height=f.height;
+  renderRoomDetail();renderRoomList();
 }
+function togCool(none){const i=getRi();if(i<0)return;STATE.rooms[i].cdb=none?null:26;renderRoomDetail();}
+function togHeat(none){const i=getRi();if(i<0)return;STATE.rooms[i].hdb=none?null:5;renderRoomDetail();}
 
 function renderRoomDetail(){
-  const el = document.getElementById('room-detail-content');
-  if(!selectedRoomId){ el.innerHTML='<div class="empty-msg">실을 선택하세요.</div>'; return; }
-  const ri = getRi();
-  if(ri<0){ el.innerHTML='<div class="empty-msg">실을 찾을 수 없습니다.</div>'; return; }
-  const r = STATE.rooms[ri];
-  const area = getRoomArea(r);
-  const vol  = getRoomVol(r);
-  const occ  = r.occDensity * area;
-  const lightTotal = r.lightWm2 * area * r.lightFactor;
-  const ventCMH = vol * r.ventACH;
-  const infCMH  = vol * r.infACH;
+  const el=document.getElementById('rdc');
+  if(!selRid){el.innerHTML='<div class="empty">실을 선택하세요.</div>';return;}
+  const i=getRi(); if(i<0){el.innerHTML='<div class="empty">실 없음</div>';return;}
+  const r=STATE.rooms[i];
+  const area=gA(r), vol=gV(r);
+  const occ=r.od*area, lightW=r.lw*area*1.08, infCMH=vol*r.infACH, ventCMH=vol*r.ventACH;
+  const {b,f}=getBF(r.bldgId,r.floorId);
 
-  const floorOpts = STATE.floors.map(f=>`<option value="${f.id}" ${f.id===r.floorId?'selected':''}>${esc(f.name)}</option>`).join('');
-  const typeOpts  = ROOM_TYPES.map(t=>`<option value="${t.key}" ${t.key===r.type?'selected':''}>${t.key}</option>`).join('');
-  const occHeatOpts = Object.keys(HUMAN_HEAT).map(k=>`<option value="${k}" ${k===r.occHeat?'selected':''}>${k}</option>`).join('');
-  const dir8opts = d => DIRS8.map(x=>`<option value="${x}" ${x===d?'selected':''}>${x}</option>`).join('');
+  const bOpts=STATE.buildings.map(x=>`<option value="${x.id}" ${x.id===r.bldgId?'selected':''}>${esc(x.name)}</option>`).join('');
+  const fOpts=(b?b.floors:[]).map(x=>`<option value="${x.id}" ${x.id===r.floorId?'selected':''}>${esc(x.name)}</option>`).join('');
+  const tOpts=Object.keys(RT).map(k=>`<option value="${k}" ${k===r.type?'selected':''}>${RT[k].lb}</option>`).join('');
+  const ceOpts=COOL_EQUIPS.map(e=>`<option value="${e}" ${e===r.ce?'selected':''}>${e}</option>`).join('');
+  const heOpts=HEAT_EQUIPS.map(e=>`<option value="${e}" ${e===r.he?'selected':''}>${e}</option>`).join('');
+  const veOpts=VENT_EQUIPS.map(e=>`<option value="${e}" ${e===r.ve?'selected':''}>${e}</option>`).join('');
 
-  el.innerHTML = `
-<div class="stitle" style="margin-top:0">${esc(r.name)} — 실 상세 정보</div>
+  const wallRow=(dir,wo)=>`
+    <tr>
+      <td class="C" style="font-weight:700">${dir}</td>
+      <td class="C"><input type="checkbox" ${wo.en?'checked':''} onchange="sW('${dir}','en',this.checked)"></td>
+      <td><input type="number" value="${wo.len}" step="0.1" ${!wo.en?'disabled':''} onchange="sW('${dir}','len',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td class="au C">${f1(wo.len*r.height)}</td>
+      <td><input type="number" value="${wo.u}" step="0.01" onchange="sW('${dir}','u',parseFloat(this.value)||0.24)"></td>
+    </tr>`;
+  const winRow=(dir,wo)=>`
+    <tr>
+      <td class="C" style="font-weight:700">${dir}</td>
+      <td><input type="number" value="${wo.w}" step="0.1" onchange="sWw('${dir}','w',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td><input type="number" value="${wo.h}" step="0.1" onchange="sWw('${dir}','h',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td class="au C">${f1(wo.w*wo.h)}</td>
+      <td><input type="number" value="${wo.shgc}" step="0.01" min="0" max="1" onchange="sWw('${dir}','shgc',parseFloat(this.value)||0.35)"></td>
+      <td><input type="number" value="${wo.u}" step="0.01" onchange="sWw('${dir}','u',parseFloat(this.value)||2.10)"></td>
+    </tr>`;
+  const iwRow=(n,iw,def)=>`
+    <tr>
+      <td class="C">(${n}) ${def?'기본='+def:''}</td>
+      <td><input type="number" value="${iw.len}" step="0.1" placeholder="${def}" onchange="sIW(${n},'len',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td class="au C">${f1(iw.len*r.height)}</td>
+      <td><input type="number" value="${iw.u}" step="0.01" onchange="sIW(${n},'u',parseFloat(this.value)||2.08)"></td>
+      <td class="au C">1.25</td>
+    </tr>`;
 
-<!-- §1 기본 정보 -->
-<div class="card">
-  <div class="card-header">§1 기본 정보</div>
-  <div class="card-body">
-    <div class="fg col3">
-      <div class="form-group"><label>실 명칭</label>
-        <input type="text" value="${esc(r.name)}" onchange="setRRefresh('name',this.value)">
+  el.innerHTML=`
+<div class="st" style="margin-top:0">${esc(r.name)} — 실 상세</div>
+
+<div class="card"><div class="ch">§1 기본 정보</div><div class="cb">
+  <div class="fg c3">
+    <div class="fv"><label>실 명칭</label><input type="text" value="${esc(r.name)}" onchange="sRr('name',this.value)"></div>
+    <div class="fv"><label>건물</label><select onchange="onBldgChange(this.value)">${bOpts}</select></div>
+    <div class="fv"><label>층</label><select onchange="onFloorChange(this.value)">${fOpts}</select></div>
+    <div class="fv"><label>실 용도 (선택 시 자동 세팅)</label><select onchange="setRoomType(this.value)">${tOpts}</select></div>
+    <div class="fv" style="grid-column:span 2"><label>비고</label><input type="text" value="${esc(r.note)}" onchange="sR('note',this.value)"></div>
+  </div>
+  <div class="fg fg5" style="margin-top:10px">
+    <div class="fv"><label>가로 (m)</label><input type="number" value="${r.width}" step="0.1" onchange="sRd('width',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>세로 (m)</label><input type="number" value="${r.depth}" step="0.1" onchange="sRd('depth',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>바닥면적 (m²) 자동</label><input class="au" readonly value="${f1(area)}"></div>
+    <div class="fv"><label>천장고(층고, m)</label><input type="number" value="${r.height}" step="0.1" onchange="sRd('height',parseFloat(this.value)||3.0)"></div>
+    <div class="fv"><label>체적 (m³) 자동</label><input class="au" readonly value="${f1(vol)}"></div>
+  </div>
+</div></div>
+
+<div class="card"><div class="ch">§2 실내 설계조건</div><div class="cb">
+  <div class="fg c2">
+    <div>
+      <div style="font-weight:700;color:var(--bl);font-size:11px;margin-bottom:6px">여름 (냉방)</div>
+      <div class="fgr" style="flex-wrap:wrap;gap:8px">
+        <label class="fgr" style="font-size:11px;gap:4px"><input type="checkbox" ${r.cdb===null?'checked':''} onchange="togCool(this.checked)"> 냉방없음</label>
+        ${r.cdb!==null?`
+        <div class="fv" style="flex:1"><label>설계온도 (℃ DB)</label><input type="number" value="${r.cdb}" step="0.5" onchange="sR('cdb',parseFloat(this.value)||26)"></div>
+        <div class="fv" style="flex:1"><label>습도 (%RH)</label><input type="number" value="${r.crh??''}" placeholder="관리없음" step="1" onchange="sR('crh',this.value===''?null:parseFloat(this.value))"></div>
+        `:`<span class="badge br">냉방 미적용</span>`}
       </div>
-      <div class="form-group"><label>층</label>
-        <select onchange="setR('floorId',this.value);renderRoomList()">${floorOpts}</select>
-      </div>
-      <div class="form-group"><label>실 용도 (선택 시 조건 자동 세팅)</label>
-        <select onchange="updateRoomType(this.value)">${typeOpts}</select>
-      </div>
-      <div class="form-group"><label>가로 (m)</label>
-        <input type="number" value="${r.width}" step="0.1" onchange="setRRefresh('width',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>세로 (m)</label>
-        <input type="number" value="${r.depth}" step="0.1" onchange="setRRefresh('depth',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>면적 (m²) — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt1(area)}">
-      </div>
-      <div class="form-group"><label>천장고 (층고, m)</label>
-        <input type="number" value="${r.height}" step="0.1" onchange="setRRefresh('height',parseFloat(this.value)||3.0)">
-      </div>
-      <div class="form-group"><label>체적 (m³) — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt1(vol)}">
-      </div>
-      <div class="form-group"><label>비고</label>
-        <input type="text" value="${esc(r.note)}" onchange="setR('note',this.value)">
+    </div>
+    <div>
+      <div style="font-weight:700;color:var(--red);font-size:11px;margin-bottom:6px">겨울 (난방)</div>
+      <div class="fgr" style="flex-wrap:wrap;gap:8px">
+        <label class="fgr" style="font-size:11px;gap:4px"><input type="checkbox" ${r.hdb===null?'checked':''} onchange="togHeat(this.checked)"> 난방없음</label>
+        ${r.hdb!==null?`
+        <div class="fv" style="flex:1"><label>설계온도 (℃ DB)</label><input type="number" value="${r.hdb}" step="0.5" onchange="sR('hdb',parseFloat(this.value)||5)"></div>
+        `:`<span class="badge br">난방 미적용</span>`}
       </div>
     </div>
   </div>
-</div>
+</div></div>
 
-<!-- §2 실내 설계조건 -->
-<div class="card">
-  <div class="card-header">§2 실내 설계조건 (실 용도 변경 시 자동 세팅, 수기 변경 가능)</div>
-  <div class="card-body">
-    <div class="fg col2">
-      <div>
-        <div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:8px">여름 (냉방)</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap">
-            <input type="checkbox" ${r.coolDB===null?'checked':''} onchange="toggleCoolDB(this.checked)"> 냉방없음
-          </label>
-          ${r.coolDB!==null?`
-          <div class="fg" style="grid-template-columns:1fr 1fr;gap:8px;flex:1">
-            <div class="form-group"><label>설계온도 (℃ DB)</label>
-              <input type="number" value="${r.coolDB}" step="0.5" onchange="setR('coolDB',parseFloat(this.value)||26)">
-            </div>
-            <div class="form-group"><label>설계습도 (%RH, — 이면 공란)</label>
-              <input type="number" value="${r.coolRH??''}" step="1" placeholder="관리없음"
-                onchange="setR('coolRH',this.value===''?null:parseFloat(this.value))">
-            </div>
-          </div>`:
-          `<span class="badge badge-gray">냉방 미적용</span>`}
-        </div>
-      </div>
-      <div>
-        <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:8px">겨울 (난방)</div>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <label style="display:flex;align-items:center;gap:4px;font-size:12px;white-space:nowrap">
-            <input type="checkbox" ${r.heatDB===null?'checked':''} onchange="toggleHeatDB(this.checked)"> 난방없음
-          </label>
-          ${r.heatDB!==null?`
-          <div class="form-group" style="flex:1"><label>설계온도 (℃ DB)</label>
-            <input type="number" value="${r.heatDB}" step="0.5" onchange="setR('heatDB',parseFloat(this.value)||5)">
-          </div>`:
-          `<span class="badge badge-gray">난방 미적용</span>`}
-        </div>
-      </div>
+<div class="card"><div class="ch">§3 외피 입력</div><div class="cb">
+  <div class="st" style="font-size:11px">외벽 (기본 U=0.24 W/m²K) — 길이×천장고=면적 자동</div>
+  <div class="tw"><table>
+    <thead><tr><th>방위</th><th>외기접함</th><th>길이 (m)</th><th>면적 (m²) 자동</th><th>U값 (W/m²K)</th></tr></thead>
+    <tbody>
+    ${['N','E','S','W'].map(d=>wallRow(d,r['wall'+d])).join('')}
+    </tbody>
+  </table></div>
+
+  <div class="st" style="font-size:11px;margin-top:12px">창문 (기본 SHGC=0.35, U=2.10 W/m²K) — 너비×높이=면적 자동</div>
+  <div class="tw"><table>
+    <thead><tr><th>방위</th><th>너비 (m)</th><th>높이 (m)</th><th>면적 (m²) 자동</th><th>SHGC</th><th>U값 (W/m²K)</th></tr></thead>
+    <tbody>
+    ${['N','E','S','W'].map(d=>winRow(d,r['win'+d])).join('')}
+    </tbody>
+  </table></div>
+
+  <div class="st" style="font-size:11px;margin-top:12px">내벽 (ΔT=1.25℃ 고정, 기본 U=2.08 W/m²K) — 길이×천장고=면적 자동</div>
+  <div class="tw"><table>
+    <thead><tr><th>번호</th><th>길이 (m)</th><th>면적 (m²) 자동</th><th>U값 (W/m²K)</th><th>ΔT (℃)</th></tr></thead>
+    <tbody>
+    ${iwRow(1,r.iw1,'가로')} ${iwRow(2,r.iw2,'세로')} ${iwRow(3,r.iw3,'')} ${iwRow(4,r.iw4,'')}
+    </tbody>
+  </table></div>
+
+  <div class="fg c3" style="margin-top:12px">
+    <div class="fv"><label>지붕 활성화</label>
+      <select onchange="sRd('roofOn',this.value==='true')">
+        <option value="false" ${!r.roofOn?'selected':''}>아니오</option>
+        <option value="true"  ${r.roofOn?'selected':''}>예 (최상층)</option>
+      </select>
+    </div>
+    <div class="fv"><label>지붕 면적 (m²) [기본=바닥면적]</label>
+      <input type="number" value="${r.roofA||f1(area)}" step="0.1" ${!r.roofOn?'disabled':''}
+        onchange="sR('roofA',parseFloat(this.value)||0)">
+    </div>
+    <div class="fv"><label>지붕 U값 (W/m²K)</label>
+      <input type="number" value="${r.roofU}" step="0.01" ${!r.roofOn?'disabled':''}
+        onchange="sR('roofU',parseFloat(this.value)||0.11)">
     </div>
   </div>
-</div>
-
-<!-- §3 외피 입력 -->
-<div class="card">
-  <div class="card-header">§3 외피 입력 (기본값: 외벽 0.24 / 창문 2.10 / 지붕 0.11 W/m²K)</div>
-  <div class="card-body">
-    <div class="stitle" style="font-size:12px">외벽 — 길이(m) 입력, 면적 = 길이 × 층고 자동</div>
-    <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>방위</th><th>길이 (m)</th><th>면적 (m²)<br>자동</th>
-        <th>외기 접함</th><th>U값 (W/m²K)</th><th class="no-print">삭제</th>
-      </tr></thead>
-      <tbody>
-      ${r.walls.map((w,wi)=>`<tr>
-        <td class="center"><select onchange="setWall(${wi},'dir',this.value)">${dir8opts(w.dir)}</select></td>
-        <td><input type="number" value="${w.length}" step="0.1" style="width:70px"
-          onchange="setWallRefresh(${wi},'length',parseFloat(this.value)||0)"></td>
-        <td class="auto center">${fmt1(w.length * r.height)}</td>
-        <td class="center"><input type="checkbox" ${w.isExt?'checked':''}
-          onchange="setWall(${wi},'isExt',this.checked)"></td>
-        <td><input type="number" value="${w.uWall}" step="0.01" style="width:70px"
-          onchange="setWall(${wi},'uWall',parseFloat(this.value)||0.24)"></td>
-        <td class="center no-print"><span style="color:var(--red);cursor:pointer" onclick="delWall(${wi})">✕</span></td>
-      </tr>`).join('')}
-      </tbody>
-    </table>
+  <div class="fg c3" style="margin-top:8px">
+    <div class="fv"><label>바닥 활성화 (외기 접함)</label>
+      <select onchange="sR('floorOn',this.value==='true')">
+        <option value="false" ${!r.floorOn?'selected':''}>아니오</option>
+        <option value="true"  ${r.floorOn?'selected':''}>예</option>
+      </select>
     </div>
-    <button class="btn btn-sm no-print" onclick="addWall()" style="margin-top:6px">+ 외벽 추가</button>
-
-    <div class="stitle" style="font-size:12px;margin-top:14px">창호 — 너비(m) × 높이(m), 면적 자동</div>
-    <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>방위</th><th>너비 (m)</th><th>높이 (m)</th><th>면적 (m²)<br>자동</th>
-        <th>유리 종류</th><th>SC 자동</th><th>U값 (W/m²K)</th><th class="no-print">삭제</th>
-      </tr></thead>
-      <tbody>
-      ${r.windows.map((w,wi)=>`<tr>
-        <td class="center"><select onchange="setWin(${wi},'dir',this.value)">${dir8opts(w.dir)}</select></td>
-        <td><input type="number" value="${w.winWidth}" step="0.1" style="width:60px"
-          onchange="setWinRefresh(${wi},'winWidth',parseFloat(this.value)||0)"></td>
-        <td><input type="number" value="${w.winHeight}" step="0.1" style="width:60px"
-          onchange="setWinRefresh(${wi},'winHeight',parseFloat(this.value)||0)"></td>
-        <td class="auto center">${fmt1(w.winWidth * w.winHeight)}</td>
-        <td><select style="min-width:120px" onchange="setWin(${wi},'sc',this.value)">
-          ${Object.keys(SC_VALUES).map(k=>`<option value="${k}" ${k===w.sc?'selected':''}>${k}</option>`).join('')}
-        </select></td>
-        <td class="auto center">${(SC_VALUES[w.sc]||0.45).toFixed(2)}</td>
-        <td><input type="number" value="${w.uWin}" step="0.01" style="width:70px"
-          onchange="setWin(${wi},'uWin',parseFloat(this.value)||2.10)"></td>
-        <td class="center no-print"><span style="color:var(--red);cursor:pointer" onclick="delWin(${wi})">✕</span></td>
-      </tr>`).join('')}
-      </tbody>
-    </table>
-    </div>
-    <button class="btn btn-sm no-print" onclick="addWin()" style="margin-top:6px">+ 창호 추가</button>
-
-    <div class="stitle" style="font-size:12px;margin-top:14px">지붕</div>
-    <div class="fg col3">
-      <div class="form-group"><label>지붕 면적 (m²)</label>
-        <input type="number" value="${r.roof.area}" step="0.1"
-          onchange="setR('roof',{...STATE.rooms[${ri}].roof,area:parseFloat(this.value)||0})">
-      </div>
-      <div class="form-group"><label>외기 접함</label>
-        <select onchange="setR('roof',{...STATE.rooms[${ri}].roof,isExt:this.value==='true'})">
-          <option value="false" ${!r.roof.isExt?'selected':''}>아니오</option>
-          <option value="true"  ${r.roof.isExt?'selected':''}>예</option>
-        </select>
-      </div>
-      <div class="form-group"><label>U값 (W/m²K)</label>
-        <input type="number" value="${r.roof.uRoof}" step="0.01"
-          onchange="setR('roof',{...STATE.rooms[${ri}].roof,uRoof:parseFloat(this.value)||0.11})">
-      </div>
+    <div class="fv"><label>바닥 U값 (W/m²K)</label>
+      <input type="number" value="${r.floorU}" step="0.01" ${!r.floorOn?'disabled':''}
+        onchange="sR('floorU',parseFloat(this.value)||2.08)">
     </div>
   </div>
-</div>
+</div></div>
 
-<!-- §4 내부 발열 -->
-<div class="card">
-  <div class="card-header">§4 내부 발열</div>
-  <div class="card-body">
-    <div class="fg col4">
-      <div class="form-group"><label>재실 밀도 (인/m²)</label>
-        <input type="number" value="${r.occDensity}" step="0.01"
-          onchange="setRRefresh('occDensity',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>재실인원 (인) — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt1(occ)}">
-      </div>
-      <div class="form-group"><label>인체발열 유형</label>
-        <select onchange="setR('occHeat',this.value)">${occHeatOpts}</select>
-      </div>
-      <div class="form-group"><label>현열/잠열 (W/인)</label>
-        <input readonly class="auto" value="${HUMAN_HEAT[r.occHeat]?.s||70} / ${HUMAN_HEAT[r.occHeat]?.l||60}">
-      </div>
-      <div class="form-group"><label>조명 (W/m²)</label>
-        <input type="number" value="${r.lightWm2}" step="1"
-          onchange="setRRefresh('lightWm2',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>형광등 보정계수</label>
-        <input type="number" value="${r.lightFactor}" step="0.01"
-          onchange="setRRefresh('lightFactor',parseFloat(this.value)||1.0)">
-      </div>
-      <div class="form-group" style="grid-column:span 2"><label>조명부하 (W) = W/m² × ${fmt1(area)} m² × ${r.lightFactor} — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt0(lightTotal)}">
-      </div>
-      <div class="form-group" style="grid-column:span 2"><label>기기·OA 발열 (W) — 직접입력</label>
-        <input type="number" value="${r.equipW}" step="100"
-          onchange="setR('equipW',parseFloat(this.value)||0)">
-      </div>
-    </div>
+<div class="card"><div class="ch">§4 INFILTRATION & 환기</div><div class="cb">
+  <div class="fg fg6">
+    <div class="fv"><label>INFILTRATION 횟수 (회/h)</label><input type="number" value="${r.infACH}" step="0.1" onchange="sRd('infACH',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>침입량 (m³/h) 자동</label><input class="au" readonly value="${f0(infCMH)}"></div>
+    <div class="fv"><label>환기 횟수 (회/h)</label><input type="number" value="${r.ventACH}" step="1" onchange="sRd('ventACH',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>필요환기량 (m³/h) 자동</label><input class="au" readonly value="${f0(ventCMH)}"></div>
   </div>
-</div>
+</div></div>
 
-<!-- §5 환기/침기 설정 -->
-<div class="card">
-  <div class="card-header">§5 환기 / 침기 설정</div>
-  <div class="card-body">
-    <div class="fg col4">
-      <div class="form-group"><label>침기 횟수 (회/h)</label>
-        <input type="number" value="${r.infACH}" step="0.1"
-          onchange="setRRefresh('infACH',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>침기량 (m³/h) — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt0(infCMH)}">
-      </div>
-      <div class="form-group"><label>환기 횟수 (회/h)</label>
-        <input type="number" value="${r.ventACH}" step="1"
-          onchange="setRRefresh('ventACH',parseFloat(this.value)||0)">
-      </div>
-      <div class="form-group"><label>환기량 (m³/h) — 자동</label>
-        <input type="number" class="auto" readonly value="${fmt0(ventCMH)}">
-      </div>
-    </div>
+<div class="card"><div class="ch">§5 내부 발열</div><div class="cb">
+  <div class="fg fg6">
+    <div class="fv"><label>재실 밀도 (인/m²)</label><input type="number" value="${r.od}" step="0.01" onchange="sRd('od',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="${f1(occ)}"></div>
+    <div class="fv"><label style="color:#888">현열 57 W/인 / 잠열 62 W/인 (고정)</label><input readonly value="57 / 62 W/인" style="background:var(--glr);color:var(--tsm)"></div>
+    <div class="fv"><label>조명 (W/m²)</label><input type="number" value="${r.lw}" step="1" onchange="sRd('lw',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>조명발열 (W) = ×1.08 자동</label><input class="au" readonly value="${f0(lightW)}"></div>
+    <div class="fv"><label>기기발열 (kW) ← 필수</label><input type="number" value="${r.eqKW}" step="0.1" onchange="sR('eqKW',parseFloat(this.value)||0)"></div>
   </div>
-</div>
+</div></div>
 
-<!-- §6 설비 선정 -->
-<div class="card">
-  <div class="card-header">§6 설비 선정 (용량계산서 탭에 자동 분류)</div>
-  <div class="card-body">
-    <div class="fg col3">
-      <div class="form-group"><label>냉방 설비</label>
-        <select onchange="setR('coolEquip',this.value)">
-          ${COOL_EQUIPS.map(e=>`<option value="${e}" ${e===r.coolEquip?'selected':''}>${e}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group"><label>난방 설비</label>
-        <select onchange="setR('heatEquip',this.value)">
-          ${HEAT_EQUIPS.map(e=>`<option value="${e}" ${e===r.heatEquip?'selected':''}>${e}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group"><label>환기 설비</label>
-        <select onchange="setR('ventEquip',this.value)">
-          ${VENT_EQUIPS.map(e=>`<option value="${e}" ${e===r.ventEquip?'selected':''}>${e}</option>`).join('')}
-        </select>
-      </div>
-    </div>
+<div class="card"><div class="ch">§6 설비 선정 (용량계산서 자동 분류)</div><div class="cb">
+  <div class="fg c3">
+    <div class="fv"><label>냉방 설비</label><select onchange="sR('ce',this.value)">${ceOpts}</select></div>
+    <div class="fv"><label>난방 설비</label><select onchange="sR('he',this.value)">${heOpts}</select></div>
+    <div class="fv"><label>환기 설비</label><select onchange="sR('ve',this.value)">${veOpts}</select></div>
   </div>
-</div>
+</div></div>
 `;
 }
 
 // ══════════════════════════════════════════════
 //  LOAD CALCULATION ENGINE
 // ══════════════════════════════════════════════
+function calcLE(room){
+  const p=STATE.project;
+  const outDB=p.cust||p.cdb, outWB=p.cwb, outH=p.hdb;
+  const area=gA(room), h=room.height, vol=area*h;
+  const infCMH=vol*room.infACH;
+  const occ=room.od*area;
+  const lightW=room.lw*area*1.08;
+  const eqW=room.eqKW*1000;
+  const roofA=room.roofA||area;
+  const dTc=room.cdb!==null?outDB-room.cdb:null;
+  const dTh=room.hdb!==null?room.hdb-outH:null;
+  const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
+  const outRH_val=RHfromWB(outDB,outWB);
 
-function calcCoolDetail(room, tIdx){
-  const p = STATE.project;
-  const outDB = p.outCustom || p.outCoolDB;
-  const dT = outDB - (room.coolDB || 26);
-  const area = getRoomArea(room);
-  const vol  = getRoomVol(room);
-  const dWB  = Math.max(0, p.outCoolWB - 19);
+  const DIRS=['N','E','S','W'];
 
-  let solar=0, wallCond=0, winCond=0, roofCond=0;
-  let infS=0, infL=0, ventS=0, ventL=0;
-  let occS=0, occL=0, light=0, equip=0;
-
-  room.windows.forEach(w=>{
-    const wA = w.winWidth * w.winHeight; if(!wA) return;
-    const sc = SC_VALUES[w.sc]||0.45;
-    const sol = (SOLAR_RADIATION[w.dir]||SOLAR_RADIATION['S'])[tIdx];
-    solar   += wA * sc * sol;
-    winCond += w.uWin * wA * dT;
+  // Per time-slot sensible items
+  const td=TIME_SLOTS.map((_,ti)=>{
+    if(dTc===null) return null;
+    // Solar gain by direction
+    const sg={N:0,E:0,S:0,W:0};
+    DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
+    // Wall conduction (time-independent ΔT)
+    const wc={N:0,E:0,S:0,W:0};
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en)wc[d]=wd.u*wd.len*h*dTc;});
+    // Roof
+    const rc=room.roofOn?room.roofU*roofA*(dTc+5):0;
+    // Glass conduction
+    const gc={N:0,E:0,S:0,W:0};
+    DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*dTc;});
+    // Interior walls
+    const iw=[
+      room.iw1.len>0?room.iw1.u*room.iw1.len*h*1.25:0,
+      room.iw2.len>0?room.iw2.u*room.iw2.len*h*1.25:0,
+      room.iw3.len>0?room.iw3.u*room.iw3.len*h*1.25:0,
+      room.iw4.len>0?room.iw4.u*room.iw4.len*h*1.25:0,
+    ];
+    const flC=room.floorOn?room.floorU*area*1.25:0;
+    const infS=infCMH*dTc*0.336;
+    const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS;
+    const st2=occ*57+eqW+lightW;
+    const rsh=st1+st2;
+    return {sg,wc,rc,gc,iw,flC,infS,st1,st2,rsh};
   });
 
-  room.walls.forEach(w=>{
-    if(!w.isExt) return;
-    const wA = w.length * room.height; if(!wA) return;
-    wallCond += w.uWall * wA * dT;
-  });
+  // Latent (time-independent)
+  const infL=room.cdb!==null?infCMH*dOm*833:0;
+  const pplL=room.cdb!==null?occ*62:0;
+  const rlh=infL+pplL;
 
-  if(room.roof.isExt && room.roof.area>0)
-    roofCond += room.roof.uRoof * room.roof.area * (dT + 5);
+  // Per-time totals
+  const tsh=td.map(d=>d?d.rsh*1.1:0);
+  const tlh=rlh*1.1;
+  const rth=tsh.map(s=>s+tlh);
+  const maxRth=Math.max(0,...rth);
+  const pkIdx=rth.indexOf(maxRth);
 
-  const infCMH  = vol * room.infACH;
-  const ventCMH = vol * room.ventACH;
-  infS  = 0.335 * infCMH  * dT;
-  infL  = 0.84  * infCMH  * dWB;
-  ventS = 0.335 * ventCMH * dT;
-  ventL = 0.84  * ventCMH * dWB;
+  // Heating
+  let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0;
+  if(dTh!==null){
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const v=wd.u*wd.len*h*dTh;if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}});
+    if(room.roofOn)hroof=room.roofU*roofA*dTh;
+    DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh;});
+    hinf=infCMH*0.336*dTh;
+  }
+  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf;
+  const totalH=Math.max(0,hRsh*1.1);
 
-  const occ = room.occDensity * area;
-  const hh  = HUMAN_HEAT[room.occHeat]||HUMAN_HEAT.default;
-  occS = occ * hh.s;
-  occL = occ * hh.l;
-  light = room.lightWm2 * area * room.lightFactor;
-  equip = room.equipW;
-
-  const total = solar+wallCond+winCond+roofCond+infS+infL+ventS+ventL+occS+occL+light+equip;
-  return {solar,wallCond,winCond,roofCond,infS,infL,ventS,ventL,occS,occL,light,equip,total:Math.max(0,total)};
-}
-
-function calcHeatDetail(room){
-  const p = STATE.project;
-  const outH = p.outCustom || p.outHeat;
-  const dT   = (room.heatDB||5) - outH;
-  const vol  = getRoomVol(room);
-
-  let wallCond=0, winCond=0, roofCond=0, infLoad=0, ventLoad=0;
-
-  room.walls.forEach(w=>{
-    if(!w.isExt) return;
-    const wA = w.length * room.height; if(!wA) return;
-    wallCond += w.uWall * wA * dT;
-  });
-  room.windows.forEach(w=>{
-    const wA = w.winWidth * w.winHeight; if(!wA) return;
-    winCond += w.uWin * wA * dT;
-  });
-  if(room.roof.isExt && room.roof.area>0)
-    roofCond += room.roof.uRoof * room.roof.area * dT;
-
-  infLoad  = 0.335 * vol * room.infACH  * dT;
-  ventLoad = 0.335 * vol * room.ventACH * dT;
-
-  const total = wallCond+winCond+roofCond+infLoad+ventLoad;
-  return {wallCond,winCond,roofCond,infLoad,ventLoad,total:Math.max(0,total)};
-}
-
-function getMaxCoolLoad(room){
-  if(room.coolLoadManual!==null) return room.coolLoadManual;
-  if(room.coolDB===null) return null;
-  return Math.max(...TIME_SLOTS.map((_,i)=>calcCoolDetail(room,i).total));
-}
-
-function getHeatLoad(room){
-  if(room.heatLoadManual!==null) return room.heatLoadManual;
-  if(room.heatDB===null) return null;
-  return calcHeatDetail(room).total;
+  return {
+    area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
+    dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
+    infL,pplL,rlh,
+    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hRsh,totalH,
+  };
 }
 
 // ══════════════════════════════════════════════
-//  LOAD CALC RENDER — AIR CONDITIONING LOAD ESTIMATE
+//  LOAD CALC RENDER
 // ══════════════════════════════════════════════
-
 function renderLoadCalc(){
-  const el = document.getElementById('load-calc-content');
-  if(!STATE.rooms.length){ el.innerHTML='<div class="empty-msg">② 실 목록 탭에서 실을 추가하세요.</div>'; return; }
+  const lc=document.getElementById('lcc');
+  if(!STATE.rooms.length){lc.innerHTML='<div class="empty">실을 추가하세요.</div>';return;}
+  const p=STATE.project;
+  const outDB=p.cust||p.cdb;
 
-  const p = STATE.project;
-  const sf = p.sfCool, sfH = p.sfHeat;
-  const outDB = p.outCustom || p.outCoolDB;
+  // Update room selector dropdown
+  const sel=document.getElementById('le-room-sel');
+  sel.innerHTML=STATE.rooms.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
 
-  const ROWS = [
-    {key:'solar',   label:'일사 (Solar Gain)',           klass:''},
-    {key:'wallCond',label:'전도 — 외벽 (Wall Cond.)',     klass:''},
-    {key:'winCond', label:'전도 — 창문 (Window Cond.)',   klass:''},
-    {key:'roofCond',label:'전도 — 지붕 (Roof Cond.)',     klass:''},
-    {key:'infS',    label:'침기 현열 (Inf. Sensible)',    klass:''},
-    {key:'infL',    label:'침기 잠열 (Inf. Latent)',      klass:''},
-    {key:'ventS',   label:'환기 현열 (Vent. Sensible)',   klass:''},
-    {key:'ventL',   label:'환기 잠열 (Vent. Latent)',     klass:''},
-    {key:'occS',    label:'인체 현열 (Occ. Sensible)',    klass:''},
-    {key:'occL',    label:'인체 잠열 (Occ. Latent)',      klass:''},
-    {key:'light',   label:'조명 (Lighting)',              klass:''},
-    {key:'equip',   label:'기기·OA (Equipment)',          klass:''},
-  ];
-
-  let html = '';
-
+  let html='';
   STATE.rooms.forEach(room=>{
-    const fl = STATE.floors.find(f=>f.id===room.floorId);
-    const area = getRoomArea(room);
-    const vol  = getRoomVol(room);
-    const coolNone = room.coolDB === null;
-    const heatNone = room.heatDB === null;
+    const {b,f}=getBF(room.bldgId,room.floorId);
+    const le=calcLE(room);
+    const cn=room.cdb===null;
+    const hn=room.hdb===null;
 
-    // Per time slot details
-    const details = TIME_SLOTS.map((_,i)=> coolNone ? null : calcCoolDetail(room,i));
-    const heatD = heatNone ? null : calcHeatDetail(room);
+    const DIRS=['N','E','S','W'];
+    const cHdr=TIME_SLOTS.map(t=>`<th>${t}:00</th>`).join('');
 
-    // Max cool
-    const subtotals   = details.map(d=>d?d.total:0);
-    const designLoads = subtotals.map(v=>v*sf);
-    const maxDesign   = Math.max(...designLoads);
-    const maxTIdx     = designLoads.indexOf(maxDesign);
+    const tdV=(ti,fn)=>le.td[ti]?fW(fn(le.td[ti])):'—';
+    const tdR=(fn)=>TIME_SLOTS.map((_,ti)=>`<td class="au">${cn?'—':tdV(ti,fn)}</td>`).join('');
+    const tdFixed=(v)=>TIME_SLOTS.map(()=>`<td class="au">${cn?'—':fW(v)}</td>`).join('');
 
-    const heatTotal   = heatD ? heatD.total : 0;
-    const heatDesign  = heatTotal * sfH;
-
-    html += `<div class="le-card">
-  <div class="le-header">
-    <div class="le-header-title">AIR CONDITIONING LOAD ESTIMATE</div>
-    <div class="le-header-info">
-      <span>프로젝트: <strong>${esc(p.name||'—')}</strong></span>
-      <span>작성일: <strong>${p.date||'—'}</strong></span>
-      <span>실 명칭: <strong>${esc(room.name)}</strong></span>
-      <span>층: <strong>${fl?fl.name:'—'}</strong></span>
-      <span>바닥면적: <strong>${fmt1(area)} m²</strong></span>
-      <span>체적: <strong>${fmt1(vol)} m³</strong></span>
-    </div>
+    html+=`<div class="lec" id="room-${room.id}">
+<div class="leh">
+  <div class="leh-t">AIR CONDITIONING LOAD ESTIMATE</div>
+  <div class="leh-g">
+    <span>BLDG NAME : <strong>${esc(b?.name||'—')}</strong></span>
+    <span>ROOM SIZE : <strong>${room.width}M × ${room.depth}M = ${f1(le.area)} ㎡</strong></span>
+    <span>ROOM NAME : <strong>${f?esc(f.name):''} ${esc(room.name)}</strong></span>
+    <span>PEOPLE : <strong>${room.od} P/㎡ = ${f1(le.occ)} PERSONS</strong></span>
+    <span>JOB NO. : <strong>${esc(p.jobNo||'—')}</strong></span>
+    <span>LIGHT : <strong>${room.lw} WATT/㎡</strong></span>
+    <span></span>
+    <span>INFILTRATION : <strong>${room.infACH} AIR CHANGE/h = ${f0(le.infCMH)} ㎥/h</strong></span>
   </div>
-  <div class="le-cond">
-    <span>외기(냉방): DB <strong>${outDB}°C</strong> / WB <strong>${p.outCoolWB}°C</strong></span>
-    <span>외기(난방): <strong>${p.outHeat}°C</strong></span>
-    <span>여름 실내: <strong>${room.coolDB!==null?room.coolDB+'°C'+(room.coolRH?'/'+room.coolRH+'%RH':''):'냉방없음'}</strong></span>
-    <span>겨울 실내: <strong>${room.heatDB!==null?room.heatDB+'°C':'난방없음'}</strong></span>
-    <span>안전율(냉/난): <strong>${sf} / ${sfH}</strong></span>
-  </div>
-  <div class="le-body">`;
+</div>
+<div class="lec-d">
+  <span style="font-weight:700;color:var(--nv)">DESIGN CONDITION</span>
+  <span>OUTSIDE(냉방): <strong>${outDB}℃ DB / ${p.cwb}℃ WB / ${le.outRH_val}% RH</strong></span>
+  <span>OUTSIDE(난방): <strong>${p.hdb}℃ DB</strong></span>
+  <span>ROOM(냉방): <strong>${room.cdb!==null?room.cdb+'℃ DB'+(room.crh?' / '+room.crh+'% RH':''):'냉방없음'}</strong></span>
+  <span>ROOM(난방): <strong>${room.hdb!==null?room.hdb+'℃ DB':'난방없음'}</strong></span>
+</div>
+<div class="lec-b">
+${cn?`<div class="no-cool">⚠ 냉방 미적용 — ${room.cdb===null?'냉방없음':`Max ${room.cdb}℃ (환기로 온도 제어)`}</div>`:''}
+<div class="tw"><table>
+<thead>
+  <tr><th style="text-align:left;min-width:200px">ITEM</th><th style="min-width:140px">기준</th>${cHdr}<th style="min-width:80px">난방 (W)</th></tr>
+</thead>
+<tbody>
 
-    // COOLING TABLE
-    if(coolNone){
-      html += `<div class="le-no-cool">⚠ 냉방 미적용 (${room.coolDB===null?'냉방없음':('Max '+room.coolDB+'°C 환기 온도제어')})</div>`;
-    } else {
-      html += `<div style="font-weight:700;font-size:12px;color:var(--blue);margin-bottom:6px">냉방부하 (COOLING LOAD, W)</div>
-      <div class="tbl-wrap"><table>
-      <thead><tr>
-        <th style="text-align:left;min-width:180px">구성 요소</th>
-        ${TIME_SLOTS.map(t=>`<th>${t}:00</th>`).join('')}
-      </tr></thead>
-      <tbody>`;
-
-      ROWS.forEach(row=>{
-        html += `<tr>
-          <td class="left">${row.label}</td>
-          ${details.map(d=>`<td class="auto">${fmtW(d?d[row.key]:0)}</td>`).join('')}
-        </tr>`;
-      });
-
-      html += `<tr style="background:#e0e7ff">
-        <td class="left" style="font-weight:700">소 계 (Sub-total, W)</td>
-        ${subtotals.map(v=>`<td class="auto" style="font-weight:700">${fmtW(v)}</td>`).join('')}
-      </tr>
-      <tr>
-        <td class="left" style="color:var(--tsm)">× 안전율 ${sf}</td>
-        ${designLoads.map(v=>`<td class="auto">${fmtW(v)}</td>`).join('')}
-      </tr>`;
-
-      // Max row
-      html += `<tr class="le-max-row">
-        <td class="left">▶ 최대 설계 냉방부하 (W) — ${TIME_SLOTS[maxTIdx]}:00 기준</td>
-        <td colspan="4" style="text-align:center;font-size:14px">${fmtW(maxDesign)} W &nbsp;=&nbsp; ${fmt1(maxDesign/1000)} kW</td>
-      </tr>`;
-
-      html += `</tbody></table></div>`;
-    }
-
-    // HEATING SECTION
-    html += `<div class="le-heat-section">
-      <div class="le-heat-title">난방부하 (HEATING LOAD)</div>`;
-
-    if(heatNone){
-      html += `<div style="text-align:center;color:var(--gray);font-size:12px">난방 미적용</div>`;
-    } else {
-      html += `<div class="tbl-wrap"><table>
-        <thead><tr><th style="text-align:left">구성 요소</th><th>값 (W)</th></tr></thead>
-        <tbody>
-        <tr><td class="left">전도 — 외벽</td><td class="auto">${fmtW(heatD.wallCond)}</td></tr>
-        <tr><td class="left">전도 — 창문</td><td class="auto">${fmtW(heatD.winCond)}</td></tr>
-        <tr><td class="left">전도 — 지붕</td><td class="auto">${fmtW(heatD.roofCond)}</td></tr>
-        <tr><td class="left">침기</td><td class="auto">${fmtW(heatD.infLoad)}</td></tr>
-        <tr><td class="left">환기</td><td class="auto">${fmtW(heatD.ventLoad)}</td></tr>
-        <tr style="background:#fce7e7"><td class="left" style="font-weight:700">소 계</td><td class="auto" style="font-weight:700">${fmtW(heatTotal)}</td></tr>
-        <tr><td class="left" style="color:var(--tsm)">× 안전율 ${sfH}</td><td class="auto">${fmtW(heatDesign)}</td></tr>
-        <tr style="background:#fee2e2"><td class="left" style="font-weight:700">▶ 설계 난방부하</td>
-          <td style="text-align:right;font-weight:700;color:var(--red)">${fmtW(heatDesign)} W = ${fmt1(heatDesign/1000)} kW</td></tr>
-        </tbody></table></div>`;
-    }
-    html += `</div>`; // heat section
-
-    html += `</div></div>`; // le-body, le-card
-  });
-
-  // SUMMARY TABLE
-  html += `<div class="card" style="margin-top:24px">
-    <div class="card-header">부하계산 집계표</div>
-    <div class="card-body">
-    <div class="tbl-wrap"><table>
-      <thead><tr>
-        <th>실 명칭</th><th>층</th><th>면적(m²)</th>
-        <th>최대냉방부하(W)</th><th>×${sf}(W)</th><th>kW</th>
-        <th>난방부하(W)</th><th>×${sfH}(W)</th><th>kW</th>
-      </tr></thead>
-      <tbody>`;
-
-  let totC=0, totH=0;
-  STATE.rooms.forEach(room=>{
-    const fl  = STATE.floors.find(f=>f.id===room.floorId);
-    const mc  = getMaxCoolLoad(room);
-    const hl  = getHeatLoad(room);
-    const mcd = mc!==null ? mc*sf : null;
-    const hld = hl!==null ? hl*sfH: null;
-    if(mcd) totC += mcd;
-    if(hld) totH += hld;
-    html += `<tr>
-      <td class="left">${esc(room.name)}</td>
-      <td class="center">${fl?fl.name:'—'}</td>
-      <td class="center">${fmt1(getRoomArea(room))}</td>
-      <td class="auto">${mc!==null?fmtW(mc):'—'}</td>
-      <td class="auto" style="font-weight:700">${mcd!==null?fmtW(mcd):'냉방없음'}</td>
-      <td class="auto">${mcd!==null?fmt1(mcd/1000):'—'}</td>
-      <td class="auto">${hl!==null?fmtW(hl):'—'}</td>
-      <td class="auto" style="color:var(--red);font-weight:700">${hld!==null?fmtW(hld):'난방없음'}</td>
-      <td class="auto">${hld!==null?fmt1(hld/1000):'—'}</td>
-    </tr>`;
-  });
-
-  html += `<tr class="tot">
-    <td class="left" colspan="4">전체 합계</td>
-    <td>${fmtW(totC)}</td><td>${fmt1(totC/1000)} kW</td>
-    <td></td>
-    <td>${fmtW(totH)}</td><td>${fmt1(totH/1000)} kW</td>
+<tr><td class="s0" colspan="7">태양복사열에 의한 부하 (SOLAR GAIN — GLASS)</td></tr>
+${DIRS.map(d=>{
+  const wn=room['win'+d];
+  const A=f1(wn.w*wn.h);
+  return `<tr>
+    <td class="L">GLASS ${d}</td>
+    <td class="L au">${A} ㎡ × SHGC ${wn.shgc}</td>
+    ${TIME_SLOTS.map((_,ti)=>`<td class="au">${cn?'—':fW(le.td[ti]?le.td[ti].sg[d]:0)}</td>`).join('')}
+    <td class="C">—</td>
   </tr>`;
+}).join('')}
 
-  html += `</tbody></table></div></div></div>`;
+<tr><td class="s0" colspan="7">전열에 의한 부하 (SOLAR &amp; TRANS GAIN — WALLS &amp; ROOF)</td></tr>
+${DIRS.map(d=>{
+  const wd=room['wall'+d];
+  if(!wd.en&&wd.len===0&&le.hwN+le.hwE+le.hwS+le.hwW===0)return`<tr><td class="L">OUT.WALL ${d}</td><td class="au C">비활성</td>${TIME_SLOTS.map(()=>'<td class="au">0</td>').join('')}<td class="au">0</td></tr>`;
+  const A=f1(wd.len*room.height);
+  const hv=d==='N'?le.hwN:d==='E'?le.hwE:d==='S'?le.hwS:le.hwW;
+  return `<tr>
+    <td class="L">OUT.WALL ${d}</td>
+    <td class="L au">${A} ㎡ × ΔT ${le.dTc!==null?le.dTc.toFixed(1):'—'}℃</td>
+    ${tdFixed(le.td&&le.td[0]?le.td[0].wc[d]:0)}
+    <td class="au ${hv>0?'ht':''}">${hn?'—':fW(hv)}</td>
+  </tr>`;
+}).join('')}
+<tr>
+  <td class="L">ROOF</td>
+  <td class="L au">${room.roofOn?f1(le.roofA)+' ㎡':'비활성'}</td>
+  ${tdFixed(le.td&&le.td[0]?le.td[0].rc:0)}
+  <td class="au ${le.hroof>0?'ht':''}">${hn?'—':fW(le.hroof)}</td>
+</tr>
 
-  el.innerHTML = html;
+<tr><td class="s0" colspan="7">전열에 의한 부하 (TRANS. GAIN EXCEPT WALLS &amp; ROOF)</td></tr>
+${DIRS.map(d=>{
+  const wn=room['win'+d];
+  const A=f1(wn.w*wn.h);
+  const hv=le.hglass/4;
+  return `<tr>
+    <td class="L">GLASS ${d}</td>
+    <td class="L au">${A} ㎡ × ΔT ${le.dTc!==null?le.dTc.toFixed(1):'—'}℃</td>
+    ${tdFixed(le.td&&le.td[0]?le.td[0].gc[d]:0)}
+    <td class="au ${le.hglass>0?'ht':''}">${hn?'—':fW(le.hglass/4)}</td>
+  </tr>`;
+}).join('')}
+${[1,2,3,4].map(n=>{
+  const iw=room['iw'+n];
+  return `<tr>
+    <td class="L">INT.WALL (${n})</td>
+    <td class="L au">${f1(iw.len*room.height)} ㎡ × ΔT 1.25℃</td>
+    ${tdFixed(le.td&&le.td[0]?le.td[0].iw[n-1]:0)}
+    <td class="C">—</td>
+  </tr>`;
+}).join('')}
+<tr>
+  <td class="L">FLOOR</td>
+  <td class="L au">${room.floorOn?f1(le.area)+' ㎡ × ΔT 1.25℃':'비활성'}</td>
+  ${tdFixed(le.td&&le.td[0]?le.td[0].flC:0)}
+  <td class="C">—</td>
+</tr>
+<tr>
+  <td class="L">INFILTRATION</td>
+  <td class="L au">${f0(le.infCMH)} ㎥/h × ΔT ${le.dTc!==null?le.dTc.toFixed(1):'—'}℃ × 0.336</td>
+  ${tdFixed(le.td&&le.td[0]?le.td[0].infS:0)}
+  <td class="au ${le.hinf>0?'ht':''}">${hn?'—':fW(le.hinf)}</td>
+</tr>
+
+<tr style="background:#e8eef6">
+  <td class="L tot" colspan="2">SUB TOTAL</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="tot">${cn?'—':fW(le.td[ti]?le.td[ti].st1:0)}</td>`).join('')}
+  <td class="tot ${le.hRsh>0?'ht':''}">${hn?'—':fW(le.hwN+le.hwE+le.hwS+le.hwW+le.hroof+le.hglass+le.hinf)}</td>
+</tr>
+
+<tr><td class="L" colspan="2">PEOPLE : ${f1(le.occ)} 인 × 57 W/인</td>${tdFixed(le.occ*57)}<td class="C">—</td></tr>
+<tr><td class="L" colspan="2">POWER : ${room.eqKW} kW × 1,000 W/kW</td>${tdFixed(le.eqW)}<td class="C">—</td></tr>
+<tr><td class="L" colspan="2">LIGHT : ${f0(room.lw*le.area)} W × 1.08</td>${tdFixed(le.lightW)}<td class="C">—</td></tr>
+<tr><td class="L" colspan="2">MISCELLANEOUS</td>${TIME_SLOTS.map(()=>'<td class="au">0</td>').join('')}<td class="C">—</td></tr>
+
+<tr style="background:#e8eef6">
+  <td class="L tot" colspan="2">SUB TOTAL</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="tot">${cn?'—':fW(le.td[ti]?le.td[ti].st2:0)}</td>`).join('')}
+  <td class="tot">—</td>
+</tr>
+<tr>
+  <td class="L rsh" colspan="2">ROOM SENSIBLE HEAT SUB TOTAL</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="rsh">${cn?'—':fW(le.td[ti]?le.td[ti].rsh:0)}</td>`).join('')}
+  <td class="ht">${hn?'—':fW(le.hRsh)}</td>
+</tr>
+<tr>
+  <td class="L" colspan="2" style="color:var(--tsm)">SAFETY FACTOR 10%</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="au">${cn?'—':fW(le.td[ti]?le.td[ti].rsh*0.1:0)}</td>`).join('')}
+  <td class="au">${hn?'—':fW(le.hRsh*0.1)}</td>
+</tr>
+<tr>
+  <td class="L tot" colspan="2">TOTAL SENSIBLE HEAT</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="tot">${cn?'—':fW(le.tsh[ti])}</td>`).join('')}
+  <td class="ht" style="font-weight:700">${hn?'—':fW(le.totalH)}</td>
+</tr>
+
+<tr><td class="s0" colspan="7">ROOM LATENT HEAT (잠열)</td></tr>
+<tr><td class="L" colspan="2">INFILTRATION : ${f0(le.infCMH)} ㎥/h × ${le.dOm.toFixed(4)} × 833</td>${tdFixed(le.infL)}<td class="C">—</td></tr>
+<tr><td class="L" colspan="2">PEOPLE : ${f1(le.occ)} 인 × 62 W/인</td>${tdFixed(le.pplL)}<td class="C">—</td></tr>
+<tr style="background:#e8eef6">
+  <td class="L tot" colspan="2">ROOM LATENT HEAT SUB TOTAL</td>
+  ${tdFixed(le.rlh)}
+  <td class="tot">—</td>
+</tr>
+<tr><td class="L" colspan="2" style="color:var(--tsm)">SAFETY FACTOR 10%</td>${tdFixed(le.rlh*0.1)}<td>—</td></tr>
+<tr><td class="L tot" colspan="2">TOTAL LATENT HEAT</td>${tdFixed(le.tlh)}<td class="tot">—</td></tr>
+
+<tr>
+  <td class="L pk" colspan="2">ROOM TOTAL HEAT</td>
+  ${TIME_SLOTS.map((_,ti)=>`<td class="${ti===le.pkIdx?'pk':'au'}">${cn?'—':fW(le.rth[ti])}</td>`).join('')}
+  <td class="C">—</td>
+</tr>
+<tr style="background:#fef9c3">
+  <td class="L" colspan="2" style="font-weight:700;color:#92400e">
+    COOLING GRAND TOTAL LOAD: ${le.area>0?f1(le.maxRth/le.area):'—'} W/㎡
+  </td>
+  <td colspan="4" style="text-align:center;font-weight:700;color:#92400e">
+    ${cn?'냉방 미적용':fW(le.maxRth)+' W (▶ '+TIME_SLOTS[le.pkIdx]+':00 기준)'}
+  </td>
+  <td></td>
+</tr>
+<tr style="background:#fee2e2">
+  <td class="L" colspan="2" style="font-weight:700;color:var(--red)">
+    HEATING GRAND TOTAL LOAD: ${le.area>0?f1(le.totalH/le.area):'—'} W/㎡
+  </td>
+  <td colspan="5" style="text-align:center;font-weight:700;color:var(--red)">
+    ${hn?'난방 미적용':fW(le.totalH)+' W'}
+  </td>
+</tr>
+
+</tbody></table></div>
+</div></div>`;
+  });
+
+  lc.innerHTML=html;
+}
+
+function scrollToRoom(id){
+  const el=document.getElementById('room-'+id);
+  if(el)el.scrollIntoView({behavior:'smooth'});
 }
 
 // ══════════════════════════════════════════════
 //  CAPACITY CALC
 // ══════════════════════════════════════════════
-
-const CAP_TABS = [
-  {key:'PAC',   label:'PAC'},
-  {key:'EHP',   label:'EHP'},
-  {key:'CTH',   label:'CTH'},
-  {key:'AHU',   label:'AHU'},
-  {key:'FCU',   label:'FCU'},
-  {key:'유니트히터', label:'유니트히터'},
-  {key:'라디에이터', label:'라디에이터'},
-  {key:'환기설비', label:'환기설비'},
-  {key:'요약',  label:'전체 요약'},
+const CAP_TABS=[
+  {k:'PAC',lb:'PAC'},{k:'EHP실내기',lb:'EHP실내기'},{k:'EHP실외기',lb:'EHP실외기'},
+  {k:'CTH',lb:'CTH'},{k:'전열교환기',lb:'전열교환기'},
+  {k:'인라인덕트팬',lb:'인라인덕트팬'},{k:'천정형팬',lb:'천정형팬'},
+  {k:'벽부형팬',lb:'벽부형팬'},{k:'루프팬',lb:'루프팬'},
+  {k:'유니트히터',lb:'유니트히터'},{k:'라디에이터',lb:'라디에이터'},
+  {k:'전기온수기',lb:'전기온수기'},
 ];
 
-function setCapTab(k){ capSubTab=k; renderCapCalc(); }
+function setCapTab(k){capTab=k;renderCapCalc();}
 
-function setCC(roomId, field, val){
-  const r = STATE.rooms.find(x=>x.id===roomId);
-  if(r) r.capCool[field] = val;
+function sCC(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capC[f]=v;}
+function sCEo(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capEo[f]=v;}
+function sCH(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capH[f]=v;}
+function sCV(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capV[f]=v;}
+function sCHW(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capHW[f]=v;}
+
+function getMaxCool(room){
+  if(room.cdb===null)return null;
+  const le=calcLE(room); return Math.max(0,...le.rth);
 }
-function setCH(roomId, field, val){
-  const r = STATE.rooms.find(x=>x.id===roomId);
-  if(r) r.capHeat[field] = val;
-}
-function setCV(roomId, field, val){
-  const r = STATE.rooms.find(x=>x.id===roomId);
-  if(r) r.capVent[field] = val;
+function getHeatLoad(room){
+  if(room.hdb===null)return null;
+  return calcLE(room).totalH;
 }
 
 function renderCapCalc(){
-  // Sub-tab buttons
-  const stEl = document.getElementById('cap-subtabs');
-  stEl.innerHTML = CAP_TABS.map(t=>
-    `<button class="csub-btn ${capSubTab===t.key?'active':''} no-print" onclick="setCapTab('${t.key}')">${t.label}</button>`
+  document.getElementById('cst').innerHTML=CAP_TABS.map(t=>
+    `<button class="csb ${capTab===t.k?'on':''} no-print" onclick="setCapTab('${t.k}')">${t.lb}</button>`
   ).join('');
 
-  const el = document.getElementById('cap-content');
-  const p  = STATE.project;
+  const el=document.getElementById('cc');
+  const p=STATE.project;
 
-  if(capSubTab === '요약'){
-    renderCapSummary(el); return;
-  }
-
-  if(capSubTab === '환기설비'){
-    renderCapVent(el); return;
-  }
-
-  if(capSubTab === '유니트히터' || capSubTab === '라디에이터'){
-    renderCapHeat(el, capSubTab); return;
-  }
-
-  // Cooling equipment tab (PAC, EHP, CTH, AHU, FCU)
-  const rooms = STATE.rooms.filter(r=>r.coolEquip===capSubTab);
-  if(!rooms.length){
-    el.innerHTML=`<div class="empty-msg">${capSubTab}로 선택된 실이 없습니다.<br><small>② 실 목록 탭 → §6 설비 선정에서 냉방 설비를 선택하세요.</small></div>`;
-    return;
-  }
-
-  let html = `<div class="card">
-    <div class="card-header">${capSubTab} 냉방 용량계산서</div>
-    <div class="card-body">
-    <div class="tbl-wrap"><table>
-      <thead><tr>
-        <th>실 명칭</th><th>층</th><th>면적(m²)</th>
-        <th>최대냉방부하(W)</th><th>선정용량(W)</th><th>수량</th>
-        <th>형식/모델</th><th>소비전력(kW)</th><th>전원</th>
-        <th>냉매</th><th>가스관(mm)</th><th>액관(mm)</th><th>비고</th>
-      </tr></thead>
-      <tbody>`;
-
-  let totLoad=0, totCap=0;
-  rooms.forEach(r=>{
-    const fl  = STATE.floors.find(f=>f.id===r.floorId);
-    const mc  = getMaxCoolLoad(r);
-    const mcd = mc!==null ? mc*p.sfCool : 0;
-    totLoad += mcd;
-    totCap  += (r.capCool.capacity||0) * (r.capCool.count||1);
-    const rid = r.id;
-    html += `<tr>
-      <td class="left">${esc(r.name)}</td>
-      <td class="center">${fl?fl.name:'—'}</td>
-      <td class="center">${fmt1(getRoomArea(r))}</td>
-      <td class="auto" style="font-weight:700">${mcd?fmtW(mcd):'냉방없음'}</td>
-      <td><input type="number" value="${r.capCool.capacity||''}" step="100" placeholder="W"
-        onchange="setCC('${rid}','capacity',parseFloat(this.value)||0)"></td>
-      <td><input type="number" value="${r.capCool.count||1}" min="1" style="width:50px"
-        onchange="setCC('${rid}','count',parseInt(this.value)||1)"></td>
-      <td><input type="text" value="${esc(r.capCool.model)}" placeholder="형식/모델"
-        onchange="setCC('${rid}','model',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.power)}" placeholder="kW"
-        onchange="setCC('${rid}','power',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.voltage)}" placeholder="3φ/220V/60Hz"
-        onchange="setCC('${rid}','voltage',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.refrigerant)}" placeholder="R-410A"
-        onchange="setCC('${rid}','refrigerant',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.gasLine)}" placeholder="Ø mm"
-        onchange="setCC('${rid}','gasLine',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.liquidLine)}" placeholder="Ø mm"
-        onchange="setCC('${rid}','liquidLine',this.value)"></td>
-      <td><input type="text" value="${esc(r.capCool.note)}"
-        onchange="setCC('${rid}','note',this.value)"></td>
-    </tr>`;
-  });
-
-  html += `<tr class="tot">
-    <td class="left" colspan="3">합 계</td>
-    <td>${fmtW(totLoad)}</td>
-    <td>${fmtW(totCap)}</td>
-    <td colspan="8"></td>
-  </tr>`;
-
-  html += `</tbody></table></div></div></div>`;
-  el.innerHTML = html;
-}
-
-function renderCapHeat(el, type){
-  const rooms = STATE.rooms.filter(r=>r.heatEquip===type);
-  if(!rooms.length){
-    el.innerHTML=`<div class="empty-msg">${type}로 선택된 실이 없습니다.</div>`; return;
-  }
-  const p = STATE.project;
-  let html = `<div class="card">
-    <div class="card-header">${type} 난방 용량계산서</div>
-    <div class="card-body"><div class="tbl-wrap"><table>
+  // COOLING EQUIP TABS (PAC, EHP실내기, CTH)
+  if(['PAC','EHP실내기','CTH'].includes(capTab)){
+    const ceKey=capTab==='EHP실내기'?'EHP':capTab;
+    const rooms=STATE.rooms.filter(r=>r.ce===ceKey);
+    if(!rooms.length){el.innerHTML=`<div class="empty">${capTab}로 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 냉방 설비를 선택하세요.</small></div>`;return;}
+    let totL=0,totC=0;
+    let html=`<div class="card"><div class="ch">${capTab} 냉방 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
-      <th>실 명칭</th><th>층</th><th>최대난방부하(W)</th>
-      <th>수량</th><th>용량(W)</th><th>풍량(CMH)</th>
-      <th>팬모터(kW)</th><th>전원</th><th>비고</th>
+      <th>실명</th><th>건물</th><th>층</th><th>면적(㎡)</th>
+      <th>최대냉방부하(W)</th><th>선정기준(W)<br>×1.1</th>
+      <th>수량</th><th>형식/모델</th><th>냉방용량(W)</th><th>난방용량(W)</th>
+      <th>소비전력(kW)</th><th>전원</th><th>냉매</th><th>가스관(mm)</th><th>액관(mm)</th><th>비고</th>
     </tr></thead><tbody>`;
-
-  let totLoad=0;
-  rooms.forEach(r=>{
-    const fl  = STATE.floors.find(f=>f.id===r.floorId);
-    const hl  = getHeatLoad(r);
-    const hld = hl!==null ? hl*p.sfHeat : 0;
-    totLoad += hld;
-    const rid = r.id;
-    html += `<tr>
-      <td class="left">${esc(r.name)}</td>
-      <td class="center">${fl?fl.name:'—'}</td>
-      <td class="auto" style="color:var(--red);font-weight:700">${hld?fmtW(hld):'난방없음'}</td>
-      <td><input type="number" value="${r.capHeat.count||1}" min="1" style="width:50px"
-        onchange="setCH('${rid}','count',parseInt(this.value)||1)"></td>
-      <td><input type="number" value="${r.capHeat.capacity||''}" step="100" placeholder="W"
-        onchange="setCH('${rid}','capacity',parseFloat(this.value)||0)"></td>
-      <td><input type="number" value="${r.capHeat.airflow||''}" step="10" placeholder="CMH"
-        onchange="setCH('${rid}','airflow',parseFloat(this.value)||0)"></td>
-      <td><input type="text" value="${esc(r.capHeat.fanPower)}" placeholder="kW"
-        onchange="setCH('${rid}','fanPower',this.value)"></td>
-      <td><input type="text" value="${esc(r.capHeat.voltage)}" placeholder="전원"
-        onchange="setCH('${rid}','voltage',this.value)"></td>
-      <td><input type="text" value="${esc(r.capHeat.note)}"
-        onchange="setCH('${rid}','note',this.value)"></td>
-    </tr>`;
-  });
-
-  html += `<tr class="tot"><td class="left" colspan="2">합 계</td>
-    <td>${fmtW(totLoad)}</td><td colspan="6"></td></tr>`;
-  html += `</tbody></table></div></div></div>`;
-  el.innerHTML = html;
-}
-
-function renderCapVent(el){
-  const VENT_TYPES_FAN = ['전열교환기','인라인덕트팬','벽부형팬','루프팬'];
-  const rooms = STATE.rooms.filter(r=>VENT_TYPES_FAN.includes(r.ventEquip));
-  if(!rooms.length){
-    el.innerHTML=`<div class="empty-msg">환기설비가 선택된 실이 없습니다.</div>`; return;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const mc=getMaxCool(r); const mcd=mc!==null?mc:0; const std=mcd*1.1;
+      totL+=mcd; totC+=(r.capC.cc||0)*(r.capC.cnt||1);
+      const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au C">${f1(gA(r))}</td>
+        <td class="au">${mc!==null?fW(mcd):'냉방없음'}</td>
+        <td class="au">${mc!==null?fW(std):'—'}</td>
+        <td><input type="number" value="${r.capC.cnt||1}" min="1" style="width:45px" onchange="sCC('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capC.model)}" placeholder="모델명" onchange="sCC('${rid}','model',this.value)"></td>
+        <td><input type="number" value="${r.capC.cc||''}" step="100" placeholder="W" onchange="sCC('${rid}','cc',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capC.hc||''}" step="100" placeholder="W" onchange="sCC('${rid}','hc',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capC.pw)}" placeholder="kW" onchange="sCC('${rid}','pw',this.value)"></td>
+        <td><input type="text" value="${esc(r.capC.volt)}" placeholder="전원" onchange="sCC('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capC.ref)}" placeholder="R-410A" onchange="sCC('${rid}','ref',this.value)"></td>
+        <td><input type="text" value="${esc(r.capC.gas)}" placeholder="Ø" onchange="sCC('${rid}','gas',this.value)"></td>
+        <td><input type="text" value="${esc(r.capC.liq)}" placeholder="Ø" onchange="sCC('${rid}','liq',this.value)"></td>
+        <td><input type="text" value="${esc(r.capC.note)}" onchange="sCC('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr class="tot"><td class="L" colspan="4">합 계</td><td>${fW(totL)}</td><td>${fW(totL*1.1)}</td><td colspan="10"></td></tr>`;
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
   }
 
-  let html = `<div class="card">
-    <div class="card-header">환기설비 용량계산서</div>
-    <div class="card-body"><div class="tbl-wrap"><table>
+  // EHP 실외기
+  if(capTab==='EHP실외기'){
+    const rooms=STATE.rooms.filter(r=>r.ce==='EHP');
+    if(!rooms.length){el.innerHTML='<div class="empty">EHP로 선택된 실이 없습니다.</div>';return;}
+    let html=`<div class="card"><div class="ch">EHP 실외기 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
-      <th>실 명칭</th><th>층</th><th>환기방식</th>
-      <th>필요환기량(m³/h)</th>
-      <th>수량</th><th>팬번호(Ø)</th><th>동력전달</th>
+      <th>실명</th><th>건물</th><th>층</th><th>면적(㎡)</th>
+      <th>최대냉방부하(W)</th><th>수량</th><th>형식/모델</th>
+      <th>냉방용량(W)</th><th>난방용량(W)</th><th>소비전력(kW)</th>
+      <th>전원</th><th>냉매</th><th>가스관(mm)</th><th>액관(mm)</th><th>비고</th>
+    </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const mc=getMaxCool(r); const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au C">${f1(gA(r))}</td>
+        <td class="au">${mc!==null?fW(mc):'—'}</td>
+        <td><input type="number" value="${r.capEo.cnt||1}" min="1" style="width:45px" onchange="sCEo('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capEo.model)}" onchange="sCEo('${rid}','model',this.value)"></td>
+        <td><input type="number" value="${r.capEo.cc||''}" step="100" placeholder="W" onchange="sCEo('${rid}','cc',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capEo.hc||''}" step="100" placeholder="W" onchange="sCEo('${rid}','hc',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capEo.pw)}" placeholder="kW" onchange="sCEo('${rid}','pw',this.value)"></td>
+        <td><input type="text" value="${esc(r.capEo.volt)}" onchange="sCEo('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capEo.ref)}" placeholder="R-410A" onchange="sCEo('${rid}','ref',this.value)"></td>
+        <td><input type="text" value="${esc(r.capEo.gas)}" placeholder="Ø" onchange="sCEo('${rid}','gas',this.value)"></td>
+        <td><input type="text" value="${esc(r.capEo.liq)}" placeholder="Ø" onchange="sCEo('${rid}','liq',this.value)"></td>
+        <td><input type="text" value="${esc(r.capEo.note)}" onchange="sCEo('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
+
+  // 전열교환기
+  if(capTab==='전열교환기'){
+    const rooms=STATE.rooms.filter(r=>r.ve==='전열교환기');
+    if(!rooms.length){el.innerHTML='<div class="empty">전열교환기로 선택된 실이 없습니다.</div>';return;}
+    let totV=0;
+    let html=`<div class="card"><div class="ch">전열교환기 용량계산서</div><div class="cb"><div class="tw"><table>
+    <thead><tr>
+      <th>실명</th><th>건물</th><th>층</th><th>필요환기량(m³/h)</th>
+      <th>수량</th><th>급기풍량(CMH)</th><th>배기풍량(CMH)</th>
+      <th>정압(Pa)</th><th>팬모터(kW)</th><th>전원</th><th>비고</th>
+    </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const need=gV(r)*r.ventACH; totV+=need; const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au">${fW(need)}</td>
+        <td><input type="number" value="${r.capV.cnt||1}" min="1" style="width:45px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capV.eaf||''}" step="10" placeholder="CMH" onchange="sCV('${rid}','eaf',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capV.mp)}" placeholder="kW" onchange="sCV('${rid}','mp',this.value)"></td>
+        <td><input type="text" value="${esc(r.capV.volt)}" onchange="sCV('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capV.note)}" onchange="sCV('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr class="tot"><td class="L" colspan="3">합 계 필요환기량</td><td>${fW(totV)} m³/h</td><td colspan="7"></td></tr>`;
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
+
+  // 팬 탭 (인라인덕트팬, 천정형팬, 벽부형팬, 루프팬)
+  if(['인라인덕트팬','천정형팬','벽부형팬','루프팬'].includes(capTab)){
+    const rooms=STATE.rooms.filter(r=>r.ve===capTab);
+    if(!rooms.length){el.innerHTML=`<div class="empty">${capTab}로 선택된 실이 없습니다.</div>`;return;}
+    let totV=0;
+    let html=`<div class="card"><div class="ch">${capTab} 용량계산서</div><div class="cb"><div class="tw"><table>
+    <thead><tr>
+      <th>실명</th><th>건물</th><th>층</th><th>필요환기량(m³/h)</th>
+      <th>수량</th><th>팬번호(Ø mm)</th><th>동력전달</th>
       <th>풍량(CMH)</th><th>정압(Pa)</th><th>모터동력(kW)</th><th>전원</th><th>비고</th>
     </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const need=gV(r)*r.ventACH; totV+=need; const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au">${fW(need)}</td>
+        <td><input type="number" value="${r.capV.cnt||1}" min="1" style="width:45px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capV.fno)}" placeholder="Ø200" onchange="sCV('${rid}','fno',this.value)"></td>
+        <td><select onchange="sCV('${rid}','drv',this.value)"><option ${r.capV.drv==='직결'?'selected':''}>직결</option><option ${r.capV.drv==='벨트'?'selected':''}>벨트</option></select></td>
+        <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capV.mp)}" placeholder="kW" onchange="sCV('${rid}','mp',this.value)"></td>
+        <td><input type="text" value="${esc(r.capV.volt)}" onchange="sCV('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capV.note)}" onchange="sCV('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr class="tot"><td class="L" colspan="3">합 계</td><td>${fW(totV)} m³/h</td><td colspan="8"></td></tr>`;
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
 
-  let totVent=0;
-  rooms.forEach(r=>{
-    const fl      = STATE.floors.find(f=>f.id===r.floorId);
-    const needCMH = getRoomVol(r) * r.ventACH;
-    totVent += needCMH;
-    const rid = r.id;
-    html += `<tr>
-      <td class="left">${esc(r.name)}</td>
-      <td class="center">${fl?fl.name:'—'}</td>
-      <td class="center">${r.ventEquip}</td>
-      <td class="auto">${fmtW(needCMH)}</td>
-      <td><input type="number" value="${r.capVent.count||1}" min="1" style="width:50px"
-        onchange="setCV('${rid}','count',parseInt(this.value)||1)"></td>
-      <td><input type="text" value="${esc(r.capVent.fanNo)}" placeholder="Ø200"
-        onchange="setCV('${rid}','fanNo',this.value)"></td>
-      <td><select onchange="setCV('${rid}','drive',this.value)">
-        <option ${r.capVent.drive==='직결'?'selected':''}>직결</option>
-        <option ${r.capVent.drive==='벨트'?'selected':''}>벨트</option>
-      </select></td>
-      <td><input type="number" value="${r.capVent.airflow||''}" step="10" placeholder="CMH"
-        onchange="setCV('${rid}','airflow',parseFloat(this.value)||0)"></td>
-      <td><input type="number" value="${r.capVent.staticPressure||''}" step="5" placeholder="Pa"
-        onchange="setCV('${rid}','staticPressure',parseFloat(this.value)||0)"></td>
-      <td><input type="text" value="${esc(r.capVent.motorPower)}" placeholder="kW"
-        onchange="setCV('${rid}','motorPower',this.value)"></td>
-      <td><input type="text" value="${esc(r.capVent.voltage)}" placeholder="전원"
-        onchange="setCV('${rid}','voltage',this.value)"></td>
-      <td><input type="text" value="${esc(r.capVent.note)}"
-        onchange="setCV('${rid}','note',this.value)"></td>
-    </tr>`;
-  });
-
-  html += `<tr class="tot"><td class="left" colspan="3">합 계 필요환기량</td>
-    <td>${fmtW(totVent)} m³/h</td><td colspan="8"></td></tr>`;
-  html += `</tbody></table></div></div></div>`;
-  el.innerHTML = html;
-}
-
-function renderCapSummary(el){
-  const p = STATE.project;
-  let html = `<div class="card">
-    <div class="card-header">용량계산 전체 요약</div>
-    <div class="card-body"><div class="tbl-wrap"><table>
+  // 유니트히터
+  if(capTab==='유니트히터'){
+    const rooms=STATE.rooms.filter(r=>r.he==='유니트히터');
+    if(!rooms.length){el.innerHTML='<div class="empty">유니트히터로 선택된 실이 없습니다.</div>';return;}
+    let totH=0;
+    let html=`<div class="card"><div class="ch">유니트히터 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
-      <th>실 명칭</th><th>층</th><th>면적(m²)</th>
-      <th>최대냉방부하(W)</th><th>설계냉방(W)</th><th>냉방설비</th>
-      <th>난방부하(W)</th><th>설계난방(W)</th><th>난방설비</th>
-      <th>필요환기(m³/h)</th><th>환기설비</th>
+      <th>실명</th><th>건물</th><th>층</th><th>최대난방부하(W)</th>
+      <th>수량</th><th>형식</th><th>용량(W)</th><th>풍량(CMH)</th><th>팬모터(kW)</th><th>전원</th><th>비고</th>
     </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const hl=getHeatLoad(r); totH+=hl||0; const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au ht">${hl!==null?fW(hl):'난방없음'}</td>
+        <td><input type="number" value="${r.capH.cnt||1}" min="1" style="width:45px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capH.model)}" placeholder="형식" onchange="sCH('${rid}','model',this.value)"></td>
+        <td><input type="number" value="${r.capH.cap||''}" step="100" placeholder="W" onchange="sCH('${rid}','cap',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capH.af||''}" step="10" placeholder="CMH" onchange="sCH('${rid}','af',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capH.fp)}" placeholder="kW" onchange="sCH('${rid}','fp',this.value)"></td>
+        <td><input type="text" value="${esc(r.capH.volt)}" onchange="sCH('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capH.note)}" onchange="sCH('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr class="tot"><td class="L" colspan="3">합 계</td><td>${fW(totH)}</td><td colspan="7"></td></tr>`;
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
 
-  let tC=0,tH=0,tV=0;
-  STATE.rooms.forEach(r=>{
-    const fl  = STATE.floors.find(f=>f.id===r.floorId);
-    const mc  = getMaxCoolLoad(r);
-    const hl  = getHeatLoad(r);
-    const vc  = getRoomVol(r)*r.ventACH;
-    const mcd = mc!==null?mc*p.sfCool:null;
-    const hld = hl!==null?hl*p.sfHeat:null;
-    if(mcd)tC+=mcd; if(hld)tH+=hld; tV+=vc;
-    html+=`<tr>
-      <td class="left">${esc(r.name)}</td>
-      <td class="center">${fl?fl.name:'—'}</td>
-      <td class="center">${fmt1(getRoomArea(r))}</td>
-      <td class="auto">${mc!==null?fmtW(mc):'—'}</td>
-      <td class="auto" style="font-weight:700">${mcd!==null?fmtW(mcd):'냉방없음'}</td>
-      <td class="center">${r.coolEquip}</td>
-      <td class="auto">${hl!==null?fmtW(hl):'—'}</td>
-      <td class="auto" style="color:var(--red);font-weight:700">${hld!==null?fmtW(hld):'난방없음'}</td>
-      <td class="center">${r.heatEquip}</td>
-      <td class="auto">${fmtW(vc)}</td>
-      <td class="center">${r.ventEquip}</td>
-    </tr>`;
-  });
+  // 라디에이터
+  if(capTab==='라디에이터'){
+    const rooms=STATE.rooms.filter(r=>r.he==='라디에이터');
+    if(!rooms.length){el.innerHTML='<div class="empty">라디에이터로 선택된 실이 없습니다.</div>';return;}
+    let totH=0;
+    let html=`<div class="card"><div class="ch">라디에이터 용량계산서</div><div class="cb"><div class="tw"><table>
+    <thead><tr>
+      <th>실명</th><th>건물</th><th>층</th><th>최대난방부하(W)</th>
+      <th>수량</th><th>형식</th><th>용량(W)</th><th>용량(kcal/h)</th><th>전원</th><th>비고</th>
+    </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const hl=getHeatLoad(r); totH+=hl||0; const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td class="au ht">${hl!==null?fW(hl):'난방없음'}</td>
+        <td><input type="number" value="${r.capH.cnt||1}" min="1" style="width:45px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capH.model)}" placeholder="형식" onchange="sCH('${rid}','model',this.value)"></td>
+        <td><input type="number" value="${r.capH.cap||''}" step="100" placeholder="W" onchange="sCH('${rid}','cap',parseFloat(this.value)||0)"></td>
+        <td class="au">${r.capH.cap?fW(r.capH.cap*0.86):'—'}</td>
+        <td><input type="text" value="${esc(r.capH.volt)}" onchange="sCH('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capH.note)}" onchange="sCH('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr class="tot"><td class="L" colspan="3">합 계</td><td>${fW(totH)}</td><td colspan="6"></td></tr>`;
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
 
-  html+=`<tr class="tot">
-    <td class="left" colspan="4">전체 합계</td>
-    <td>${fmtW(tC)} (${fmt1(tC/1000)} kW)</td><td></td>
-    <td></td><td>${fmtW(tH)} (${fmt1(tH/1000)} kW)</td><td></td>
-    <td>${fmtW(tV)} m³/h</td><td></td>
-  </tr>`;
-  html+=`</tbody></table></div></div></div>`;
-  el.innerHTML = html;
+  // 전기온수기
+  if(capTab==='전기온수기'){
+    const rooms=STATE.rooms.filter(r=>r.he==='전기온수기');
+    if(!rooms.length){el.innerHTML='<div class="empty">전기온수기로 선택된 실이 없습니다.</div>';return;}
+    let html=`<div class="card"><div class="ch">전기온수기 용량계산서</div><div class="cb"><div class="tw"><table>
+    <thead><tr>
+      <th>실명</th><th>건물</th><th>층</th>
+      <th>수량</th><th>형식/모델</th><th>용량(L/h)</th><th>용량(kW)</th><th>전원</th><th>비고</th>
+    </tr></thead><tbody>`;
+    rooms.forEach(r=>{
+      const {b,f}=getBF(r.bldgId,r.floorId); const rid=r.id;
+      html+=`<tr>
+        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
+        <td><input type="number" value="${r.capHW.cnt||1}" min="1" style="width:45px" onchange="sCHW('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td><input type="text" value="${esc(r.capHW.model)}" placeholder="형식/모델" onchange="sCHW('${rid}','model',this.value)"></td>
+        <td><input type="number" value="${r.capHW.lph||''}" step="10" placeholder="L/h" onchange="sCHW('${rid}','lph',parseFloat(this.value)||0)"></td>
+        <td><input type="number" value="${r.capHW.kw||''}" step="0.1" placeholder="kW" onchange="sCHW('${rid}','kw',parseFloat(this.value)||0)"></td>
+        <td><input type="text" value="${esc(r.capHW.volt)}" onchange="sCHW('${rid}','volt',this.value)"></td>
+        <td><input type="text" value="${esc(r.capHW.note)}" onchange="sCHW('${rid}','note',this.value)"></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div></div></div>`;
+    el.innerHTML=html; return;
+  }
+
+  el.innerHTML='<div class="empty">탭을 선택하세요.</div>';
 }
 
 // ══════════════════════════════════════════════
-//  JSON SAVE / LOAD
+//  JSON
 // ══════════════════════════════════════════════
-
 function saveJSON(){
-  const blob = new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (STATE.project.name||'hvac-calc')+'.json';
-  a.click(); URL.revokeObjectURL(a.href);
+  const b=new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download=(STATE.project.name||'hvac-calc')+'.json';
+  a.click();URL.revokeObjectURL(a.href);
 }
-
 function loadJSON(input){
-  const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e=>{
-    try{
-      STATE = JSON.parse(e.target.result);
-      selectedRoomId = STATE.rooms[0]?.id||null;
-      loadStateToForm(); renderFloorList(); renderRoomList(); renderRoomDetail();
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{STATE=JSON.parse(e.target.result);
+      selRid=STATE.rooms[0]?.id||null;
+      loadPtoForm();renderBldgTree();renderRoomList();renderRoomDetail();
       alert('불러오기 완료');
-    }catch{ alert('JSON 파싱 오류'); }
+    }catch{alert('JSON 파싱 오류');}
   };
-  reader.readAsText(file);
-  input.value='';
+  r.readAsText(f);input.value='';
 }
 
 // ══════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function f1(n){return typeof n==='number'?n.toLocaleString('ko-KR',{maximumFractionDigits:1}):'—';}
+function f0(n){return typeof n==='number'?Math.round(n).toLocaleString('ko-KR'):'—';}
+function fW(n){if(n===null||n===undefined)return'—';return Math.round(n).toLocaleString('ko-KR');}
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmt1(n){ return typeof n==='number'?n.toLocaleString('ko-KR',{maximumFractionDigits:1}):'—'; }
-function fmt0(n){ return typeof n==='number'?Math.round(n).toLocaleString('ko-KR'):'—'; }
-function fmtW(n){ if(n===null||n===undefined)return'—'; return Math.round(n).toLocaleString('ko-KR'); }
-
-// ══════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════
 init();
 </script>
 </body>
