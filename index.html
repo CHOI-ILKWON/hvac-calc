@@ -1116,7 +1116,7 @@ function calcLE(room){
       room.iw3.len>0?room.iw3.u*room.iw3.len*h*1.25:0,
       room.iw4.len>0?room.iw4.u*room.iw4.len*h*1.25:0,
     ];
-    const flC=room.floorOn?room.floorU*area*1.25:0;
+    const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc:0;
     const infS=infCMH*dTc*0.336;
     const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS;
     const st2=occ*57+eqW+lightW;
@@ -1152,14 +1152,16 @@ function calcLE(room){
     ];
   }
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
-  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum;
+  let hfloor=0;
+  if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh;
+  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor;
   const totalH=Math.max(0,hRsh*1.1);
 
   return {
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infL,pplL,rlh,
-    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hRsh,totalH,
+    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,
   };
 }
 
@@ -1234,7 +1236,7 @@ function renderLoadCalc(){
       const iw=room['iw'+n];
       return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT 1.25℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
     }).join('');
-    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT 1.25℃`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
+    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×57W/인`,le.occ*57);
@@ -1270,7 +1272,7 @@ function renderLoadCalc(){
       const iw=room['iw'+n];
       return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT 1.25℃×U${iw.u}`,le.hiw[n-1]);
     }).join('');
-    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡`:'비활성',0);
+    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     const hTotRow=grnH('ROOM TOTAL HEATING LOSS',le.totalH);
