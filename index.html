@@ -428,8 +428,8 @@ const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:0,  va:10, ce:'없음', he:'유니트히터', ve:'인라인덕트팬'}, // va:10 — AIK 기준 기계실 권장 환기횟수 (열 배출 목적)
   elec:    {lb:'전기실/비상발전기실류',     cdb:30,  crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:12, ce:'PAC',  he:'없음',      ve:'없음'},           // va:12 — AIK 기준 전기실 권장 환기횟수 (발열 제거 목적)
   toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:18,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},        // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준
-  office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.05, lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기'},       // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2)
-  control: {lb:'중앙제어실/계측류실',       cdb:24,  crh:50, hdb:24,  hrh:50, od:0.05, lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기'},       // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음
+  office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기'},       // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2)
+  control: {lb:'중앙제어실/계측류실',       cdb:24,  crh:50, hdb:24,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기'},       // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음
   storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:5, ia:0,  va:3,  ce:'없음', he:'없음',       ve:'벽부형팬'},         // va:3 — 실무 관행 (AIK 창고류 최소 환기)
 };
 
@@ -782,9 +782,9 @@ function newRoom(){
     winS:{w:0,h:0,shgc:0.35,u:2.10}, winW:{w:0,h:0,shgc:0.35,u:2.10},
     iw1:{len:0,u:2.08}, iw2:{len:0,u:2.08}, iw3:{len:0,u:2.08}, iw4:{len:0,u:2.08},
     roofOn:false, roofA:0, roofU:0.11,
-    floorOn:false, floorU:2.08,
+    floorOn:false, floorU:3.0,
     infACH:0.5, ventACH:5, ia:0,
-    od:0.05, lw:15, eqKW:0,
+    od:0.1, lw:15, eqKW:0,
     ce:'EHP', he:'EHP', ve:'전열교환기',
     capC:{model:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:''},
     capEo:{model:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:''},
@@ -905,6 +905,9 @@ function renderRoomDetail(){
   const area=gA(r), vol=gV(r);
   const occ=r.od*area, lightW=r.lw*area*1.08, infCMH=vol*r.infACH, ventCMH=vol*r.ventACH;
   const {b,f}=getBF(r.bldgId,r.floorId);
+  const _p=STATE.project;
+  const _outDB=_p.cust||_p.cdb;
+  const _dtcIW=r.cdb!==null?((_outDB-r.cdb)/2).toFixed(1):'—';
 
   const bOpts=STATE.buildings.map(x=>`<option value="${x.id}" ${x.id===r.bldgId?'selected':''}>${esc(x.name)}</option>`).join('');
   const fOpts=(b?b.floors:[]).map(x=>`<option value="${x.id}" ${x.id===r.floorId?'selected':''}>${esc(x.name)}</option>`).join('');
@@ -936,7 +939,7 @@ function renderRoomDetail(){
       <td><input type="number" value="${iw.len}" step="0.1" onchange="sIW(${n},'len',parseFloat(this.value)||0);renderRoomDetail()"></td>
       <td class="au C">${f1(iw.len*r.height)}</td>
       <td><input type="number" value="${iw.u}" step="0.01" onchange="sIW(${n},'u',parseFloat(this.value)||2.08)"></td>
-      <td class="au C">1.25</td>
+      <td class="au C">${_dtcIW}</td>
     </tr>`;
 
   el.innerHTML=`
@@ -1000,7 +1003,7 @@ function renderRoomDetail(){
     </tbody>
   </table></div>
 
-  <div class="st" style="font-size:11px;margin-top:12px">내벽 (ΔT=1.25℃ 고정, 기본 U=2.08 W/m²K) — 길이×천장고=면적 자동</div>
+  <div class="st" style="font-size:11px;margin-top:12px">내벽 ΔT = (외기-실내)/2 동적 계산, 기본 U=2.08 W/m²K — 길이×천장고=면적 자동</div>
   <div class="tw"><table>
     <thead><tr><th>번호</th><th>길이 (m)</th><th>면적 (m²) 자동</th><th>U값 (W/m²K)</th><th>ΔT (℃)</th></tr></thead>
     <tbody>
@@ -1033,7 +1036,7 @@ function renderRoomDetail(){
     </div>
     <div class="fv"><label>바닥 U값 (W/m²K)</label>
       <input type="number" value="${r.floorU}" step="0.01" ${!r.floorOn?'disabled':''}
-        onchange="sR('floorU',parseFloat(this.value)||2.08)">
+        onchange="sR('floorU',parseFloat(this.value)||3.0)">
     </div>
   </div>
 </div></div>
@@ -1092,6 +1095,11 @@ function calcLE(room){
   const dTh=room.hdb!==null?room.hdb-outH:null;
   const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
   const outRH_val=RHfromWB(outDB,outWB);
+  const ventCMH=vol*room.ventACH;
+  const ervEff=room.ve==='전열교환기'?0.2:1.0;
+  const oaCMH=ventCMH*ervEff;
+  const oaS=dTc!==null?oaCMH*dTc*0.336:0;
+  const oaH=dTh!==null?oaCMH*dTh*0.336:0;
 
   const DIRS=['N','E','S','W'];
 
@@ -1119,10 +1127,10 @@ function calcLE(room){
     ];
     const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc:0;
     const infS=infCMH*dTc*0.336;
-    const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS;
+    const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS+oaS;
     const st2=occ*57+eqW+lightW;
     const rsh=st1+st2;
-    return {sg,wc,rc,gc,iw,flC,infS,st1,st2,rsh};
+    return {sg,wc,rc,gc,iw,flC,infS,oaS,st1,st2,rsh};
   });
 
   // Latent (time-independent)
@@ -1156,7 +1164,7 @@ function calcLE(room){
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
   let hfloor=0;
   if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh;
-  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor;
+  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor+oaH;
   const totalH=Math.max(0,hRsh*1.1);
 
   return {
@@ -1164,6 +1172,7 @@ function calcLE(room){
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infL,pplL,rlh,
     hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,
+    ventCMH,oaCMH,oaS,oaH,ervEff,
   };
 }
 
@@ -1240,6 +1249,7 @@ function renderLoadCalc(){
     }).join('');
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
+    const oaRowC=cRowFixed('OUTSIDE AIR',`${f0(le.oaCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336${le.ervEff<1?' (ERV 80%회수)':''}`,le.td&&le.td[0]?le.td[0].oaS||0:0);
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×57W/인`,le.occ*57);
     const eqRowC=cRowFixed('POWER',`${room.eqKW}kW×1,000`,le.eqW);
@@ -1276,6 +1286,7 @@ function renderLoadCalc(){
     }).join('');
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
+    const oaRowH=hRow('OUTSIDE AIR',`${f0(le.oaCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336${le.ervEff<1?' (ERV 80%회수)':''}`,le.oaH||0);
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     const hTotRow=grnH('ROOM TOTAL HEATING LOSS',le.totalH);
 
@@ -1329,7 +1340,7 @@ function renderLoadCalc(){
       ${sHC('② 전열에 의한 부하 (SOLAR &amp; TRANS GAIN — WALLS &amp; ROOF)<span class="src-badge">Q = U × A × ΔT (정상상태 전도)</span>')}
       ${wallRowsC}${roofRowC}
       ${sHC('③ 전열에 의한 부하 (TRANS. GAIN EXCEPT WALLS &amp; ROOF)<span class="src-badge">Q = 1.2 × V × ΔT (현열) / 2501 × V × Δω (잠열)</span>')}
-      ${glassCRows}${iwRowsC}${floorRowC}${infRowC}
+      ${glassCRows}${iwRowsC}${floorRowC}${infRowC}${oaRowC}
       ${st1Row}
       ${sHC('④ 내부 발열 (INTERNAL HEAT GAIN)<span class="src-badge">AIK 표준 내부발열 기준</span>')}
       ${pplRowC}${eqRowC}${ltRowC}${miscRowC}
@@ -1362,7 +1373,7 @@ function renderLoadCalc(){
       ${sHH('② OUTSIDE WALL HEAT LOSS')}
       ${wallRowsH}${roofRowH}
       ${sHH('③ TRANS. LOSS EXCEPT WALLS &amp; ROOF')}
-      ${iwRowsH}${floorRowH}${infRowH}
+      ${iwRowsH}${floorRowH}${infRowH}${oaRowH}
       ${hRshRow}${sfHrow}${hTotRow}
     </tbody>
   </table>`}
