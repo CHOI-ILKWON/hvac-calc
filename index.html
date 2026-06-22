@@ -1109,12 +1109,13 @@ function calcLE(room){
     // Glass conduction
     const gc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*dTc;});
-    // Interior walls
+    // Interior walls (냉방 ΔT = dTc/2)
+    const dTc_iw=dTc/2;
     const iw=[
-      room.iw1.len>0?room.iw1.u*room.iw1.len*h*1.25:0,
-      room.iw2.len>0?room.iw2.u*room.iw2.len*h*1.25:0,
-      room.iw3.len>0?room.iw3.u*room.iw3.len*h*1.25:0,
-      room.iw4.len>0?room.iw4.u*room.iw4.len*h*1.25:0,
+      room.iw1.len>0?room.iw1.u*room.iw1.len*h*dTc_iw:0,
+      room.iw2.len>0?room.iw2.u*room.iw2.len*h*dTc_iw:0,
+      room.iw3.len>0?room.iw3.u*room.iw3.len*h*dTc_iw:0,
+      room.iw4.len>0?room.iw4.u*room.iw4.len*h*dTc_iw:0,
     ];
     const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc:0;
     const infS=infCMH*dTc*0.336;
@@ -1144,11 +1145,12 @@ function calcLE(room){
     if(room.roofOn)hroof=room.roofU*roofA*dTh;
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh;});
     hinf=infCMH*0.336*dTh;
+    const dTh_iw=dTh/2;
     hiw=[
-      room.iw1.len>0?room.iw1.u*room.iw1.len*h*1.25:0,
-      room.iw2.len>0?room.iw2.u*room.iw2.len*h*1.25:0,
-      room.iw3.len>0?room.iw3.u*room.iw3.len*h*1.25:0,
-      room.iw4.len>0?room.iw4.u*room.iw4.len*h*1.25:0,
+      room.iw1.len>0?room.iw1.u*room.iw1.len*h*dTh_iw:0,
+      room.iw2.len>0?room.iw2.u*room.iw2.len*h*dTh_iw:0,
+      room.iw3.len>0?room.iw3.u*room.iw3.len*h*dTh_iw:0,
+      room.iw4.len>0?room.iw4.u*room.iw4.len*h*dTh_iw:0,
     ];
   }
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
@@ -1234,7 +1236,7 @@ function renderLoadCalc(){
     }).join('');
     const iwRowsC=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
-      return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT 1.25℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
+      return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
     }).join('');
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
@@ -1270,7 +1272,7 @@ function renderLoadCalc(){
     const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.hroof);
     const iwRowsH=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
-      return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT 1.25℃×U${iw.u}`,le.hiw[n-1]);
+      return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
     }).join('');
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
