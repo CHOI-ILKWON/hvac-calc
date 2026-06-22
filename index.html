@@ -1096,8 +1096,11 @@ function calcLE(room){
   const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
   const outRH_val=RHfromWB(outDB,outWB);
   const ventCMH=vol*room.ventACH;
-  const ervEff=room.ve==='전열교환기'?0.2:1.0;
-  const oaCMH=ventCMH*ervEff;
+  // Outside Air(신선외기)는 사무실류(ia>0)에만 적용 — 건축법 별표1의2 기준 25CMH/인
+  const oaPpl=room.ia>0?area/room.ia:0;          // 재실인원 (인)
+  const oaCMH_raw=room.ia>0?oaPpl*25:0;          // 신선외기량 (㎥/h), 법정 25CMH/인
+  const ervEff=room.ve==='전열교환기'?0.2:1.0;   // ERV 80% 회수 시 20%만 부하
+  const oaCMH=oaCMH_raw*ervEff;                  // 실제 냉난방 부담 외기량
   const oaS=dTc!==null?oaCMH*dTc*0.336:0;
   const oaH=dTh!==null?oaCMH*dTh*0.336:0;
 
@@ -1172,7 +1175,7 @@ function calcLE(room){
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infL,pplL,rlh,
     hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,
-    ventCMH,oaCMH,oaS,oaH,ervEff,
+    ventCMH,oaCMH_raw,oaCMH,oaPpl,oaS,oaH,ervEff,
   };
 }
 
@@ -1249,7 +1252,9 @@ function renderLoadCalc(){
     }).join('');
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
-    const oaRowC=cRowFixed('OUTSIDE AIR',`${f0(le.oaCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336${le.ervEff<1?' (ERV 80%회수)':''}`,le.td&&le.td[0]?le.td[0].oaS||0:0);
+    const oaRowC=le.oaCMH_raw>0
+      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEff<1?`×ERV20%=${f0(le.oaCMH)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
+      :'';
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×57W/인`,le.occ*57);
     const eqRowC=cRowFixed('POWER',`${room.eqKW}kW×1,000`,le.eqW);
@@ -1286,7 +1291,9 @@ function renderLoadCalc(){
     }).join('');
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
-    const oaRowH=hRow('OUTSIDE AIR',`${f0(le.oaCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336${le.ervEff<1?' (ERV 80%회수)':''}`,le.oaH||0);
+    const oaRowH=le.oaCMH_raw>0
+      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEff<1?`×ERV20%=${f0(le.oaCMH)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
+      :'';
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     const hTotRow=grnH('ROOM TOTAL HEATING LOSS',le.totalH);
 
