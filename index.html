@@ -620,29 +620,42 @@ function selectCatRow(i) {
 function _catPAC(rid, row) {
   const r = STATE.rooms.find(function(x){return x.id===rid;});
   if (!r) return;
-  r.capC.model   = row['실내기 모델명'] || row['시리즈'] || r.capC.model;
-  r.capC.ouModel = row['실외기 모델명'] || r.capC.ouModel || '';
+  // INDOOR
+  r.capC.model      = row['실내기 모델명'] || row['시리즈'] || r.capC.model;
+  r.capC.ouModel    = row['실외기 모델명'] || r.capC.ouModel || '';
   var _ft = row['형식(실내기)'] || '';
-  r.capC.inType  = _ft === 'Floor Mounted' ? 'STAND TYPE' : (_ft || r.capC.inType || '');
-  r.capC.ccMin   = row['냉방능력(kW)_최소'] ?? r.capC.ccMin;
-  r.capC.ccStd   = row['냉방능력(kW)_표준'] ?? r.capC.ccStd;
-  r.capC.ccMax   = row['냉방능력(kW)_최대'] ?? r.capC.ccMax;
-  r.capC.hcMin   = row['난방능력(kW)_최소'] ?? null;
-  r.capC.hcStd   = row['난방능력(kW)_표준'] ?? null;
-  r.capC.hcMax   = row['난방능력(kW)_최대'] ?? null;
-  r.capC.pwCMin  = row['소비전력 냉방(kW)_최소'] ?? r.capC.pwCMin;
-  r.capC.pwCStd  = row['소비전력 냉방(kW)_표준'] ?? r.capC.pwCStd;
-  r.capC.pwCMax  = row['소비전력 냉방(kW)_최대'] ?? r.capC.pwCMax;
-  r.capC.pwHMin  = row['소비전력 난방(kW)_최소'] ?? null;
-  r.capC.pwHStd  = row['소비전력 난방(kW)_표준'] ?? null;
-  r.capC.pwHMax  = row['소비전력 난방(kW)_최대'] ?? null;
-  r.capC.liq     = row['배관경(mm)_액관φ']  != null ? String(row['배관경(mm)_액관φ'])  : r.capC.liq;
-  r.capC.gas     = row['배관경(mm)_가스관φ'] != null ? String(row['배관경(mm)_가스관φ']) : r.capC.gas;
-  r.capC.ref     = row['냉매종류']             || r.capC.ref;
-  r.capC.volt    = row['실내기 전원(Ph,V,Hz)'] || r.capC.volt;
+  r.capC.inType     = _ft === 'Floor Mounted' ? 'STAND TYPE' : (_ft || r.capC.inType || '');
+  r.capC.ccMin      = row['냉방능력(kW)_최소'] ?? r.capC.ccMin;
+  r.capC.ccStd      = row['냉방능력(kW)_표준'] ?? r.capC.ccStd;
+  r.capC.ccMax      = row['냉방능력(kW)_최대'] ?? r.capC.ccMax;
+  r.capC.hcMin      = row['난방능력(kW)_최소'] ?? null;
+  r.capC.hcStd      = row['난방능력(kW)_표준'] ?? null;
+  r.capC.hcMax      = row['난방능력(kW)_최대'] ?? null;
+  r.capC.pwCMin     = row['소비전력 냉방(kW)_최소'] ?? r.capC.pwCMin;
+  r.capC.pwCStd     = row['소비전력 냉방(kW)_표준'] ?? r.capC.pwCStd;
+  r.capC.pwCMax     = row['소비전력 냉방(kW)_최대'] ?? r.capC.pwCMax;
+  r.capC.pwHMin     = row['소비전력 난방(kW)_최소'] ?? null;
+  r.capC.pwHStd     = row['소비전력 난방(kW)_표준'] ?? null;
+  r.capC.pwHMax     = row['소비전력 난방(kW)_최대'] ?? null;
+  r.capC.liq        = row['배관경(mm)_액관φ']  != null ? String(row['배관경(mm)_액관φ'])  : r.capC.liq;
+  r.capC.gas        = row['배관경(mm)_가스관φ'] != null ? String(row['배관경(mm)_가스관φ']) : r.capC.gas;
+  r.capC.ref        = row['냉매종류']             || r.capC.ref;
+  r.capC.volt       = row['실내기 전원(Ph,V,Hz)'] || r.capC.volt;
+  r.capC.iaf        = row['실내기 송풍기_풍량(㎥/h)'] ?? (row['실내기 송풍기_풍량(CMH)'] ?? r.capC.iaf);
+  r.capC.iesp       = row['실내기 송풍기_정압(Pa)'] ?? r.capC.iesp;
+  r.capC.ifm        = row['실내기 송풍기_전동기(W)'] != null ? row['실내기 송풍기_전동기(W)'] / 1000 : r.capC.ifm;
+  // OUTDOOR
+  r.capC.otype      = row['실외기 모델명'] || r.capC.otype || '';
+  r.capC.ocompType  = row['실외기 압축기_형식']    || r.capC.ocompType || '';
+  r.capC.ocompKw    = row['실외기 압축기_출력(kW)'] ?? r.capC.ocompKw;
+  var _oaf = row['실외기 팬풍량(㎥/min)'];
+  r.capC.oaf        = _oaf != null ? Math.round(_oaf * 60) : r.capC.oaf; // CMM→CMH
+  r.capC.ovolt      = row['실외기 전원(Ph,V,Hz)'] || r.capC.ovolt || '';
+  // TOTAL POWER / SELECTION
   if (r.capC.ccStd != null) r.capC.selC = Math.round(r.capC.ccStd * 1000);
   if (r.capC.hcStd != null) r.capC.selH = Math.round(r.capC.hcStd * 1000);
   if (r.capC.pwCStd != null) r.capC.pw = String(r.capC.pwCStd);
+  renderCapCalc();
 }
 
 function _catCTH(rid, row) {
@@ -1782,10 +1795,20 @@ function renderCapCalc(){
         // ⑤ OUTDOOR UNIT
         +'<div>'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ OUTDOOR UNIT</div>'
-        +row('COMPRESSOR *','ocomp',r.capC.ocomp,'kW','형식','outdoor_compressor')
-        +row('TYPE *','otype',r.capC.otype,'','모델명','outdoor_type')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;gap:4px">'
+        +'<span style="font-size:9px;color:#64748b;white-space:nowrap">COMPRESSOR *</span>'
+        +'<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">'
+        +'<input type="text" value="'+esc(String(r.capC.ocompType||''))+'" placeholder="형식" style="width:65px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'ocompType\',this.value)">'
+        +'<input type="text" value="'+esc(String(r.capC.ocompKw||''))+'" placeholder="kW" style="width:40px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ocompKw\',this.value)">'
+        +'<span style="font-size:9px;color:#94a3b8">kW</span>'
+        +'</div></div>'
+        +row('TYPE *','otype',r.capC.otype||r.capC.ouModel,'','실외기 모델명','outdoor_type')
         +row('AIR VOLUME *','oaf',r.capC.oaf,'CMH','','outdoor_airvolume')
         +row('FAN MOTOR *','ofm',r.capC.ofm,'kW','','outdoor_fanmotor')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:9px;gap:4px">'
+        +'<span style="color:#64748b;white-space:nowrap">POWER SOURCE</span>'
+        +'<input type="text" value="'+esc(String(r.capC.ovolt||''))+'" placeholder="3,4,380,60" style="width:85px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ovolt\',this.value)">'
+        +'</div>'
         +'</div>'
 
         // ⑥ PIPING
@@ -1942,10 +1965,20 @@ function renderCapCalc(){
         // ⑤ OUTDOOR UNIT
         +'<div>'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ OUTDOOR UNIT</div>'
-        +row('COMPRESSOR *','ocomp',r.capC.ocomp,'kW','형식','outdoor_compressor')
-        +row('TYPE *','otype',r.capC.otype,'','모델명','outdoor_type')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;gap:4px">'
+        +'<span style="font-size:9px;color:#64748b;white-space:nowrap">COMPRESSOR *</span>'
+        +'<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">'
+        +'<input type="text" value="'+esc(String(r.capC.ocompType||''))+'" placeholder="형식" style="width:65px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'ocompType\',this.value)">'
+        +'<input type="text" value="'+esc(String(r.capC.ocompKw||''))+'" placeholder="kW" style="width:40px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ocompKw\',this.value)">'
+        +'<span style="font-size:9px;color:#94a3b8">kW</span>'
+        +'</div></div>'
+        +row('TYPE *','otype',r.capC.otype||r.capC.ouModel,'','실외기 모델명','outdoor_type')
         +row('AIR VOLUME *','oaf',r.capC.oaf,'CMH','','outdoor_airvolume')
         +row('FAN MOTOR *','ofm',r.capC.ofm,'kW','','outdoor_fanmotor')
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:9px;gap:4px">'
+        +'<span style="color:#64748b;white-space:nowrap">POWER SOURCE</span>'
+        +'<input type="text" value="'+esc(String(r.capC.ovolt||''))+'" placeholder="3,4,380,60" style="width:85px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ovolt\',this.value)">'
+        +'</div>'
         +'</div>'
 
         // ⑥ PIPING
