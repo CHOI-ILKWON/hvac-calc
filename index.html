@@ -707,6 +707,92 @@ function _catEHP_OUT(zi, row) {
   renderCapCalc();
 }
 
+function _catHEX(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capV.model=row['모델명']||r.capV.model;
+  r.capV.afH  =row['풍량(m³/h)_강']              ??r.capV.afH;
+  r.capV.afM  =row['풍량(m³/h)_중']              ??r.capV.afM;
+  r.capV.afL  =row['풍량(m³/h)_약']              ??r.capV.afL;
+  r.capV.pwH  =row['소비전력(W)_강']              ??r.capV.pwH;
+  r.capV.pwM  =row['소비전력(W)_중']              ??r.capV.pwM;
+  r.capV.pwL  =row['소비전력(W)_약']              ??r.capV.pwL;
+  r.capV.effC =row['유효전열교환효율(%)_냉방']    ??r.capV.effC;
+  r.capV.effH =row['유효전열교환효율(%)_난방']    ??r.capV.effH;
+  r.capV.volt =row['전원(V,Hz)']                 ||r.capV.volt;
+  renderCapCalc();
+}
+
+function _catFAN_INLINE(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capV.model =row['모델명']          ||r.capV.model;
+  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
+  r.capV.volt  =row['전원']            ||r.capV.volt;
+  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
+  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
+  renderCapCalc();
+}
+
+function _catFAN_CEIL(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capV.model =row['모델명']          ||r.capV.model;
+  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
+  r.capV.volt  =row['전원']            ||r.capV.volt;
+  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
+  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
+  renderCapCalc();
+}
+
+function _catFAN_WALL(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capV.model =row['모델명']          ||r.capV.model;
+  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
+  r.capV.volt  =row['전원']            ||r.capV.volt;
+  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
+  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
+  renderCapCalc();
+}
+
+function _catUH(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capH.model =row['형식']            ||r.capH.model;
+  r.capH.capW  =row['용량_(W)']        ??r.capH.capW;
+  r.capH.fp    =row['동력*(kW)']       ??r.capH.fp;
+  r.capH.volt  =row['전원(Ph/V/Hz)']   ||r.capH.volt;
+  r.capH.af    =row['팬_풍량*(CMH)']   ??r.capH.af;
+  r.capH.fanPw =row['팬_동력*(kW)']    ??r.capH.fanPw;
+  renderCapCalc();
+}
+
+function _catRAD(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capH.model =row['모델명']          ||r.capH.model;
+  r.capH.volt2 =row['전압(V)']         ??r.capH.volt2;
+  r.capH.pw    =row['소비전력(W)']     ??r.capH.pw;
+  r.capH.spec  =row['규격 W×H×D(mm)'] ||r.capH.spec;
+  r.capH.heat  =row['열량(Kcal)']      ??r.capH.heat;
+  renderCapCalc();
+}
+
+function _catWH(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capHW.model   =row['모델명']          ||r.capHW.model;
+  r.capHW.type    =row['타입']            ||r.capHW.type;
+  r.capHW.vol     =row['용량(L)']         ??r.capHW.vol;
+  r.capHW.kw      =row['전력(kW)']        ??r.capHW.kw;
+  r.capHW.volt    =row['전원']            ||r.capHW.volt;
+  r.capHW.maxTemp =row['최고온도(℃)']     ??r.capHW.maxTemp;
+  r.capHW.maxPres =row['최고사용압력']    ||r.capHW.maxPres;
+  r.capHW.pipeDia =row['냉수/온수구경(A)']??r.capHW.pipeDia;
+  renderCapCalc();
+}
+
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
@@ -2106,6 +2192,51 @@ function renderCapCalc(){
       <td colspan="5" style="background:#dcfce7"></td>
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
+    // 전열교환기 장비별 선정 카드
+    html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">전열교환기 장비 선정</div>`;
+    rooms.forEach((r,idx)=>{
+      const {f}=getBF(r.bldgId,r.floorId);
+      const rid=r.id;
+      const autoTag='M-AH-ERV-'+String(idx+1).padStart(3,'0');
+      const tag=r.capV.tag||autoTag;
+      const sRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:130px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px">${unit}</span>`:''}</div>`;
+      html+=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px">
+        <div style="background:#1e3a5f;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;font-size:11px">ITEM NO : ${esc(tag)}</span>
+          <span style="font-size:10px;opacity:.8">${f?esc(f.name)+' ':''}${esc(r.name)} / 전열교환기</span>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f">■ SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)})">📋 카탈로그</button>
+          </div>
+          ${sRow('model','TYPE / MODEL',r.capV.model,'','모델명')}
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">풍량 (강/중/약)</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            <b>${r.capV.afH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afL??'—'}</b>
+            <span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span>
+          </div>
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">소비전력 (강/중/약)</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            <b>${r.capV.pwH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwL??'—'}</b>
+            <span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span>
+          </div>
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">유효전열교환효율</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            냉방&nbsp;<b>${r.capV.effC??'—'}</b>%&nbsp;&nbsp;난방&nbsp;<b>${r.capV.effH??'—'}</b>%
+          </div>
+          ${sRow('volt','전원',r.capV.volt,'','220V, 60Hz')}
+          <div style="display:flex;align-items:center;padding:4px 0;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:130px;color:#334155">Q'TY</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="number" value="${r.capV.cnt||1}" min="1" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"><span style="font-size:9px;color:#94a3b8;margin-left:4px">SET</span></div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
     el.innerHTML=html; return;
   }
 
@@ -2239,9 +2370,24 @@ function renderCapCalc(){
           </div>
         </div>
         <div style="padding:0 14px 12px">
-          <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">③ FAN SELECTION</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">③ FAN SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('FAN_INLINE',function(row){_catFAN_INLINE('${rid}',row)})">📋 카탈로그</button>
+          </div>
           ${selRow('model','TYPE',r.capV.model,'','DUCT IN-LINE')}
-          ${selRow('fno','SIZE',r.capV.fno,'Dia(A)','mm')}
+          ${selRow('fno','SIZE (임펠러)',r.capV.fno,'mm','')}
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:110px;color:#334155">최대풍량</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            ${r.capV.maxAf!=null?`<b style="color:#1d4ed8">${fW(r.capV.maxAf)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span>`:`<span style="color:#94a3b8;font-size:10px">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:110px;color:#334155">소비전력</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            ${r.capV.pw!=null?`<b>${r.capV.pw}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span>`:`<span style="color:#94a3b8;font-size:10px">—</span>`}
+          </div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
             <span style="min-width:110px;color:#334155">SPEC.</span>
@@ -2404,11 +2550,25 @@ function renderCapCalc(){
           </div>
         </div>
         <div style="padding:0 14px 12px">
-          <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">FAN SELECTION</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">FAN SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('${capTab==='벽부형팬'?'FAN_WALL':'FAN_CEILING'}',function(row){${capTab==='벽부형팬'?'_catFAN_WALL':'_catFAN_CEIL'}('${rid}',row)})">📋 카탈로그</button>
+          </div>
           ${selRow('model','TYPE',r.capV.model,'','형식')}
-          ${selRow('fno','SIZE',r.capV.fno,'Dia(A)','mm')}
-          ${selRow('spec','SPEC.',r.capV.spec,'','CMM × Pa × kW')}
-          ${selRow('volt','POWER SOURCE',r.capV.volt,'','3P × 220V × 60Hz')}
+          ${selRow('fno','SIZE (임펠러)',r.capV.fno,'mm','')}
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:110px;color:#334155">최대풍량</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            ${r.capV.maxAf!=null?`<b style="color:#1d4ed8">${fW(r.capV.maxAf)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:110px;color:#334155">소비전력</span>
+            <span style="color:#94a3b8;margin-right:4px">:</span>
+            ${r.capV.pw!=null?`<b>${r.capV.pw}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          ${selRow('volt','POWER SOURCE',r.capV.volt,'','1P × 220V × 60Hz')}
           <div style="display:flex;align-items:center;padding:4px 0;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">Q'TY</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="number" value="${r.capV.cnt||1}" min="1" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"><span style="font-size:9px;color:#94a3b8;margin-left:4px">SET</span></div>
         </div>
       </div>`;
@@ -2544,17 +2704,20 @@ function renderCapCalc(){
           <span style="font-size:10px;opacity:.85">서비스지역 : ${svc}</span>
         </div>
         <div style="padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">UNIT HEATER SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('UNIT_HEATER',function(row){_catUH('${rid}',row)})">📋 카탈로그</button>
+          </div>
           ${dRow('◆','TYPE','model',r.capH.model||'WALL MOUNTED(ELEC.)','','WALL MOUNTED(ELEC.)')}
           ${dRowAuto('◆','Q\'TY',cntD+' SETS','')}
-          ${dRowAuto('◆','HEATING CAP.',fW(autoCap),'W')}
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px">
+          ${dRowAuto('◆','HEATING CAP. (부하)',fW(autoCap),'W')}
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="color:#334155;font-weight:600">FAN</span>
+            <span style="min-width:130px;color:#334155">용량 (W)</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capH.capW!=null?`<b style="color:#1d4ed8">${fW(r.capH.capW)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span>`:`<span style="color:#94a3b8">—</span>`}
           </div>
-          ${dRow('&nbsp;','&nbsp;&nbsp;TYPE','fantype',r.capH.fantype||'PROPELLER FAN','','PROPELLER FAN')}
-          ${dRow('&nbsp;','&nbsp;&nbsp;AIR VOL.*','af',r.capH.af,'㎥/h')}
-          ${dRow('&nbsp;','&nbsp;&nbsp;ESP','esp',r.capH.esp,'Pa')}
-          ${dRow('&nbsp;','&nbsp;&nbsp;POWER *','fp',r.capH.fp,'kW')}
+          ${dRow('◆','동력 (kW)','fp',r.capH.fp,'kW','')}
           ${dRow('◆','POWER SOURCE','volt',r.capH.volt||'1P × 220V × 60Hz','','1P × 220V × 60Hz')}
         </div>
       </div>`;
@@ -2606,6 +2769,61 @@ function renderCapCalc(){
       <td colspan="3" style="background:#fef9c3"></td>
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
+
+    // ② 라디에이터 장비별 상세 카드
+    html+=`<div style="margin-top:16px">`;
+    html+=`<div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div>`;
+    rooms.forEach((r,idx)=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const rid=r.id;
+      const autoTag='M-HX-RAD-'+String(idx+1).padStart(3,'0');
+      const tag=r.capH.tag||autoTag;
+      const svc=(f?esc(f.name)+' ':'')+esc(r.name);
+      html+=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px;page-break-inside:avoid">
+        <div style="background:#1e3a5f;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;font-size:11px">장비번호 : ${esc(tag)}</span>
+          <span style="font-size:10px;opacity:.85">서비스지역 : ${svc}</span>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">RADIATOR SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('RADIATOR',function(row){_catRAD('${rid}',row)})">📋 카탈로그</button>
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">모델명</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            <input type="text" value="${esc(r.capH.model||'')}" placeholder="모델명" style="flex:1;max-width:160px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit" onchange="sCH('${rid}','model',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">소비전력</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capH.pw!=null?`<b style="color:#1d4ed8">${fW(r.capH.pw)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">열량</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capH.heat!=null?`<b style="color:#dc2626">${fW(r.capH.heat)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">Kcal</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">전압</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capH.volt2!=null?`<b>${r.capH.volt2}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">V</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">규격</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capH.spec?`<b>${esc(r.capH.spec)}</b>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+
     el.innerHTML=html; return;
   }
 
@@ -2631,6 +2849,79 @@ function renderCapCalc(){
       </tr>`;
     });
     html+=`</tbody></table></div></div></div>`;
+
+    // 장비별 상세 카드
+    html+=`<div style="margin-top:16px">`;
+    html+=`<div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div>`;
+    rooms.forEach((r,idx)=>{
+      const {b,f}=getBF(r.bldgId,r.floorId);
+      const rid=r.id;
+      const autoTag='M-WH-'+String(idx+1).padStart(3,'0');
+      const tag=r.capHW.tag||autoTag;
+      const svc=(f?esc(f.name)+' ':'')+esc(r.name);
+      html+=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px;page-break-inside:avoid">
+        <div style="background:#1e3a5f;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700;font-size:11px">장비번호 : ${esc(tag)}</span>
+          <span style="font-size:10px;opacity:.85">서비스지역 : ${svc}</span>
+        </div>
+        <div style="padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">WATER HEATER SELECTION</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('WATER_HEATER',function(row){_catWH('${rid}',row)})">📋 카탈로그</button>
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">모델명</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            <input type="text" value="${esc(r.capHW.model||'')}" placeholder="모델명" style="flex:1;max-width:160px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit" onchange="sCHW('${rid}','model',this.value)">
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">타입</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.type?`<b>${esc(r.capHW.type)}</b>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">용량</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.vol!=null?`<b style="color:#1d4ed8">${fW(r.capHW.vol)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">L</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">최고온도</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.maxTemp!=null?`<b>${r.capHW.maxTemp}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">℃</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">최고사용압력</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.maxPres?`<b>${esc(r.capHW.maxPres)}</b>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">냉온수구경</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.pipeDia!=null?`<b>${r.capHW.pipeDia}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">A</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">전력</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.kw!=null&&r.capHW.kw?`<b style="color:#1d4ed8">${r.capHW.kw}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">kW</span>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+          <div style="display:flex;align-items:center;padding:5px 0;font-size:10px;gap:4px">
+            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
+            <span style="min-width:130px;color:#334155">전원</span>
+            <span style="color:#94a3b8;margin-right:6px">:</span>
+            ${r.capHW.volt?`<b>${esc(r.capHW.volt)}</b>`:`<span style="color:#94a3b8">—</span>`}
+          </div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+
     el.innerHTML=html; return;
   }
 
