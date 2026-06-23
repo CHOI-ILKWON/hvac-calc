@@ -662,12 +662,26 @@ function _catCTH(rid, row) {
 function _catEHP(zi, row) {
   if (!STATE.project.ehpZ || !STATE.project.ehpZ[zi]) return;
   const z = STATE.project.ehpZ[zi];
-  z.inModel = row['모델명']      || z.inModel;
-  z.inCc    = row['냉방용량(W)'] ?? z.inCc;
-  z.inHc    = row['난방용량(W)'] ?? z.inHc;
-  z.inAf    = row['풍량(CMH)']   ?? z.inAf;
-  z.inPw    = row['동력(kW)']    ?? z.inPw;
-  z.inVolt  = row['전원']        || z.inVolt;
+  z.inModel    = row['모델명']              || z.inModel;
+  z.inType     = row['타입']               || z.inType;
+  z.inCc       = row['냉방(kW)'] != null   ? Math.round(row['냉방(kW)'] * 1000) : z.inCc;
+  z.inHc       = row['난방(kW)'] != null   ? Math.round(row['난방(kW)'] * 1000) : z.inHc;
+  z.inPwC      = row['소비전력(W)_냉방']   ?? z.inPwC;
+  z.inPwH      = row['소비전력(W)_난방']   ?? z.inPwH;
+  z.inPw       = row['소비전력(W)_냉방'] != null ? row['소비전력(W)_냉방'] / 1000 : z.inPw;
+  z.inFanType  = row['송풍기_형식']        || z.inFanType;
+  z.inFanW     = row['송풍기_출력(W)']     ?? z.inFanW;
+  z.inAfH      = row['풍량(CMM)_강']       ?? z.inAfH;
+  z.inAfM      = row['풍량(CMM)_중']       ?? z.inAfM;
+  z.inAfL      = row['풍량(CMM)_약']       ?? z.inAfL;
+  z.inAf       = row['풍량(CMM)_강'] != null ? Math.round(row['풍량(CMM)_강'] * 60) : z.inAf;
+  z.inLiq      = row['배관경(mm)_액관']    ?? z.inLiq;
+  z.inGas      = row['배관경(mm)_가스관']  ?? z.inGas;
+  z.inDrain    = row['배관경(mm)_배수관']  || z.inDrain;
+  z.inVolt     = row['전원(Ph,V,Hz)']      || z.inVolt;
+  z.inWt       = row['제품중량(kg)']       ?? z.inWt;
+  z.inSize     = row['제품치수WxHxD(mm)']  || z.inSize;
+  renderCapCalc();
 }
 
 function _catEHP_OUT(zi, row) {
@@ -1875,13 +1889,13 @@ function renderCapCalc(){
     const ehpRooms=STATE.rooms.filter(r=>r.ce==='EHP');
     if(!ehpRooms.length){el.innerHTML='<div class="empty">EHP로 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 냉방 설비를 EHP로 선택하세요.</small></div>';return;}
     if(!Array.isArray(STATE.project.ehpZ)||!STATE.project.ehpZ.length){
-      STATE.project.ehpZ=[{rooms:[],inModel:'',inCc:'',inHc:'',inAf:'',inPw:'',inVolt:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''}];
+      STATE.project.ehpZ=[{rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''}];
     }
     const EZ=STATE.project.ehpZ;
     window._ezField=function(zi,fld,val){if(STATE.project.ehpZ&&STATE.project.ehpZ[zi])STATE.project.ehpZ[zi][fld]=val;renderCapCalc();};
     window._ezRoom=function(zi,action,rid){if(!STATE.project.ehpZ||!STATE.project.ehpZ[zi])return;const z=STATE.project.ehpZ[zi];if(action==='add'&&!z.rooms.includes(rid))z.rooms.push(rid);if(action==='del')z.rooms=z.rooms.filter(x=>x!==rid);renderCapCalc();};
-    window._ezAdd=function(){if(!Array.isArray(STATE.project.ehpZ))STATE.project.ehpZ=[];STATE.project.ehpZ.push({rooms:[],inModel:'',inCc:'',inHc:'',inAf:'',inPw:'',inVolt:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''});renderCapCalc();};
-    window._ezDel=function(zi){if(!Array.isArray(STATE.project.ehpZ))return;STATE.project.ehpZ.splice(zi,1);if(!STATE.project.ehpZ.length)STATE.project.ehpZ=[{rooms:[],inModel:'',inCc:'',inHc:'',inAf:'',inPw:'',inVolt:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''}];renderCapCalc();};
+    window._ezAdd=function(){if(!Array.isArray(STATE.project.ehpZ))STATE.project.ehpZ=[];STATE.project.ehpZ.push({rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''});renderCapCalc();};
+    window._ezDel=function(zi){if(!Array.isArray(STATE.project.ehpZ))return;STATE.project.ehpZ.splice(zi,1);if(!STATE.project.ehpZ.length)STATE.project.ehpZ=[{rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:''}];renderCapCalc();};
     let html='<div style="display:flex;flex-direction:column;gap:14px">'
       +'<div style="display:flex;justify-content:flex-end">'
       +'<button onclick="_ezAdd()" style="background:#1e3a5f;color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font-size:11px;font-family:inherit">+ ZONE 추가</button>'
@@ -1965,6 +1979,19 @@ function renderCapCalc(){
         +'<div style="font-weight:700;font-size:10px;color:#1d4ed8">☞ 실내기 사양 (대표 적용)</div>'
         +'<button class="btn btP btS no-print" onclick="openCatModal(\'EHP\',function(row){_catEHP('+zi+',row)})">📋 카탈로그에서 선택</button>'
         +'</div>'
+        +(z.inModel?(
+          '<div style="font-size:9px;background:#fff;border:1px solid #bfdbfe;border-radius:4px;padding:6px 10px;margin-bottom:6px">'
+          +'<div style="font-weight:700;color:#1d4ed8;margin-bottom:5px">'+esc(z.inModel)+(z.inType?' — '+esc(z.inType):'')+'</div>'
+          +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">'
+          +(z.inCc||z.inHc?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">성능 (kW)</div>'+(z.inCc?'<div>냉방&nbsp;<b>'+(z.inCc/1000).toFixed(1)+'</b></div>':'')+(z.inHc?'<div>난방&nbsp;<b>'+(z.inHc/1000).toFixed(1)+'</b></div>':'')+'</div>':'')
+          +(z.inPwC!=null||z.inPwH!=null?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">전력 (W)</div>'+(z.inPwC!=null?'<div>냉방&nbsp;<b>'+z.inPwC+'</b></div>':'')+(z.inPwH!=null?'<div>난방&nbsp;<b>'+z.inPwH+'</b></div>':'')+'</div>':'')
+          +(z.inFanType?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">송풍기</div><div>'+esc(z.inFanType)+'</div>'+(z.inFanW!=null?'<div>출력&nbsp;<b>'+z.inFanW+'</b>W</div>':'')+'</div>':'')
+          +(z.inAfH!=null?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">풍량 (CMM)</div><div>강&nbsp;<b>'+z.inAfH+'</b></div><div>중&nbsp;<b>'+z.inAfM+'</b>&nbsp;약&nbsp;<b>'+z.inAfL+'</b></div></div>':'')
+          +(z.inLiq!=null||z.inGas!=null||z.inDrain?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">배관경 (mm)</div>'+(z.inLiq!=null?'<div>액관&nbsp;φ<b>'+z.inLiq+'</b></div>':'')+(z.inGas!=null?'<div>가스관&nbsp;φ<b>'+z.inGas+'</b></div>':'')+(z.inDrain?'<div>배수관&nbsp;<b>'+esc(z.inDrain)+'</b></div>':'')+'</div>':'')
+          +(z.inVolt?'<div><div style="font-weight:600;color:#1d4ed8;margin-bottom:2px">전원</div><div><b>'+esc(z.inVolt)+'</b></div></div>':'')
+          +'</div>'
+          +'</div>'
+        ):'')
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
         +lbl('형식*','inModel',z.inModel,'','모델명')
         +lbl('냉방(W)*','inCc',z.inCc,'W','')
