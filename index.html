@@ -1358,9 +1358,9 @@ function calcLE(room){
     // Solar gain by direction (Is × SC/SHGC)
     const sg={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
-    // Wall conduction — CLTD (heavy-weight wall, 26°C base)
+    // Wall conduction — CLTD, net area = wall gross - window area
     const wc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en)wc[d]=wd.u*wd.len*h*(CLTD_WALL[d]||CLTD_WALL.N)[ti];});
+    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*(CLTD_WALL[d]||CLTD_WALL.N)[ti];}});
     // Roof — CLTD (heavy-weight roof, 26°C base)
     const rc=room.roofOn?room.roofU*roofA*CLTD_ROOF[ti]:0;
     // Glass conduction — ΔT/2 (Excel standard)
@@ -1486,7 +1486,8 @@ function renderLoadCalc(){
     const wallRowsC=DIRS.map(d=>{
       const wd=room['wall'+d];
       const cltd=le.pkIdx!=null?(CLTD_WALL[d]||CLTD_WALL.N)[le.pkIdx]:null;
-      return cRowFixed(`OUT.WALL ${d}`,`${f1(wd.len*room.height)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
+      const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
+      return cRowFixed(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
     }).join('');
     const roofCltd=le.pkIdx!=null?CLTD_ROOF[le.pkIdx]:null;
     const roofRowC=cRowFixed('ROOF',room.roofOn?`${f1(le.roofA)}㎡×CLTD${roofCltd!=null?roofCltd.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.td&&le.td[0]?le.td[0].rc:0);
@@ -1517,6 +1518,9 @@ function renderLoadCalc(){
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
     const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.rlh*0.1));
     const tlhRow=grnCf('TOTAL LATENT HEAT',le.tlh);
+    const shf=le.pkIdx!=null&&le.rth[le.pkIdx]>0?le.tsh[le.pkIdx]/le.rth[le.pkIdx]:null;
+    const shfOk=shf===null||shf>=0.75;
+    const shfRow=`<tr><td colspan="2" style="font-size:8.5px;padding:3px 5px;background:${shfOk?'#f0fdf4':'#fff7ed'};font-weight:700;color:${shfOk?'#166534':'#c2410c'}">현열비 SHF = ${shf!=null?shf.toFixed(2):'—'}${shf!=null&&!shfOk?' ⚠️ 0.75 미만 — 제습 성능 검토 필요 (CTH 또는 ERV 조합 권장)':shf!=null?' ✓ 정상':''}</td>${TIME_SLOTS.map(()=>'<td></td>').join('')}</tr>`;
     const rthRow=`<tr><td colspan="2" style="background:#fbbf24;font-weight:700;color:#78350f;font-size:8.5px;padding:2px 5px;border-top:1px solid #d97706;border-bottom:1px solid #d97706">ROOM TOTAL HEAT</td>${
       cn?TIME_SLOTS.map(()=>'<td style="background:#fef9c3;text-align:right;color:#aaa">—</td>').join('')
         :TIME_SLOTS.map((_,ti)=>`<td style="background:${ti===le.pkIdx?'#fbbf24':'#fef9c3'};text-align:right;font-weight:${ti===le.pkIdx?'700':'400'};font-size:8.5px;padding:2px 4px;border-top:1px solid #d97706;border-bottom:1px solid #d97706">${fW(le.rth[ti])}</td>`).join('')
@@ -1603,7 +1607,7 @@ function renderLoadCalc(){
       ${rshRow}${sfSRow}${tshRow}
       ${sHC('⑤ 잠열 (ROOM LATENT HEAT)')}
       ${infLRow}${pplLRow}
-      ${rlhRow}${sfLRow}${tlhRow}
+      ${rlhRow}${sfLRow}${tlhRow}${shfRow}
       ${rthRow}
     </tbody>
   </table>`}
