@@ -722,17 +722,21 @@ function _catPAC(rid, row) {
 function _catCTH(rid, row) {
   const r = STATE.rooms.find(function(x){return x.id===rid;});
   if (!r) return;
-  r.capC.model = row['모델명']      || row['시리즈']        || r.capC.model;
-  r.capC.selC  = row['냉방용량(W)'] ?? r.capC.selC;
-  r.capC.selH  = row['난방용량(W)'] ?? r.capC.selH;
-  r.capC.iaf   = row['풍량(CMH)']   ?? r.capC.iaf;
-  r.capC.iesp  = row['ESP(Pa)']     ?? r.capC.iesp;
-  r.capC.ifm   = (row['팬동력(kW)'] || row['동력(kW)'])     ?? r.capC.ifm;
-  r.capC.volt  = row['전원']        || r.capC.volt;
-  r.capC.gas   = row['가스관(A)']   || r.capC.gas;
-  r.capC.liq   = row['액관(A)']     || r.capC.liq;
-  r.capC.drain = row['드레인(A)']   || r.capC.drain;
-  r.capC.water = row['냉각수관(A)'] || r.capC.water;
+  r.capC.model    = row['형식']                        || row['모델명'] || r.capC.model;
+  r.capC.iaf      = row['팬&모터_풍량(CMH)']           ?? r.capC.iaf;
+  r.capC.iesp     = row['팬&모터_정압(mmAq)']          ?? r.capC.iesp;
+  r.capC.ifm      = row['팬&모터_모터(kW)']            ?? r.capC.ifm;
+  var _ccW = row['냉방코일_용량(W)'];
+  var _hcW = row['난방코일_용량(W)'];
+  if (_ccW != null) { r.capC.ccStd = _ccW / 1000; r.capC.selC = _ccW; }
+  if (_hcW != null) { r.capC.hcStd = _hcW / 1000; r.capC.selH = _hcW; }
+  r.capC.humidity = row['가습기_용량(kg/h)']           ?? r.capC.humidity;
+  r.capC.ref      = row['냉매']                        || r.capC.ref;
+  r.capC.gas      = row['연결관경(Ø mm)_가스관'] != null ? String(row['연결관경(Ø mm)_가스관']) : r.capC.gas;
+  r.capC.liq      = row['연결관경(Ø mm)_액관']  != null ? String(row['연결관경(Ø mm)_액관'])  : r.capC.liq;
+  r.capC.pwCStd   = row['동력*(kW)']                  ?? r.capC.pwCStd;
+  r.capC.pw       = row['동력*(kW)'] != null ? String(row['동력*(kW)']) : r.capC.pw;
+  r.capC.volt     = row['전원(Ph/V/Hz)']               || r.capC.volt;
 }
 
 function _catEHP(zi, row) {
