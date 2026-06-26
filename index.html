@@ -561,6 +561,7 @@ function openCatModal(type, callback) {
     (typeMap[type] || type) + ' 선택';
   document.getElementById('cat-search').value = '';
   document.getElementById('cat-modal').style.display = 'flex';
+  _catSort = []; _catFiltered = [];
   const raw = data[type];
   const arr = Array.isArray(raw) ? raw : (raw?.data || []);
   const cols = raw?.cols;
@@ -574,7 +575,8 @@ function openCatModal(type, callback) {
   } else {
     _catRows = arr;
   }
-  renderCatModal(_catRows);
+  _catFiltered = _catRows.slice();
+  renderCatModal(_catFiltered);
 }
 
 function closeCatModal() {
@@ -582,32 +584,90 @@ function closeCatModal() {
   _catCB = null; _catRows = [];
 }
 
+var _catSort = []; // [{k, d:'asc'|'desc'}, ...]
+var _catFiltered = [];
+
 function filterCatModal() {
   const q = document.getElementById('cat-search').value.toLowerCase();
-  const rows = q
+  _catFiltered = q
     ? _catRows.filter(row => Object.values(row).some(v => String(v??'').toLowerCase().includes(q)))
-    : _catRows;
-  renderCatModal(rows);
+    : _catRows.slice();
+  renderCatModal(_catFiltered);
+}
+
+function sortCatModal(key, shift) {
+  const idx = _catSort.findIndex(s => s.k === key);
+  if (!shift) {
+    if (idx >= 0 && _catSort.length === 1) {
+      _catSort[0].d = _catSort[0].d === 'asc' ? 'desc' : 'asc';
+    } else {
+      _catSort = [{k: key, d: 'asc'}];
+    }
+  } else {
+    if (idx >= 0) {
+      _catSort[idx].d = _catSort[idx].d === 'asc' ? 'desc' : 'asc';
+    } else {
+      _catSort.push({k: key, d: 'asc'});
+    }
+  }
+  renderCatModal(_catFiltered);
 }
 
 function renderCatModal(rows) {
   const el = document.getElementById('cat-modal-body');
-  if (!rows.length) {
+  if (!rows || !rows.length) {
     el.innerHTML = '<div class="empty">해당 장비 데이터가 없습니다.</div>';
+    el._filteredRows = [];
     return;
   }
   const keys = Object.keys(rows[0]);
+
+  // multi-sort
+  let sorted = rows.slice();
+  if (_catSort.length) {
+    sorted.sort(function(a, b) {
+      for (let i = 0; i < _catSort.length; i++) {
+        const {k, d} = _catSort[i];
+        const av = a[k], bv = b[k];
+        const an = av != null && av !== '' && !isNaN(Number(av));
+        const bn = bv != null && bv !== '' && !isNaN(Number(bv));
+        let cmp = 0;
+        if (an && bn) cmp = Number(av) - Number(bv);
+        else cmp = String(av??'').localeCompare(String(bv??''), 'ko');
+        if (cmp !== 0) return d === 'asc' ? cmp : -cmp;
+      }
+      return 0;
+    });
+  }
+
+  const fmtCell = function(v) {
+    if (v == null || v === '') return '';
+    if (typeof v === 'number' || (typeof v === 'string' && v !== '' && !isNaN(Number(v)) && String(v).trim() !== '')) {
+      const n = Number(v);
+      if (Number.isFinite(n) && Math.abs(n) >= 1000) return n.toLocaleString('ko-KR');
+    }
+    return String(v);
+  };
+
+  const thStyle = 'padding:4px 8px;white-space:nowrap;cursor:pointer;user-select:none;background:#e2e8f0;position:sticky;top:0;z-index:1';
   el.innerHTML = '<div class="tw"><table>'
-    + '<thead><tr>' + keys.map(k => '<th>'+k+'</th>').join('') + '<th></th></tr></thead>'
+    + '<thead><tr>'
+    + keys.map(function(k) {
+        const si = _catSort.findIndex(s => s.k === k);
+        const arrow = si >= 0 ? (_catSort[si].d === 'asc' ? ' ▲' : ' ▼') : '';
+        const badge = _catSort.length > 1 && si >= 0 ? '<sup style="font-size:8px;color:#6366f1">'+(si+1)+'</sup>' : '';
+        return '<th style="'+thStyle+'" onclick="sortCatModal(\''+k+'\',event.shiftKey)">'+k+badge+arrow+'</th>';
+      }).join('')
+    + '<th style="'+thStyle+'"></th></tr></thead>'
     + '<tbody>'
-    + rows.map(function(row, i) {
+    + sorted.map(function(row, i) {
         return '<tr style="cursor:pointer" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'">'
-          + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+(row[k]!=null?row[k]:'')+'</td>'; }).join('')
+          + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+fmtCell(row[k])+'</td>'; }).join('')
           + '<td><button class="btn btP btS" onclick="selectCatRow('+i+')">선택</button></td>'
           + '</tr>';
       }).join('')
     + '</tbody></table></div>';
-  el._filteredRows = rows;
+  el._filteredRows = sorted;
 }
 
 function selectCatRow(i) {
