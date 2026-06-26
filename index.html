@@ -201,20 +201,6 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
   </div>
 
   <div class="card">
-    <div class="ch">계산 설정</div>
-    <div class="cb">
-      <div class="fg c3">
-        <div class="fv"><label>외벽 종류 <span class="src-badge">CLTD 테이블 선택</span></label>
-          <select id="p-walltype" onchange="updP()">
-            <option value="heavy">중량벽 (TypeIV · 콘크리트·벽돌 70~110mm)</option>
-            <option value="light">경량벽 (TypeI · 샌드위치패널·ALC 70mm미만)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
     <div class="ch">
       건물 / 층 구성<span class="src-badge">건물별 건축용도 분류 기준</span>
       <button class="btn btP btS no-print" onclick="addBldg()" style="margin-left:auto">+ 건물 추가</button>
@@ -987,6 +973,11 @@ function renderBldgTree(){
         onchange="STATE.buildings[${bi}].usage=this.value">
         ${BLDG_USAGE.map(u=>`<option value="${u}" ${u===b.usage?'selected':''}>${u}</option>`).join('')}
       </select>
+      <select style="flex:1.2;padding:4px 7px;border:1px solid var(--bdr);border-radius:var(--r);font-family:inherit;font-size:11px"
+        onchange="STATE.buildings[${bi}].wallType=this.value">
+        <option value="heavy" ${(b.wallType||'heavy')==='heavy'?'selected':''}>중량벽 (콘크리트·벽돌)</option>
+        <option value="light" ${b.wallType==='light'?'selected':''}>경량벽 (샌드위치패널·ALC)</option>
+      </select>
       <button class="btn btS no-print" onclick="addFloor(${bi})">+ 층 추가</button>
       <button class="btn btS no-print" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="delBldg(${bi})">삭제</button>
     </div>
@@ -1008,7 +999,7 @@ function renderBldgTree(){
 }
 
 function addBldg(){
-  STATE.buildings.push({id:'B'+(STATE._nB++),name:'건물'+(STATE.buildings.length+1),usage:'공장/산업시설',floors:[]});
+  STATE.buildings.push({id:'B'+(STATE._nB++),name:'건물'+(STATE.buildings.length+1),usage:'공장/산업시설',wallType:'heavy',floors:[]});
   renderBldgTree();
 }
 function delBldg(bi){
@@ -1382,7 +1373,8 @@ function calcLE(room){
     const sg={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
     // Wall conduction — CLTD, net area = wall gross - window area
-    const CLTD_WALL=p.wallType==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
+    const {b:_bldg}=getBF(room.bldgId,room.floorId);
+    const CLTD_WALL=(_bldg?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
     const wc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*(CLTD_WALL[d]||CLTD_WALL.N)[ti];}});
     // Roof — CLTD (heavy-weight roof, 26°C base)
@@ -1510,7 +1502,8 @@ function renderLoadCalc(){
     }).join('');
     const wallRowsC=DIRS.map(d=>{
       const wd=room['wall'+d];
-      const _CW=STATE.project.wallType==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
+      const {b:_bldgD}=getBF(room.bldgId,room.floorId);
+      const _CW=(_bldgD?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
       const cltd=le.pkIdx!=null?(_CW[d]||_CW.N)[le.pkIdx]:null;
       const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
       return cRowFixed(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
