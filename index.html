@@ -416,12 +416,25 @@ const WEATHER_DATA = { // [별표7] 건축물 에너지절약설계기준
   '제주': { s_db:30.9,s_wb:26.3,s_rh:68.5,s_x:0.02219,w_db:  0.1,w_wb: -1.8,w_rh:70, w_x:0.00342 },
 };
 
-// Solar radiation W/m² at ~37°N, summer [10h,12h,14h,16h]
+// Solar radiation Is(W/m²), Seoul ~37°N, [10h,12h,14h,16h] — from KS/AIK standard table
 const SR = {
-  N:[ 60, 80, 60, 60], E:[500,220, 50, 30],
-  S:[200,350,350,200], W:[ 30, 50,220,500],
+  N:[ 50.2, 50.2, 50.2, 50.2],
+  E:[332.5,166.2,137.6,108.9],
+  S:[116.1,143.3,139.7, 92.5],
+  W:[137.6,114.7,252.2,412.7],
 };
 const TIME_SLOTS = [10,12,14,16];
+
+// CLTD for heavy-weight exterior wall (Type IV, 70~110mm), indoor 26°C base [10h,12h,14h,16h]
+const CLTD_WALL = {
+  N:[ 4.4, 6.4, 7.7, 8.2],
+  E:[17.9,16.2,11.4, 9.4],
+  S:[ 5.0,10.4,13.2,12.1],
+  W:[ 3.7, 6.2,10.7,18.7],
+};
+
+// CLTD for heavy-weight roof (110~160mm), indoor 26°C base [10h,12h,14h,16h]
+const CLTD_ROOF = [12.4, 21.0, 26.8, 27.8];
 
 // Room type definitions
 const RT = {
@@ -1342,17 +1355,17 @@ function calcLE(room){
   // Per time-slot sensible items
   const td=TIME_SLOTS.map((_,ti)=>{
     if(dTc===null) return null;
-    // Solar gain by direction
+    // Solar gain by direction (Is × SC/SHGC)
     const sg={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
-    // Wall conduction (time-independent ΔT)
+    // Wall conduction — CLTD (heavy-weight wall, 26°C base)
     const wc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en)wc[d]=wd.u*wd.len*h*dTc;});
-    // Roof
-    const rc=room.roofOn?room.roofU*roofA*(dTc+5):0;
-    // Glass conduction
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en)wc[d]=wd.u*wd.len*h*(CLTD_WALL[d]||CLTD_WALL.N)[ti];});
+    // Roof — CLTD (heavy-weight roof, 26°C base)
+    const rc=room.roofOn?room.roofU*roofA*CLTD_ROOF[ti]:0;
+    // Glass conduction — ΔT/2 (Excel standard)
     const gc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*dTc;});
+    DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*(dTc/2);});
     // Interior walls (냉방 ΔT = dTc/2)
     const dTc_iw=dTc/2;
     const iw=[
@@ -1472,12 +1485,14 @@ function renderLoadCalc(){
     }).join('');
     const wallRowsC=DIRS.map(d=>{
       const wd=room['wall'+d];
-      return cRowFixed(`OUT.WALL ${d}`,`${f1(wd.len*room.height)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
+      const cltd=le.pkIdx!=null?(CLTD_WALL[d]||CLTD_WALL.N)[le.pkIdx]:null;
+      return cRowFixed(`OUT.WALL ${d}`,`${f1(wd.len*room.height)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
     }).join('');
-    const roofRowC=cRowFixed('ROOF',room.roofOn?`${f1(le.roofA)}㎡×(ΔT+5)℃×U${room.roofU}`:'비활성',le.td&&le.td[0]?le.td[0].rc:0);
+    const roofCltd=le.pkIdx!=null?CLTD_ROOF[le.pkIdx]:null;
+    const roofRowC=cRowFixed('ROOF',room.roofOn?`${f1(le.roofA)}㎡×CLTD${roofCltd!=null?roofCltd.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.td&&le.td[0]?le.td[0].rc:0);
     const glassCRows=DIRS.map(d=>{
       const wn=room['win'+d];
-      return cRowFixed(`GLASS ${d}`,`${f1(wn.w*wn.h)}㎡×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×U${wn.u}`,le.td&&le.td[0]?le.td[0].gc[d]:0);
+      return cRowFixed(`GLASS ${d}`,`${f1(wn.w*wn.h)}㎡×ΔT/2=${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${wn.u}`,le.td&&le.td[0]?le.td[0].gc[d]:0);
     }).join('');
     const iwRowsC=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
