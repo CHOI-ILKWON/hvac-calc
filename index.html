@@ -201,6 +201,20 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
   </div>
 
   <div class="card">
+    <div class="ch">계산 설정</div>
+    <div class="cb">
+      <div class="fg c3">
+        <div class="fv"><label>외벽 종류 <span class="src-badge">CLTD 테이블 선택</span></label>
+          <select id="p-walltype" onchange="updP()">
+            <option value="heavy">중량벽 (TypeIV · 콘크리트·벽돌 70~110mm)</option>
+            <option value="light">경량벽 (TypeI · 샌드위치패널·ALC 70mm미만)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="ch">
       건물 / 층 구성<span class="src-badge">건물별 건축용도 분류 기준</span>
       <button class="btn btP btS no-print" onclick="addBldg()" style="margin-left:auto">+ 건물 추가</button>
@@ -426,11 +440,18 @@ const SR = {
 const TIME_SLOTS = [10,12,14,16];
 
 // CLTD for heavy-weight exterior wall (Type IV, 70~110mm), indoor 26°C base [10h,12h,14h,16h]
-const CLTD_WALL = {
+const CLTD_WALL_HEAVY = {
   N:[ 4.4, 6.4, 7.7, 8.2],
   E:[17.9,16.2,11.4, 9.4],
   S:[ 5.0,10.4,13.2,12.1],
   W:[ 3.7, 6.2,10.7,18.7],
+};
+// CLTD for light-weight exterior wall (Type I, <70mm 경량), indoor 26°C base [10h,12h,14h,16h]
+const CLTD_WALL_LIGHT = {
+  N:[ 6.1, 8.3, 9.4, 9.7],
+  E:[21.7,16.1,11.1, 8.9],
+  S:[ 8.3,14.4,17.2,15.8],
+  W:[ 5.6, 7.8,15.6,28.3],
 };
 
 // CLTD for heavy-weight roof (110~160mm), indoor 26°C base [10h,12h,14h,16h]
@@ -923,6 +944,7 @@ function loadPtoForm(){
   document.getElementById('p-hrh').value=p.w_rh??'';
   document.getElementById('p-hx').value=p.w_x??'';
   if(p.cust) document.getElementById('p-cust').value=p.cust;
+  document.getElementById('p-walltype').value=p.wallType||'heavy';
   document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
 function updP(){
@@ -931,6 +953,7 @@ function updP(){
   p.client=document.getElementById('p-client').value;
   p.date=document.getElementById('p-date').value;
   p.cust=parseFloat(document.getElementById('p-cust').value)||null;
+  p.wallType=document.getElementById('p-walltype').value||'heavy';
   document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
 function onLocChange(){
@@ -1359,6 +1382,7 @@ function calcLE(room){
     const sg={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
     // Wall conduction — CLTD, net area = wall gross - window area
+    const CLTD_WALL=p.wallType==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
     const wc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*(CLTD_WALL[d]||CLTD_WALL.N)[ti];}});
     // Roof — CLTD (heavy-weight roof, 26°C base)
@@ -1384,8 +1408,9 @@ function calcLE(room){
 
   // Latent (time-independent)
   const infL=room.cdb!==null?infCMH*dOm*833:0;
+  const oaL=room.cdb!==null?oaCMH*dOm*833:0;
   const pplL=room.cdb!==null?occ*62:0;
-  const rlh=infL+pplL;
+  const rlh=infL+oaL+pplL;
 
   // Per-time totals
   const tsh=td.map(d=>d?d.rsh*1.1:0);
@@ -1419,7 +1444,7 @@ function calcLE(room){
   return {
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
-    infL,pplL,rlh,
+    infL,oaL,pplL,rlh,
     hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,
     ventCMH,oaCMH_raw,oaCMH,oaPpl,oaS,oaH,ervEff,
   };
@@ -1485,7 +1510,8 @@ function renderLoadCalc(){
     }).join('');
     const wallRowsC=DIRS.map(d=>{
       const wd=room['wall'+d];
-      const cltd=le.pkIdx!=null?(CLTD_WALL[d]||CLTD_WALL.N)[le.pkIdx]:null;
+      const _CW=STATE.project.wallType==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
+      const cltd=le.pkIdx!=null?(_CW[d]||_CW.N)[le.pkIdx]:null;
       const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
       return cRowFixed(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
     }).join('');
@@ -1514,6 +1540,7 @@ function renderLoadCalc(){
     const sfSRow=sfCrow(TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rsh*0.1:0));
     const tshRow=grnC('TOTAL SENSIBLE HEAT',le.tsh);
     const infLRow=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.infL);
+    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
     const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×62W/인`,le.pplL);
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
     const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.rlh*0.1));
@@ -1606,7 +1633,7 @@ function renderLoadCalc(){
       ${st2Row}
       ${rshRow}${sfSRow}${tshRow}
       ${sHC('⑤ 잠열 (ROOM LATENT HEAT)')}
-      ${infLRow}${pplLRow}
+      ${infLRow}${oaLRow}${pplLRow}
       ${rlhRow}${sfLRow}${tlhRow}${shfRow}
       ${rthRow}
     </tbody>
