@@ -427,7 +427,7 @@ const TIME_SLOTS = [10,12,14,16];
 const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:0,  va:10, ce:'없음', he:'유니트히터', ve:'인라인덕트팬'}, // va:10 — AIK 기준 기계실 권장 환기횟수 (열 배출 목적)
   elec:    {lb:'전기실류',                  cdb:30,  crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:12, ce:'PAC',  he:'없음',      ve:'없음'},           // va:12 — AIK 기준 전기실 권장 환기횟수 (발열 제거 목적); cdb:30 — 판넬류 허용온도 기준
-  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:20, ce:'없음', he:'없음',      ve:'루프팬'},            // cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
+  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:20, ce:'없음', he:'없음',      ve:'인라인덕트팬'},       // cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
   toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:18,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},        // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기'},       // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2)
   control: {lb:'중앙제어실/계측류실',       cdb:24,  crh:50, hdb:24,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기'},       // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음
