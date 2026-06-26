@@ -435,7 +435,8 @@ const RT = {
 
 const BLDG_USAGE = ['사무/업무시설','공장/산업시설','의료시설','교육시설','숙박시설','판매/상업시설','창고/물류시설','기타'];
 const COOL_EQUIPS = ['PAC','EHP','CTH','없음'];
-const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','전기온수기','없음'];
+const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','없음'];
+const SAN_EQUIPS  = ['전기온수기','없음'];
 const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','없음'];
 
 // ══════════════════════════════════════════════
@@ -950,7 +951,7 @@ function newRoom(){
     floorOn:false, floorU:3.0,
     infACH:0.5, ventACH:5, ia:0,
     od:0.1, lw:15, eqKW:0,
-    ce:'EHP', he:'EHP', ve:'전열교환기',
+    ce:'EHP', he:'EHP', ve:'전열교환기', san:'',
     capC:{model:'',ouModel:'',inType:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:'',ccMin:null,ccStd:null,ccMax:null,hcMin:null,hcStd:null,hcMax:null,pwCMin:null,pwCStd:null,pwCMax:null,pwHMin:null,pwHStd:null,pwHMax:null},
     capEo:{model:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:''},
     capH:{model:'',cnt:1,cap:0,capk:0,af:0,fp:'',volt:'',note:''},
@@ -1079,6 +1080,7 @@ function renderRoomDetail(){
   const tOpts=Object.keys(RT).map(k=>`<option value="${k}" ${k===r.type?'selected':''}>${RT[k].lb}</option>`).join('');
   const ceOpts=COOL_EQUIPS.map(e=>`<option value="${e}" ${e===r.ce?'selected':''}>${e}</option>`).join('');
   const heOpts=HEAT_EQUIPS.map(e=>`<option value="${e}" ${e===r.he?'selected':''}>${e}</option>`).join('');
+  const sanOpts=SAN_EQUIPS.map(e=>`<option value="${e}" ${e===r.san?'selected':''}>${e}</option>`).join('');
   const veOpts=VENT_EQUIPS.map(e=>`<option value="${e}" ${e===r.ve?'selected':''}>${e}</option>`).join('');
 
   const wallRow=(dir,wo)=>`
@@ -1238,6 +1240,7 @@ function renderRoomDetail(){
     <div class="fv"><label>냉방 설비</label><select onchange="sR('ce',this.value)">${ceOpts}</select></div>
     <div class="fv"><label>난방 설비</label><select onchange="sR('he',this.value)">${heOpts}</select></div>
     <div class="fv"><label>환기 설비</label><select onchange="sR('ve',this.value)">${veOpts}</select></div>
+    <div class="fv"><label>위생 설비</label><select onchange="sR('san',this.value)">${sanOpts}</select></div>
   </div>
 </div></div>
 `;
@@ -1763,61 +1766,27 @@ function renderCapCalc(){
         +'</div></div>'
 
 
-        // ④⑤⑥ SECTIONS
-        +'<div style="padding:8px 12px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">'
-
-        // ④ INDOOR UNIT
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ INDOOR UNIT</div>'
+        // ④ SPEC TABLE
+        +'<div style="padding:8px 12px 10px">'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:8px">☞ 장비 사양</div>'
         +'<button class="btn btP btS no-print" style="margin-bottom:6px" onclick="openCatModal(\'PAC\',function(row){_catPAC(\''+rid+'\',row)})">📋 카탈로그에서 선택(냉난방)</button>'
         +'<button class="btn btP btS no-print" style="margin-bottom:6px;margin-left:4px" onclick="openCatModal(\'PAC_C\',function(row){_catPAC(\''+rid+'\',row)})">📋 냉방전용</button>'
         +(r.capC.model?
-          '<div style="font-size:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:6px 8px;margin-bottom:6px">'
+          '<div style="font-size:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:6px 8px;margin-bottom:8px">'
           +'<div style="font-weight:700;color:#1d4ed8;margin-bottom:4px">'+esc(r.capC.model)+(r.capC.ouModel?' / '+esc(r.capC.ouModel):'')+'</div>'
-          +'<div style="display:flex;flex-direction:column;gap:2px;color:#334155">'
-          +(r.capC.ccStd!=null?'<span>냉방&nbsp;<b>'+(r.capC.ccMin??'—')+'/'+( r.capC.ccStd??'—')+'/'+( r.capC.ccMax??'—')+'</b>&nbsp;kW'+(r.capC.hcStd!=null?'&nbsp;&nbsp;난방&nbsp;<b>'+(r.capC.hcMin??'—')+'/'+( r.capC.hcStd??'—')+'/'+( r.capC.hcMax??'—')+'</b>&nbsp;kW':'')+'</span>':'')
-          +(r.capC.pwCStd!=null?'<span>소비냉방&nbsp;<b>'+(r.capC.pwCMin??'—')+'/'+( r.capC.pwCStd??'—')+'/'+( r.capC.pwCMax??'—')+'</b>&nbsp;kW'+(r.capC.pwHStd!=null?'&nbsp;&nbsp;소비난방&nbsp;<b>'+(r.capC.pwHMin??'—')+'/'+( r.capC.pwHStd??'—')+'/'+( r.capC.pwHMax??'—')+'</b>&nbsp;kW':'')+'</span>':'')
-          +((r.capC.liq||r.capC.gas||r.capC.ref||r.capC.volt)?
-            '<span>'
-            +(r.capC.liq?'액관φ&nbsp;<b>'+esc(r.capC.liq)+'</b>&nbsp;':'')
-            +(r.capC.gas?'가스관φ&nbsp;<b>'+esc(r.capC.gas)+'</b>&nbsp;':'')
-            +(r.capC.ref?'냉매&nbsp;<b>'+esc(r.capC.ref)+'</b>&nbsp;':'')
-            +(r.capC.volt?'전원&nbsp;<b>'+esc(r.capC.volt)+'</b>':'')
-            +'</span>':'')
-          +'</div></div>'
+          +'</div>'
         :'')
-        +row('TYPE','inType',r.capC.inType,'','모델명/형식','indoor_type')
-        +row('AIR VOLUME *','iaf',r.capC.iaf,'CMH','','indoor_airvolume')
-        +row('ESP * <span style="font-size:8px;color:#94a3b8">(덕트·필터·코일 저항 합계)</span>','iesp',r.capC.iesp,'Pa','','indoor_esp')
-        +row('FAN MOTOR *','ifm',r.capC.ifm,'kW','','indoor_fanmotor')
-        +'</div>'
-
-        // ⑤ OUTDOOR UNIT
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ OUTDOOR UNIT</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;gap:4px">'
-        +'<span style="font-size:9px;color:#64748b;white-space:nowrap">COMPRESSOR *</span>'
-        +'<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">'
-        +'<input type="text" value="'+esc(String(r.capC.ocompType||''))+'" placeholder="형식" style="width:65px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'ocompType\',this.value)">'
-        +'<input type="text" value="'+esc(String(r.capC.ocompKw||''))+'" placeholder="kW" style="width:40px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ocompKw\',this.value)">'
-        +'<span style="font-size:9px;color:#94a3b8">kW</span>'
-        +'</div></div>'
-        +row('TYPE *','otype',r.capC.otype||r.capC.ouModel,'','실외기 모델명','outdoor_type')
-        +row('AIR VOLUME *','oaf',r.capC.oaf,'CMH','','outdoor_airvolume')
-        +row('FAN MOTOR *','ofm',r.capC.ofm,'kW','','outdoor_fanmotor')
-        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:9px;gap:4px">'
-        +'<span style="color:#64748b;white-space:nowrap">POWER SOURCE</span>'
-        +'<input type="text" value="'+esc(String(r.capC.ovolt||''))+'" placeholder="3,4,380,60" style="width:85px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ovolt\',this.value)">'
-        +'</div>'
-        +'</div>'
-
-        // ⑥ PIPING
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ PIPING</div>'
-        +row('LIQUID *','liq',r.capC.liq,'Ø','','piping_liquid')
-        +row('GAS *','gas',r.capC.gas,'Ø','','piping_gas')
-        +row('DRAIN *','drain',r.capC.drain,'A','','piping_drain')
-        +'</div>'
+        +'<table style="width:100%;font-size:9px;border-collapse:collapse">'
+        +'<thead><tr style="background:#e2e8f0"><th style="padding:3px 6px;text-align:left;border:1px solid #cbd5e1">항목</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">최소</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">표준</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">최대</th><th style="padding:3px 6px;text-align:left;border:1px solid #cbd5e1">단위</th></tr></thead>'
+        +'<tbody>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ccMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#1d4ed8">'+(r.capC.ccStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ccMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">난방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.hcMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#dc2626">'+(r.capC.hcStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.hcMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">소비전력(냉방)</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwCMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700">'+(r.capC.pwCStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwCMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">소비전력(난방)</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwHMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700">'+(r.capC.pwHStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwHMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">배관경</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.liq?'액관φ '+esc(r.capC.liq):'—')+(r.capC.gas?' &nbsp;/&nbsp; 가스관φ '+esc(r.capC.gas):'')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">mm</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉매종류</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ref?esc(r.capC.ref):'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0"></td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">전원</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0"><input type="text" value="'+esc(r.capC.volt||'')+'" placeholder="3P×220V×60Hz" style="width:100%;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'volt\',this.value)"></td><td style="padding:3px 6px;border:1px solid #e2e8f0"></td></tr>'
+        +'</tbody></table>'
         +'</div>'
 
         // 여유율
@@ -1949,47 +1918,26 @@ function renderCapCalc(){
         +'</div>'
         +'</div></div>'
 
-        // ④⑤⑥ SECTIONS
-        +'<div style="padding:8px 12px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">'
-
-        // ④ INDOOR UNIT
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ INDOOR UNIT</div>'
+        // ④ SPEC TABLE (CTH)
+        +'<div style="padding:8px 12px 10px">'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:8px">☞ 장비 사양</div>'
         +'<button class="btn btP btS no-print" style="margin-bottom:6px" onclick="openCatModal(\'CTH\',function(row){_catCTH(\''+rid+'\',row)})">📋 카탈로그에서 선택</button>'
-        +row('TYPE','model',r.capC.model,'','모델명/형식','indoor_type')
-        +row('AIR VOLUME *','iaf',r.capC.iaf,'CMH','','indoor_airvolume')
-        +row('ESP * <span style="font-size:8px;color:#94a3b8">(덕트·필터·코일 저항 합계)</span>','iesp',r.capC.iesp,'Pa','','indoor_esp')
-        +row('FAN MOTOR *','ifm',r.capC.ifm,'kW','','indoor_fanmotor')
-        +'</div>'
-
-        // ⑤ OUTDOOR UNIT
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ OUTDOOR UNIT</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;gap:4px">'
-        +'<span style="font-size:9px;color:#64748b;white-space:nowrap">COMPRESSOR *</span>'
-        +'<div style="display:flex;align-items:center;gap:3px;flex-shrink:0">'
-        +'<input type="text" value="'+esc(String(r.capC.ocompType||''))+'" placeholder="형식" style="width:65px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'ocompType\',this.value)">'
-        +'<input type="text" value="'+esc(String(r.capC.ocompKw||''))+'" placeholder="kW" style="width:40px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ocompKw\',this.value)">'
-        +'<span style="font-size:9px;color:#94a3b8">kW</span>'
-        +'</div></div>'
-        +row('TYPE *','otype',r.capC.otype||r.capC.ouModel,'','실외기 모델명','outdoor_type')
-        +row('AIR VOLUME *','oaf',r.capC.oaf,'CMH','','outdoor_airvolume')
-        +row('FAN MOTOR *','ofm',r.capC.ofm,'kW','','outdoor_fanmotor')
-        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;font-size:9px;gap:4px">'
-        +'<span style="color:#64748b;white-space:nowrap">POWER SOURCE</span>'
-        +'<input type="text" value="'+esc(String(r.capC.ovolt||''))+'" placeholder="3,4,380,60" style="width:85px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ovolt\',this.value)">'
-        +'</div>'
-        +'</div>'
-
-        // ⑥ PIPING
-        +'<div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:5px">☞ PIPING</div>'
-        +row('LIQUID *','liq',r.capC.liq,'Ø','','piping_liquid')
-        +row('GAS *','gas',r.capC.gas,'Ø','','piping_gas')
-        +row('DRAIN *','drain',r.capC.drain,'A','','piping_drain')
-        +row('WATER *','water',r.capC.water,'A','','piping_water')
-        +'</div>'
-
+        +(r.capC.model?
+          '<div style="font-size:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:6px 8px;margin-bottom:8px">'
+          +'<div style="font-weight:700;color:#1d4ed8;margin-bottom:4px">'+esc(r.capC.model)+(r.capC.ouModel?' / '+esc(r.capC.ouModel):'')+'</div>'
+          +'</div>'
+        :'')
+        +'<table style="width:100%;font-size:9px;border-collapse:collapse">'
+        +'<thead><tr style="background:#e2e8f0"><th style="padding:3px 6px;text-align:left;border:1px solid #cbd5e1">항목</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">최소</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">표준</th><th style="padding:3px 6px;text-align:center;border:1px solid #cbd5e1">최대</th><th style="padding:3px 6px;text-align:left;border:1px solid #cbd5e1">단위</th></tr></thead>'
+        +'<tbody>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ccMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#1d4ed8">'+(r.capC.ccStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ccMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">난방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.hcMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700;color:#dc2626">'+(r.capC.hcStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.hcMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">소비전력(냉방)</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwCMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700">'+(r.capC.pwCStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwCMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">소비전력(난방)</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwHMin??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center;font-weight:700">'+(r.capC.pwHStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.pwHMax??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">배관경</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.liq?'액관φ '+esc(r.capC.liq):'—')+(r.capC.gas?' &nbsp;/&nbsp; 가스관φ '+esc(r.capC.gas):'')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">mm</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉매종류</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0;text-align:center">'+(r.capC.ref?esc(r.capC.ref):'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0"></td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">전원</td><td colspan="3" style="padding:3px 6px;border:1px solid #e2e8f0"><input type="text" value="'+esc(r.capC.volt||'')+'" placeholder="3P×220V×60Hz" style="width:100%;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'volt\',this.value)"></td><td style="padding:3px 6px;border:1px solid #e2e8f0"></td></tr>'
+        +'</tbody></table>'
         +'</div>'
 
         // 여유율
@@ -2120,10 +2068,15 @@ function renderCapCalc(){
         :'')
         +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'
         +lbl('형식*','inType',z.inType,'','타입')
-        +lbl('냉방(W)*','inCc',z.inCc,'W','')
-        +lbl('난방(W)*','inHc',z.inHc,'W','')
-        +lbl('풍량(CMH)*','inAf',z.inAf,'CMH','')
-        +lbl('동력(kW)*','inPw',z.inPw,'kW','')
+        +lbl('성능냉방(W)*','inCc',z.inCc,'W','')
+        +lbl('성능난방(W)*','inHc',z.inHc,'W','')
+        +lbl('전력냉방(W)','inPwC',z.inPwC,'W','')
+        +lbl('전력난방(W)','inPwH',z.inPwH,'W','')
+        +lbl('송풍기형식','inFanType',z.inFanType,'','형식')
+        +lbl('송풍기출력(W)','inFanW',z.inFanW,'W','')
+        +lbl('풍량(CMM)','inAfH',z.inAfH,'CMM','')
+        +lbl('액관(mm)','inLiq',z.inLiq,'mm','')
+        +lbl('가스관(mm)','inGas',z.inGas,'mm','')
         +lbl('전원','inVolt',z.inVolt,'','3P×220V')
         +'</div></div>';
       html+='<div style="margin:4px 12px 10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px">'
@@ -2862,7 +2815,7 @@ function renderCapCalc(){
 
   // 전기온수기
   if(capTab==='전기온수기'){
-    const rooms=STATE.rooms.filter(r=>r.he==='전기온수기');
+    const rooms=STATE.rooms.filter(r=>r.san==='전기온수기');
     if(!rooms.length){el.innerHTML='<div class="empty">전기온수기로 선택된 실이 없습니다.</div>';return;}
     let html=`<div class="card"><div class="ch">전기온수기 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
@@ -2960,7 +2913,7 @@ function renderCapCalc(){
 
   // ── 급수량 (급탕 가열기 선정) ────────────────────────────────
   if(capTab==='급수량'){
-    const rooms=STATE.rooms.filter(r=>r.he==='전기온수기');
+    const rooms=STATE.rooms.filter(r=>r.san==='전기온수기');
     if(!rooms.length){el.innerHTML='<div class="empty">전기온수기로 선택된 실이 없습니다.</div>';return;}
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
     const FX=[['wb','세면기',8,6],['sh','샤워기',60,1],['ba','세탁기',40,0.5],['ks','주방싱크',10,4],['et','기타',0,0]];
