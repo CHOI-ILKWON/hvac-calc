@@ -1551,7 +1551,7 @@ function renderLoadCalc(){
     const tlhRow=grnCf('TOTAL LATENT HEAT',le.tlh);
     const shf=le.pkIdx!=null&&le.rth[le.pkIdx]>0?le.tsh[le.pkIdx]/le.rth[le.pkIdx]:null;
     const shfOk=shf===null||shf>=0.75;
-    const shfRow=`<tr><td colspan="2" style="font-size:8.5px;padding:3px 5px;background:${shfOk?'#f0fdf4':'#fff7ed'};font-weight:700;color:${shfOk?'#166534':'#c2410c'}">현열비 SHF = ${shf!=null?shf.toFixed(2):'—'}${shf!=null&&!shfOk?' ⚠️ 0.75 미만 — 제습 성능 검토 필요 (CTH 또는 ERV 조합 권장)':shf!=null?' ✓ 정상':''}</td>${TIME_SLOTS.map(()=>'<td></td>').join('')}</tr>`;
+    const shfRow=`<tr><td colspan="2" style="font-size:8.5px;padding:2px 5px;color:#1e293b">현열비 SHF = ${shf!=null?shf.toFixed(2):'—'}${shf!=null&&!shfOk?' (0.75 미만)':''}</td>${TIME_SLOTS.map(()=>'<td></td>').join('')}</tr>`;
     const rthRow=`<tr><td colspan="2" style="background:#fbbf24;font-weight:700;color:#78350f;font-size:8.5px;padding:2px 5px;border-top:1px solid #d97706;border-bottom:1px solid #d97706">ROOM TOTAL HEAT</td>${
       cn?TIME_SLOTS.map(()=>'<td style="background:#fef9c3;text-align:right;color:#aaa">—</td>').join('')
         :TIME_SLOTS.map((_,ti)=>`<td style="background:${ti===le.pkIdx?'#fbbf24':'#fef9c3'};text-align:right;font-weight:${ti===le.pkIdx?'700':'400'};font-size:8.5px;padding:2px 4px;border-top:1px solid #d97706;border-bottom:1px solid #d97706">${fW(le.rth[ti])}</td>`).join('')
