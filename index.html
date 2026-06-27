@@ -3439,14 +3439,16 @@ function loadJSON(input){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();
   r.onload=e=>{
-    try{STATE=JSON.parse(e.target.result);
+    try{
+      const raw=e.target.result.replace(/^﻿/,'').trim();
+      STATE=JSON.parse(raw);
       STATE.rooms.forEach(r=>{if(r.type==='generator')r.type='elec';});
       selRid=STATE.rooms[0]?.id||null;
       loadPtoForm();renderBldgTree();renderRoomList();renderRoomDetail();
       alert('불러오기 완료');
-    }catch{alert('JSON 파싱 오류');}
+    }catch(err){alert('JSON 파싱 오류\n\n'+err.message);}
   };
-  r.readAsText(f);input.value='';
+  r.readAsText(f,'UTF-8');input.value='';
 }
 
 // ══════════════════════════════════════════════
