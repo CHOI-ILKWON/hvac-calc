@@ -1042,7 +1042,7 @@ function newRoom(){
     winS:{w:0,h:0,shgc:0.35,u:2.10}, winW:{w:0,h:0,shgc:0.35,u:2.10},
     iw1:{len:0,u:2.08}, iw2:{len:0,u:2.08}, iw3:{len:0,u:2.08}, iw4:{len:0,u:2.08},
     roofOn:false, roofA:0, roofU:0.11,
-    floorOn:false, floorU:3.0,
+    floorOn:false, floorU:3.13,
     infACH:0.5, ventACH:5, ia:0,
     od:0.1, lw:15, eqKW:0,
     ce:'EHP', he:'EHP', ve:'전열교환기', san:'',
@@ -1302,7 +1302,7 @@ function renderRoomDetail(){
     </div>
     <div class="fv"><label>바닥 U값 (W/m²K)</label>
       <input type="number" value="${r.floorU}" step="0.01" ${!r.floorOn?'disabled':''}
-        onchange="sR('floorU',parseFloat(this.value)||3.0)">
+        onchange="sR('floorU',parseFloat(this.value)||3.13)">
     </div>
   </div>
 </div></div>
