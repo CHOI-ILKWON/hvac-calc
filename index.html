@@ -1507,12 +1507,15 @@ function renderLoadCalc(){
       const wd=room['wall'+d];
       const {b:_bldgD}=getBF(room.bldgId,room.floorId);
       const _CW=(_bldgD?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
-      const cltd=le.pkIdx!=null?(_CW[d]||_CW.N)[le.pkIdx]:null;
+      const cltdArr=(_CW[d]||_CW.N);
       const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
-      return cRowFixed(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD${cltd!=null?cltd.toFixed(1):'—'}℃×U${wd.u}`,le.td&&le.td[0]?le.td[0].wc[d]:0);
+      return cRow(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD(${cltdArr.join('/')})℃×U${wd.u}`,
+        TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].wc[d]:0));
     }).join('');
-    const roofCltd=le.pkIdx!=null?CLTD_ROOF[le.pkIdx]:null;
-    const roofRowC=cRowFixed('ROOF',room.roofOn?`${f1(le.roofA)}㎡×CLTD${roofCltd!=null?roofCltd.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.td&&le.td[0]?le.td[0].rc:0);
+    const roofRowC=room.roofOn
+      ? cRow('ROOF',`${f1(le.roofA)}㎡×CLTD(${CLTD_ROOF.join('/')})℃×U${room.roofU}`,
+          TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rc:0))
+      : cRowFixed('ROOF','비활성',0);
     const glassCRows=DIRS.map(d=>{
       const wn=room['win'+d];
       return cRowFixed(`GLASS ${d}`,`${f1(wn.w*wn.h)}㎡×ΔT/2=${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${wn.u}`,le.td&&le.td[0]?le.td[0].gc[d]:0);
