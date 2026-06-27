@@ -449,7 +449,7 @@ const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:0,  va:10, ce:'없음', he:'유니트히터', ve:'인라인덕트팬'}, // va:10 — AIK 기준 기계실 권장 환기횟수 (열 배출 목적)
   elec:    {lb:'전기실류',                  cdb:30,  crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:12, ce:'PAC',  he:'없음',      ve:'없음'},           // va:12 — AIK 기준 전기실 권장 환기횟수 (발열 제거 목적); cdb:30 — 판넬류 허용온도 기준
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:20, ce:'없음', he:'없음',      ve:'인라인덕트팬'},       // cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
-  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},        // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준; hdb:20 — AIK 일반 사무·업무시설 화장실 기준
+  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬', iw_u:2.38}, // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준
   locker:  {lb:'탈의실류',                  cdb:null,crh:null,hdb:22,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},        // hdb:22 — 탈의 행위 고려 상향; 설비 구성은 화장실류와 동일
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기'},       // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2)
   control: {lb:'중앙제어실/계측류실',       cdb:24,  crh:50, hdb:24,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기'},       // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음
@@ -1134,6 +1134,7 @@ function setRoomType(tp){
   r.type=tp; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
   r.od=rt.od; r.lw=rt.lw; r.ia=rt.ia; r.infACH=0.5; r.ventACH=rt.va;
   r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve;
+  if(rt.iw_u!=null){const u=rt.iw_u;[1,2,3,4].forEach(n=>{r['iw'+n].u=u;});}
   renderRoomDetail();renderRoomList();
 }
 function onBldgChange(bid){
