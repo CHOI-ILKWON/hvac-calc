@@ -1334,7 +1334,7 @@ function renderRoomDetail(){
     <div class="fv"><label>냉방 설비</label><select onchange="sR('ce',this.value)">${ceOpts}</select></div>
     <div class="fv"><label>난방 설비</label><select onchange="sR('he',this.value)">${heOpts}</select></div>
     <div class="fv"><label>환기 설비</label><select onchange="sR('ve',this.value)">${veOpts}</select></div>
-    ${(r.type==='toilet'||r.type==='locker')?`<div class="fv"><label>위생 설비</label><select onchange="sR('san',this.value)">${sanOpts}</select></div>`:''}
+    ${r.type==='toilet'?`<div class="fv"><label>위생 설비</label><select onchange="sR('san',this.value)">${sanOpts}</select></div>`:''}
   </div>
 </div></div>
 `;
