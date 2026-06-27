@@ -1062,6 +1062,10 @@ function getBF(bldgId,floorId){
   return {b,f};
 }
 function getRi(){return STATE.rooms.findIndex(r=>r.id===selRid);}
+function getInfACH(room){
+  const faces=['N','E','S','W'].filter(d=>room['wall'+d].en).length;
+  return [0.5,0.5,0.6,0.8,1.0][faces];
+}
 
 // ══════════════════════════════════════════════
 //  ROOM LIST
@@ -1132,7 +1136,7 @@ function setRoomType(tp){
   const rt=RT[tp]; if(!rt)return;
   const r=STATE.rooms[i];
   r.type=tp; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
-  r.od=rt.od; r.lw=rt.lw; r.ia=rt.ia; r.infACH=0.5; r.ventACH=rt.va;
+  r.od=rt.od; r.lw=rt.lw; r.ia=rt.ia; r.ventACH=rt.va;
   r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve;
   if(rt.iw_u!=null){const u=rt.iw_u;[1,2,3,4].forEach(n=>{r['iw'+n].u=u;});}
   renderRoomDetail();renderRoomList();
@@ -1164,7 +1168,7 @@ function renderRoomDetail(){
   const i=getRi(); if(i<0){el.innerHTML='<div class="empty">실 없음</div>';return;}
   const r=STATE.rooms[i];
   const area=gA(r), vol=gV(r);
-  const occ=r.od*area, lightW=r.lw*area*1.08, infCMH=vol*r.infACH, ventCMH=vol*r.ventACH;
+  const occ=r.od*area, lightW=r.lw*area*1.08, infCMH=vol*getInfACH(r), ventCMH=vol*r.ventACH;
   const {b,f}=getBF(r.bldgId,r.floorId);
   const _p=STATE.project;
   const _outDB=_p.cust||_p.cdb;
@@ -1306,7 +1310,7 @@ function renderRoomDetail(){
 <div class="card"><div class="ch">§4 INFILTRATION (침기) / 환기 팬 설정<span class="src-badge">건축법 시행규칙 별표1의2 환기기준</span></div><div class="cb">
   <div style="font-size:10px;font-weight:700;color:var(--nv);margin-bottom:5px">§4-① INFILTRATION (침기부하 계산용)</div>
   <div class="fg fg6">
-    <div class="fv"><label>INFILTRATION 횟수 (회/h)</label><input type="number" value="${r.infACH}" step="0.1" onchange="sRd('infACH',parseFloat(this.value)||0)"></div>
+    <div class="fv"><label>INFILTRATION 횟수 (회/h) 자동</label><input class="au" readonly value="${getInfACH(r)}" title="외벽 체크 수 기준 자동: 1면=0.5, 2면=0.6, 3면=0.8, 4면=1.0"></div>
     <div class="fv"><label>침입량 (m³/h) 자동</label><input class="au" readonly value="${f0(infCMH)}"></div>
   </div>
   <div style="font-size:10px;color:var(--bl);margin-top:4px">※ 부하계산서에 사용됩니다</div>
@@ -1349,7 +1353,8 @@ function calcLE(room){
   const outDB=p.cust||p.cdb, outWB=p.cwb, outH=p.hdb;
   const area=gA(room), h=room.height, vol=area*h;
   // 환기부하는 ERV/팬 등 별도 환기설비가 처리; ventACH는 용량계산서 팬 선정에만 사용
-  const infCMH=vol*room.infACH;
+  const infACH=getInfACH(room);
+  const infCMH=vol*infACH;
   const occ=room.od*area;
   const lightW=room.lw*area*1.08;
   const eqW=room.eqKW*1000;
@@ -1439,7 +1444,7 @@ function calcLE(room){
   return {
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
-    infL,oaL,pplL,rlh,
+    infACH,infL,oaL,pplL,rlh,
     hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,
     ventCMH,oaCMH_raw,oaCMH,oaPpl,oaS,oaH,ervEff,
   };
@@ -1587,7 +1592,7 @@ function renderLoadCalc(){
   </tr>
   <tr style="border-top:1px solid #ddd">
     <td style="padding:3px 7px;border-right:1px solid #555;font-size:8.5px"><span style="color:#666">ROOM :</span> <strong>${esc(room.name)}</strong></td>
-    <td style="padding:3px 7px;font-size:8px"><span style="color:#666">PEOPLE</span> ${room.od}P/㎡=${f1(le.occ)}인 &nbsp;|&nbsp; <span style="color:#666">INF</span> ${room.infACH}ACH=${f0(le.infCMH)}㎥/h &nbsp;|&nbsp; <span style="color:#666">LIGHT</span> ${room.lw}W/㎡</td>
+    <td style="padding:3px 7px;font-size:8px"><span style="color:#666">PEOPLE</span> ${room.od}P/㎡=${f1(le.occ)}인 &nbsp;|&nbsp; <span style="color:#666">INF</span> ${le.infACH}ACH=${f0(le.infCMH)}㎥/h &nbsp;|&nbsp; <span style="color:#666">LIGHT</span> ${room.lw}W/㎡</td>
   </tr>
 </table>
 
