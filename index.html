@@ -285,6 +285,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
         <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">5회/h</td><td class="L">EHP</td></tr>
         <tr><td class="L">중앙제어실류</td><td class="C">24℃ / 50%</td><td class="C">24℃ / 50%</td><td class="C">10회/h</td><td class="L">PAC, 항온항습기</td></tr>
+        <tr><td class="L">주방류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">15회/h</td><td class="L">EHP, 천정형팬</td></tr>
         <tr><td class="L">창고류</td><td class="C">-</td><td class="C">-</td><td class="C">3회/h</td><td class="L">벽부형팬</td></tr>
       </table>
       <div style="font-size:12px;line-height:1.9;margin-top:10px">
@@ -453,6 +454,7 @@ const RT = {
   locker:  {lb:'탈의실류',                  cdb:null,crh:null,hdb:22,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬'},        // hdb:22 — 탈의 행위 고려 상향; 설비 구성은 화장실류와 동일
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기'},       // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2)
   control: {lb:'중앙제어실/계측류실',       cdb:24,  crh:50, hdb:24,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기'},       // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음
+  kitchen: {lb:'주방류',                    cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:0,  va:15, ce:'EHP',  he:'EHP',        ve:'천정형팬'},         // va:15 — 조리 냄새·수증기 배출 기준; 사무실류 온습도 + 환기횟수 상향
   storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:5, ia:0,  va:3,  ce:'없음', he:'없음',       ve:'벽부형팬'},         // va:3 — 실무 관행 (AIK 창고류 최소 환기)
 };
 
