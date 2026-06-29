@@ -575,7 +575,8 @@ function openCatModal(type, callback) {
   _catType = type;
   _catCB   = callback;
   const typeMap = {
-    CTH:'CTH 항온항습기', PAC:'PAC 패키지에어콘(냉난방)',
+    CTH_WATER:'CTH 항온항습기 수냉식', CTH_AIR:'CTH 항온항습기 공냉식',
+    PAC:'PAC 패키지에어콘(냉난방)',
     PAC_C:'PAC 패키지에어콘(냉방전용)',
     EHP:'EHP 실내기', EHP_OUT:'EHP 실외기',
     UNIT_HEATER:'유니트히터', RADIATOR:'라디에이터',
@@ -677,18 +678,19 @@ function renderCatModal(rows) {
   const thStyle = 'padding:4px 8px;white-space:nowrap;cursor:pointer;user-select:none;background:#e2e8f0;position:sticky;top:0;z-index:1';
   el.innerHTML = '<div class="tw"><table>'
     + '<thead><tr>'
+    + '<th style="'+thStyle+'"></th>'
     + keys.map(function(k) {
         const si = _catSort.findIndex(s => s.k === k);
         const arrow = si >= 0 ? (_catSort[si].d === 'asc' ? ' ▲' : ' ▼') : '';
         const badge = _catSort.length > 1 && si >= 0 ? '<sup style="font-size:8px;color:#6366f1">'+(si+1)+'</sup>' : '';
         return '<th style="'+thStyle+'" onclick="sortCatModal(\''+k+'\',event.shiftKey)">'+k+badge+arrow+'</th>';
       }).join('')
-    + '<th style="'+thStyle+'"></th></tr></thead>'
+    + '</tr></thead>'
     + '<tbody>'
     + sorted.map(function(row, i) {
         return '<tr style="cursor:pointer" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'">'
-          + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+fmtCell(row[k])+'</td>'; }).join('')
           + '<td><button class="btn btP btS" onclick="selectCatRow('+i+')">선택</button></td>'
+          + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+fmtCell(row[k])+'</td>'; }).join('')
           + '</tr>';
       }).join('')
     + '</tbody></table></div>';
@@ -744,36 +746,50 @@ function _catPAC(rid, row) {
   renderCapCalc();
 }
 
-function _catCTH(rid, row) {
+function _catCTHW(rid, row) {
   const r = STATE.rooms.find(function(x){return x.id===rid;});
   if (!r) return;
-  // 실내기
-  r.capC.model    = row['실내기_형식']                  || row['형식'] || r.capC.model;
-  r.capC.iaf      = row['팬&모터_풍량(CMH)']           ?? r.capC.iaf;
-  r.capC.iesp     = row['팬&모터_정압(mmAq)']          ?? r.capC.iesp;
-  r.capC.ifm      = row['팬&모터_모터(kW)']            ?? r.capC.ifm;
-  var _ccW = row['냉방코일_용량(W)'];
-  var _hcW = row['난방코일_용량(W)'];
-  if (_ccW != null) { r.capC.ccStd = _ccW / 1000; r.capC.selC = _ccW; }
-  if (_hcW != null) { r.capC.hcStd = _hcW / 1000; r.capC.selH = _hcW; }
-  r.capC.humidity = row['가습기_용량(kg/h)']           ?? r.capC.humidity;
-  r.capC.ref      = row['냉매']                        || r.capC.ref;
-  r.capC.gas      = row['연결관경(Ø mm)_가스관'] != null ? String(row['연결관경(Ø mm)_가스관']) : r.capC.gas;
-  r.capC.liq      = row['연결관경(Ø mm)_액관']  != null ? String(row['연결관경(Ø mm)_액관'])  : r.capC.liq;
-  r.capC.pwCStd   = row['동력*(kW)']                  ?? r.capC.pwCStd;
-  r.capC.pw       = row['동력*(kW)'] != null ? String(row['동력*(kW)']) : r.capC.pw;
-  r.capC.volt     = row['전원(Ph/V/Hz)']               || r.capC.volt;
-  // 실외기
-  r.capC.ouCcW     = row['실외기_냉방용량(W)']                  ?? r.capC.ouCcW;
-  r.capC.ouHcW     = row['실외기_난방용량(W)']                  ?? r.capC.ouHcW;
-  r.capC.ouCompType= row['실외기_압축기_형식']                  || r.capC.ouCompType;
-  r.capC.ouCompKw  = row['실외기_압축기_모터(kW)']              ?? r.capC.ouCompKw;
-  r.capC.ouCondType= row['실외기_응축기_형식']                  || r.capC.ouCondType;
-  r.capC.ouCondAf  = row['실외기_응축기_팬용량(CMH)']           ?? r.capC.ouCondAf;
-  r.capC.ouCondKw  = row['실외기_응축기_모터(kW)']              ?? r.capC.ouCondKw;
-  r.capC.ouRef     = row['실외기_냉매']                         || r.capC.ouRef;
-  r.capC.ouPw      = row['실외기_동력*(kW)']                    ?? r.capC.ouPw;
-  r.capC.ouVolt    = row['실외기_전원(Ph/V/Hz)']                || r.capC.ouVolt;
+  r.capC.model     = row['모델'] || r.capC.model;
+  var _cc = row['냉방능력(kW)'];
+  var _hc = row['난방능력(kW)'];
+  if (_cc != null) { r.capC.ccStd = Number(_cc); r.capC.selC = Math.round(_cc * 1000); }
+  if (_hc != null) { r.capC.hcStd = Number(_hc); r.capC.selH = Math.round(_hc * 1000); }
+  var _af = row['송풍기_표준풍량(CMM)'];
+  r.capC.iaf       = _af != null ? Math.round(_af * 60) : r.capC.iaf;
+  r.capC.iesp      = row['송풍기_기외정압(mmAq)'] ?? r.capC.iesp;
+  r.capC.ouCompType= row['압축기_형식']    || r.capC.ouCompType || '';
+  r.capC.ouCompKw  = row['압축기_출력(kW)'] ?? r.capC.ouCompKw;
+  r.capC.ref       = row['냉매']   || r.capC.ref;
+  r.capC.volt      = row['전원']   || r.capC.volt;
+  r.capC.pwCStd    = row['소비전력(kW)'] ?? r.capC.pwCStd;
+  r.capC.pw        = row['소비전력(kW)'] != null ? String(row['소비전력(kW)']) : r.capC.pw;
+  r.capC.ouCcW     = null;
+  r.capC.ouRef     = '';
+  renderCapCalc();
+}
+
+function _catCTHA(rid, row) {
+  const r = STATE.rooms.find(function(x){return x.id===rid;});
+  if (!r) return;
+  r.capC.model     = row['실내기 모델'] || r.capC.model;
+  var _cc = row['냉방능력(kW)'];
+  var _hc = row['난방능력(kW)'];
+  if (_cc != null) { r.capC.ccStd = Number(_cc); r.capC.selC = Math.round(_cc * 1000); }
+  if (_hc != null) { r.capC.hcStd = Number(_hc); r.capC.selH = Math.round(_hc * 1000); }
+  var _af = row['실내기_송풍기_표준풍량(CMM)'];
+  r.capC.iaf       = _af != null ? Math.round(_af * 60) : r.capC.iaf;
+  r.capC.iesp      = row['실내기_송풍기_기외정압(mmAq)'] ?? r.capC.iesp;
+  r.capC.ref       = row['냉매']   || r.capC.ref;
+  r.capC.volt      = row['전원']   || r.capC.volt;
+  r.capC.pwCStd    = row['소비전력(kW)'] ?? r.capC.pwCStd;
+  r.capC.pw        = row['소비전력(kW)'] != null ? String(row['소비전력(kW)']) : r.capC.pw;
+  r.capC.ouModel   = row['실외기 모델'] || r.capC.ouModel || '';
+  r.capC.ouCcW     = _cc != null ? Math.round(_cc * 1000) : r.capC.ouCcW;
+  r.capC.ouCompType= row['실외기_압축기_형식']   || r.capC.ouCompType || '';
+  r.capC.ouCompKw  = row['실외기_압축기_출력(kW)'] ?? r.capC.ouCompKw;
+  r.capC.ouCondType= row['실외기_열교환기형식']    || r.capC.ouCondType || '';
+  r.capC.ouRef     = row['실외기_냉매'] || r.capC.ouRef || '';
+  renderCapCalc();
 }
 
 function _catEHP(zi, row) {
@@ -960,7 +976,6 @@ function loadPtoForm(){
   document.getElementById('p-hrh').value=p.w_rh??'';
   document.getElementById('p-hx').value=p.w_x??'';
   if(p.cust) document.getElementById('p-cust').value=p.cust;
-  document.getElementById('p-walltype').value=p.wallType||'heavy';
   document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
 function updP(){
@@ -969,7 +984,6 @@ function updP(){
   p.client=document.getElementById('p-client').value;
   p.date=document.getElementById('p-date').value;
   p.cust=parseFloat(document.getElementById('p-cust').value)||null;
-  p.wallType=document.getElementById('p-walltype').value||'heavy';
   document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
 function onLocChange(){
@@ -2067,40 +2081,42 @@ function renderCapCalc(){
         // ④ SPEC TABLE (CTH — 실내기 + 실외기)
         +'<div style="padding:8px 12px 10px">'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:8px">☞ 장비 사양</div>'
-        +'<button class="btn btP btS no-print" style="margin-bottom:8px" onclick="openCatModal(\'CTH\',function(row){_catCTH(\''+rid+'\',row)})">📋 카탈로그에서 선택</button>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_WATER\',function(row){_catCTHW(\''+rid+'\',row)})">📋 수냉식 카탈로그 선택</button>'
+        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_AIR\',function(row){_catCTHA(\''+rid+'\',row)})">📋 공냉식 카탈로그 선택</button>'
+        +'</div>'
         // 실내기 섹션
         +'<div style="font-weight:700;font-size:9px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;padding:4px 8px;border-radius:4px 4px 0 0;margin-top:4px">실내기 (INDOOR UNIT)</div>'
         +'<table style="width:100%;font-size:9px;border-collapse:collapse;margin-bottom:10px">'
         +'<tbody>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600;width:38%">형식</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.model?esc(r.capC.model):'—')+'</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">팬 풍량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.iaf??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">CMH</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">팬 정압</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.iesp??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">mmAq</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">팬 모터</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ifm??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉방코일 용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#1d4ed8">'+(r.capC.ccStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">난방코일 용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#dc2626">'+(r.capC.hcStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">가습기 용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.humidity??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kg/h</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600;width:38%">모델</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.model?esc(r.capC.model):'—')+'</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#1d4ed8">'+(r.capC.ccStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">난방능력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#dc2626">'+(r.capC.hcStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">송풍기 풍량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.iaf??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">CMH</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">기외정압</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.iesp??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">mmAq</td></tr>'
+        +(r.capC.ouCcW==null?
+          '<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">압축기 형식</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouCompType?esc(r.capC.ouCompType):'—')+'</td></tr>'
+          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">압축기 출력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouCompKw??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        :
+          '<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">열교환기</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouCondType?esc(r.capC.ouCondType):'—')+'</td></tr>'
+        )
         +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉매</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ref?esc(r.capC.ref):'—')+'</td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">연결관경</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.liq?'액관 φ'+esc(r.capC.liq):'—')+(r.capC.gas?' &nbsp;/&nbsp; 가스관 φ'+esc(r.capC.gas):'')+'<span style="color:#64748b"> mm</span></td></tr>'
-        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">동력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.pwCStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">가습기 용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.humidity??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kg/h</td></tr>'
+        +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">소비전력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.pwCStd??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
         +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">전원</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0"><input type="text" value="'+esc(r.capC.volt||'')+'" placeholder="3P×220V×60Hz" style="width:100%;padding:2px 4px;border:1px solid #e2e8f0;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'volt\',this.value)"></td></tr>'
         +'</tbody></table>'
         // 실외기 섹션 (공냉식에만 해당)
-        +(r.capC.ouCcW!=null||r.capC.ouCompType?
+        +(r.capC.ouCcW!=null?
           '<div style="font-weight:700;font-size:9px;color:#065f46;background:#ecfdf5;border:1px solid #6ee7b7;padding:4px 8px;border-radius:4px 4px 0 0">실외기 (OUTDOOR UNIT)</div>'
           +'<table style="width:100%;font-size:9px;border-collapse:collapse;margin-bottom:4px">'
           +'<tbody>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600;width:38%">냉방용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#1d4ed8">'+(r.capC.ouCcW!=null?(r.capC.ouCcW/1000).toFixed(2):'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">난방용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right;font-weight:700;color:#dc2626">'+(r.capC.ouHcW!=null?(r.capC.ouHcW/1000).toFixed(2):'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600;width:38%">모델</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouModel?esc(r.capC.ouModel):'—')+'</td></tr>'
           +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">압축기 형식</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouCompType?esc(r.capC.ouCompType):'—')+'</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">압축기 모터</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouCompKw??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">응축기 형식</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouCondType?esc(r.capC.ouCondType):'—')+'</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">응축기 팬용량</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouCondAf??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">CMH</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">응축기 모터</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouCondKw??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">압축기 출력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouCompKw??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
+          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">열교환기</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouCondType?esc(r.capC.ouCondType):'—')+'</td></tr>'
           +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">냉매</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouRef?esc(r.capC.ouRef):'—')+'</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">동력</td><td style="padding:3px 6px;border:1px solid #e2e8f0;text-align:right">'+(r.capC.ouPw??'—')+'</td><td style="padding:3px 6px;border:1px solid #e2e8f0;color:#64748b">kW</td></tr>'
-          +'<tr><td style="padding:3px 6px;border:1px solid #e2e8f0;font-weight:600">전원</td><td colspan="2" style="padding:3px 6px;border:1px solid #e2e8f0">'+(r.capC.ouVolt?esc(r.capC.ouVolt):'—')+'</td></tr>'
           +'</tbody></table>'
-        :'<div style="font-size:9px;color:#94a3b8;margin-top:4px;padding:4px 6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px">실외기: 수냉식 또는 미선정</div>')
+        :'<div style="font-size:9px;color:#94a3b8;margin-top:4px;padding:4px 6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px">실외기: 수냉식(해당없음) 또는 미선정</div>')
         +'</div>'
 
         // 여유율
