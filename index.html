@@ -157,6 +157,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
   <button class="btn" onclick="saveJSON()">JSON 저장</button>
   <button class="btn" onclick="document.getElementById('fi').click()">JSON 불러오기</button>
   <input type="file" id="fi" accept=".json" style="display:none" onchange="loadJSON(this)">
+  <button class="btn" onclick="resetAll()" title="자동저장 내용을 지우고 새 프로젝트를 시작합니다">새 프로젝트</button>
   <span style="width:1px;height:20px;background:var(--bdr);display:inline-block;margin:0 2px"></span>
   <label class="btn" style="cursor:pointer" title="hvac-catalog 선정 내보내기 JSON 파일을 불러옵니다">
     📦 카탈로그 연동
@@ -283,7 +284,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC</td></tr>
         <tr><td class="L">화장실류</td><td class="C">-</td><td class="C">20℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
         <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
-        <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">5회/h</td><td class="L">EHP</td></tr>
+        <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">25㎥/h·인</td><td class="L">EHP</td></tr>
         <tr><td class="L">중앙제어실류</td><td class="C">24℃ / 50%</td><td class="C">24℃ / 50%</td><td class="C">10회/h</td><td class="L">PAC, 항온항습기</td></tr>
         <tr><td class="L">주방류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">15회/h</td><td class="L">EHP, 천정형팬</td></tr>
         <tr><td class="L">창고류</td><td class="C">-</td><td class="C">-</td><td class="C">3회/h</td><td class="L">벽부형팬</td></tr>
@@ -297,7 +298,9 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       </div>
       <div style="background:#fef3c7;border-radius:var(--r);padding:10px 14px;margin-top:10px;font-size:11px;color:#92400e">
         ⚠️ 주의: 냉방이 없는 실(기계실·화장실 등)은 냉방설계온도를 비워두면
-        부하계산서에서 냉방 항목이 자동으로 제외됩니다.
+        부하계산서에서 냉방 항목이 자동으로 제외됩니다.<br>
+        화장실·주방처럼 겨울에도 배기팬이 도는 실은 §4-②의 "난방 시 배기 가동"을 체크하면
+        배기 보충외기 부하가 난방에 가산됩니다. (화장실류·주방류는 기본 체크)
       </div>
     </div>
   </div>
@@ -365,7 +368,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <b>Q. 기상조건 수치는 어디서 나온 건가요?</b><br>
       &nbsp;&nbsp;&nbsp;A. 국토교통부 고시 [별표7] 건축물 에너지절약설계기준의 지역별 기상데이터입니다.<br><br>
       <b>Q. JSON 저장은 왜 필요한가요?</b><br>
-      &nbsp;&nbsp;&nbsp;A. 입력 데이터 전체를 .json 파일로 저장합니다. 나중에 불러오면 이어서 작업 가능합니다.<br><br>
+      &nbsp;&nbsp;&nbsp;A. 입력 데이터 전체를 .json 파일로 저장합니다. 나중에 불러오면 이어서 작업 가능합니다.<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;입력 내용은 브라우저에도 자동 저장되어 새로고침해도 유지됩니다. (다른 PC로 옮길 땐 JSON 사용)<br><br>
       <b>Q. PDF 출력 시 색상이 안 나와요.</b><br>
       &nbsp;&nbsp;&nbsp;A. 브라우저 인쇄 설정에서 "배경 그래픽" 옵션을 체크해야 합니다.<br><br>
       <b>Q. 이 계산서는 법적 효력이 있나요?</b><br>
@@ -453,11 +457,11 @@ const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,od:0,    lw:15,ia:0,  va:10, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', phS:57, phL:62}, // va:10 — AIK 기준 기계실 권장 환기횟수 (열 배출 목적); phS/phL — od:0이라 미사용
   elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:12, ce:'PAC',  he:'없음',      ve:'없음',        phS:57, phL:62}, // va:12 — AIK 기준 전기실 권장 환기횟수 (발열 제거 목적); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함 (od:0)
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:15,ia:0,  va:20, ce:'없음', he:'없음',      ve:'인라인덕트팬', phS:57, phL:62}, // cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
-  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬', san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
+  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 건축법 시행규칙 제11조 화장실 배기 기준; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,od:0.02, lw:10,ia:0,  va:15, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'EHP',  he:'EHP',        ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2); phS/phL — 경작업, 좌식 (ASHRAE Table 1)
   control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, od:0.1,  lw:15,ia:10, va:0,  ce:'CTH',  he:'없음',       ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); phS/phL — office류와 동일
-  kitchen: {lb:'주방류',                    cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:0,  va:15, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:100,phL:165}, // va:15 — 조리 냄새·수증기 배출 기준; 사무실류 온습도 + 환기횟수 상향; phS/phL — 중작업, 조리 활동 (ASHRAE Table 1)
+  kitchen: {lb:'주방류',                    cdb:26,  crh:50, hdb:21,  hrh:50, od:0.1,  lw:15,ia:0,  va:15, ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:true, phS:100,phL:165}, // va:15 — 조리 냄새·수증기 배출 기준; 사무실류 온습도 + 환기횟수 상향; phS/phL — 중작업, 조리 활동 (ASHRAE Table 1)
   storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,od:0,    lw:5, ia:0,  va:3,  ce:'없음', he:'없음',       ve:'벽부형팬', phS:57, phL:62}, // va:3 — 실무 관행 (AIK 창고류 최소 환기); phS/phL — od:0이라 미사용
 };
 
@@ -465,7 +469,7 @@ const BLDG_USAGE = ['사무/업무시설','공장/산업시설','의료시설','
 const COOL_EQUIPS = ['PAC','EHP','CTH','없음'];
 const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','없음'];
 const SAN_EQUIPS  = ['전기온수기','없음'];
-const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','없음'];
+const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','환기유니트','없음'];
 
 // ══════════════════════════════════════════════
 //  PSYCHROMETRICS
@@ -569,7 +573,7 @@ function flattenCols(cols) {
   return keys;
 }
 
-function openCatModal(type, callback) {
+function openCatModal(type, callback, req) {
   const data = loadCatalogDB();
   if (!data) {
     alert('카탈로그가 연동되지 않았습니다.\n툴바의 "카탈로그 연동" 버튼으로 먼저 JSON을 불러오세요.');
@@ -577,6 +581,8 @@ function openCatModal(type, callback) {
   }
   _catType = type;
   _catCB   = callback;
+  _catReq  = (req && req.val > 0) ? req : null; // {val, unit, label} — 필요용량
+  _catFitOnly = false;
   const typeMap = {
     CTH_WATER:'CTH 항온항습기 수냉식', CTH_AIR:'CTH 항온항습기 공냉식',
     PAC:'PAC 패키지에어콘(냉난방)',
@@ -615,6 +621,25 @@ function closeCatModal() {
 
 var _catSort = []; // [{k, d:'asc'|'desc'}, ...]
 var _catFiltered = [];
+var _catReq = null;      // 필요용량 {val, unit, label}
+var _catFitOnly = false; // 충족 모델만 보기
+// 장비 유형별 용량 컬럼과 W(또는 CMH/L) 환산 배수
+const CAT_CAP_KEYS = {
+  PAC:        {k:'냉방능력(kW)_표준', mult:1000},
+  PAC_C:      {k:'냉방능력(kW)_표준', mult:1000},
+  CTH_WATER:  {k:'냉방능력(kW)',      mult:1000},
+  CTH_AIR:    {k:'냉방능력(kW)',      mult:1000},
+  EHP:        {k:'냉방(kW)',          mult:1000},
+  EHP_OUT:    {k:'성능(kW)_냉방',     mult:1000},
+  UNIT_HEATER:{k:'용량_(W)',          mult:1},
+  RADIATOR:   {k:'열량(Kcal)',        mult:1.163},
+  FAN_INLINE: {k:'최대풍량(m³/h)',   mult:1},
+  FAN_CEILING:{k:'최대풍량(m³/h)',   mult:1},
+  FAN_WALL:   {k:'최대풍량(m³/h)',   mult:1},
+  FAN_ROOF:   {k:'최대풍량(m³/h)',   mult:1},
+  HEX:        {k:'풍량(m³/h)_강',    mult:1},
+  WATER_HEATER:{k:'용량(L)',          mult:1},
+};
 
 function filterCatModal() {
   const q = document.getElementById('cat-search').value.toLowerCase();
@@ -651,8 +676,25 @@ function renderCatModal(rows) {
   }
   const keys = Object.keys(rows[0]);
 
+  // 필요용량 판정
+  const capInfo = _catReq ? CAT_CAP_KEYS[_catType] : null;
+  const capOf = function(r) {
+    if (!capInfo) return null;
+    const v = Number(r[capInfo.k]);
+    return isFinite(v) && v > 0 ? v * capInfo.mult : null;
+  };
+  const fits = function(r) { const c = capOf(r); return c != null && c >= _catReq.val; };
+
+  let work = rows.slice();
+  if (_catReq && capInfo && _catFitOnly) work = work.filter(fits);
+  if (_catReq && capInfo && !work.length) {
+    el.innerHTML = '<div class="empty">필요용량을 충족하는 장비가 없습니다.</div>';
+    el._filteredRows = [];
+    return;
+  }
+
   // multi-sort
-  let sorted = rows.slice();
+  let sorted = work;
   if (_catSort.length) {
     sorted.sort(function(a, b) {
       for (let i = 0; i < _catSort.length; i++) {
@@ -667,6 +709,15 @@ function renderCatModal(rows) {
       }
       return 0;
     });
+  } else if (_catReq && capInfo) {
+    // 추천 정렬: 충족 모델 먼저, 그 안에서 용량 오름차순 (최소 적정 모델이 맨 위)
+    sorted = sorted.slice().sort(function(a, b) {
+      const fa = fits(a), fb = fits(b);
+      if (fa !== fb) return fa ? -1 : 1;
+      const ca = capOf(a), cb = capOf(b);
+      if (ca != null && cb != null) return ca - cb;
+      return 0;
+    });
   }
 
   const fmtCell = function(v) {
@@ -679,7 +730,14 @@ function renderCatModal(rows) {
   };
 
   const thStyle = 'padding:4px 8px;white-space:nowrap;cursor:pointer;user-select:none;background:#e2e8f0;position:sticky;top:0;z-index:1';
-  el.innerHTML = '<div class="tw"><table>'
+  const banner = _catReq && capInfo
+    ? '<div style="font-size:11px;padding:6px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      + '<b style="color:#1d4ed8">필요 ' + _catReq.label + ' : ' + fW(_catReq.val) + ' ' + _catReq.unit + '</b>'
+      + '<span style="color:#16a34a;font-size:10px">초록 행 = 충족 모델 (최소 용량순 우선 표시)</span>'
+      + '<label style="font-size:10px;display:flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer"><input type="checkbox" ' + (_catFitOnly ? 'checked' : '') + ' onchange="_catFitOnly=this.checked;renderCatModal(_catFiltered)"> 충족 모델만 보기</label>'
+      + '</div>'
+    : (_catReq ? '<div style="font-size:10px;color:#94a3b8;margin-bottom:6px">이 장비 유형은 필요용량 자동판정을 지원하지 않습니다.</div>' : '');
+  el.innerHTML = banner + '<div class="tw"><table>'
     + '<thead><tr>'
     + '<th style="'+thStyle+'"></th>'
     + keys.map(function(k) {
@@ -691,7 +749,9 @@ function renderCatModal(rows) {
     + '</tr></thead>'
     + '<tbody>'
     + sorted.map(function(row, i) {
-        return '<tr style="cursor:pointer" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'">'
+        const ok = (_catReq && capInfo) ? fits(row) : false;
+        const bg = ok ? '#f0fdf4' : '';
+        return '<tr style="cursor:pointer' + (bg ? ';background:' + bg : '') + '" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'' + bg + '\'">'
           + '<td><button class="btn btP btS" onclick="selectCatRow('+i+')">선택</button></td>'
           + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+fmtCell(row[k])+'</td>'; }).join('')
           + '</tr>';
@@ -904,6 +964,17 @@ function _catFAN_WALL(rid, row) {
   renderCapCalc();
 }
 
+function _catFAN_ROOF(rid, row) {
+  var r=STATE.rooms.find(function(x){return x.id===rid;});
+  if(!r)return;
+  r.capV.model =row['모델명']          ||r.capV.model;
+  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
+  r.capV.volt  =row['전원']            ||r.capV.volt;
+  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
+  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
+  renderCapCalc();
+}
+
 function _catUH(rid, row) {
   var r=STATE.rooms.find(function(x){return x.id===rid;});
   if(!r)return;
@@ -945,10 +1016,15 @@ function _catWH(rid, row) {
 //  INIT
 // ══════════════════════════════════════════════
 function init(){
+  const restored=restoreState(); // 브라우저 자동저장 복원
   const s=document.getElementById('p-loc');
   Object.keys(WEATHER_DATA).forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;s.appendChild(o);});
-  loadPtoForm(); renderBldgTree(); renderRoomList();
+  if(restored)selRid=STATE.rooms[0]?.id||null;
+  loadPtoForm(); renderBldgTree(); renderRoomList(); renderRoomDetail();
   updateCatalogStatus();
+  // 입력·클릭 후 자동저장 (디바운스 400ms)
+  document.addEventListener('change',function(){saveState();});
+  document.addEventListener('click',function(){saveState();});
 }
 
 // ══════════════════════════════════════════════
@@ -1073,13 +1149,12 @@ function delFloor(bi,fi){
 // ══════════════════════════════════════════════
 //  ROOM HELPERS
 // ══════════════════════════════════════════════
-function newRoom(){
-  const b0=STATE.buildings[0], f0=b0?.floors[0];
+function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 동일 기준
   return {
-    id:'R'+(STATE._nR++), name:'새 실',
-    bldgId:b0?.id||'', floorId:f0?.id||'',
+    id:'', name:'새 실',
+    bldgId:'', floorId:'',
     type:'office',
-    width:0, depth:0, height:f0?.height||4.0,
+    width:0, depth:0, height:4.0,
     cdb:26, crh:50, hdb:21, hrh:50,
     wallN:{en:false,len:0,u:0.24}, wallE:{en:false,len:0,u:0.24},
     wallS:{en:true, len:0,u:0.24}, wallW:{en:false,len:0,u:0.24},
@@ -1087,9 +1162,10 @@ function newRoom(){
     winS:{w:0,h:0,shgc:0.35,u:2.10}, winW:{w:0,h:0,shgc:0.35,u:2.10},
     iw1:{len:0,u:2.08}, iw2:{len:0,u:2.08}, iw3:{len:0,u:2.08}, iw4:{len:0,u:2.08},
     roofOn:false, roofA:0, roofU:0.11,
-    floorOn:false, floorU:3.13,
-    infACH:0.5, ventACH:5, ia:0,
+    floorOn:false, floorMode:'ground', floorU:3.13,
+    infACH:0.5, ventACH:0, ia:10,
     od:0.1, lw:15, eqKW:0, phS:57, phL:62,
+    exhHeat:false,
     ce:'EHP', he:'EHP', ve:'전열교환기', san:'없음',
     capC:{model:'',ouModel:'',inType:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:'',ccMin:null,ccStd:null,ccMax:null,hcMin:null,hcStd:null,hcMax:null,pwCMin:null,pwCStd:null,pwCMax:null,pwHMin:null,pwHStd:null,pwHMax:null,
           iaf:null,iesp:null,ifm:null,humidity:null,
@@ -1101,6 +1177,14 @@ function newRoom(){
     capHW:{model:'',cnt:1,lph:0,kw:0,volt:'',note:''},
     note:'',
   };
+}
+function newRoom(){
+  const b0=STATE.buildings[0], f0=b0?.floors[0];
+  const r=roomDefaults();
+  r.id='R'+(STATE._nR++);
+  r.bldgId=b0?.id||''; r.floorId=f0?.id||'';
+  r.height=f0?.height||4.0;
+  return r;
 }
 function gA(r){return r.width*r.depth;}
 function gV(r){return r.width*r.depth*r.height;}
@@ -1187,6 +1271,7 @@ function setRoomType(tp){
   r.od=rt.od; r.lw=rt.lw; r.ia=rt.ia; r.ventACH=rt.va;
   r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve; r.san=rt.san||'없음';
   r.phS=rt.phS; r.phL=rt.phL;
+  r.exhHeat=!!rt.exhH; // 화장실·주방류: 난방 시 배기 보충외기 부하 기본 반영
   if(rt.iw_u!=null){const u=rt.iw_u;[1,2,3,4].forEach(n=>{r['iw'+n].u=u;});}
   renderRoomDetail();renderRoomList();
 }
@@ -1217,7 +1302,7 @@ function renderRoomDetail(){
   const i=getRi(); if(i<0){el.innerHTML='<div class="empty">실 없음</div>';return;}
   const r=STATE.rooms[i];
   const area=gA(r), vol=gV(r);
-  const occ=r.od*area, lightW=r.lw*area*1.08, infCMH=vol*getInfACH(r), ventCMH=vol*r.ventACH;
+  const occ=r.od*area, lightW=r.lw*area, infCMH=vol*getInfACH(r), ventCMH=vol*r.ventACH; // 조명 LED 기준 — 부하계산과 동일
   const {b,f}=getBF(r.bldgId,r.floorId);
   const _p=STATE.project;
   const _outDB=_p.cust||_p.cdb;
@@ -1343,10 +1428,16 @@ function renderRoomDetail(){
     </div>
   </div>
   <div class="fg c3" style="margin-top:8px">
-    <div class="fv"><label>바닥 활성화 (외기 접함)</label>
-      <select onchange="sR('floorOn',this.value==='true')">
+    <div class="fv"><label>바닥 부하 반영</label>
+      <select onchange="sRd('floorOn',this.value==='true')">
         <option value="false" ${!r.floorOn?'selected':''}>아니오</option>
         <option value="true"  ${r.floorOn?'selected':''}>예</option>
+      </select>
+    </div>
+    <div class="fv"><label>바닥 조건</label>
+      <select ${!r.floorOn?'disabled':''} onchange="sR('floorMode',this.value)">
+        <option value="ground" ${(r.floorMode||'ground')==='ground'?'selected':''}>접지·비공조 하부 (ΔT/2)</option>
+        <option value="outdoor" ${r.floorMode==='outdoor'?'selected':''}>외기 직접 노출·필로티 (ΔT)</option>
       </select>
     </div>
     <div class="fv"><label>바닥 U값 (W/m²K)</label>
@@ -1368,17 +1459,18 @@ function renderRoomDetail(){
   <div class="fg fg6">
     <div class="fv"><label>환기 횟수 (회/h)</label><input type="number" value="${r.ventACH}" step="1" onchange="sRd('ventACH',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>필요환기량 (m³/h) 자동</label><input class="au" readonly value="${f0(ventCMH)}"></div>
+    <div class="fv" style="grid-column:span 2"><label>난방 시 배기 가동 (보충외기 부하)</label><label class="fgr" style="font-size:11px;gap:5px;padding:4px 0"><input type="checkbox" ${r.exhHeat?'checked':''} onchange="sRd('exhHeat',this.checked)"> 배기 보충외기를 난방부하에 가산</label></div>
   </div>
-  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 팬 풍량 선정에만 사용됩니다. 부하계산에 미포함</div>
+  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 팬 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
 </div></div>
 
 <div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AIK / ASHRAE 62.1 W/m² 기준</span></div><div class="cb">
   <div class="fg fg6">
     <div class="fv"><label>재실 밀도 (인/m²)</label><input type="number" value="${r.od}" step="0.01" onchange="sRd('od',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="${f1(occ)}"></div>
-    <div class="fv"><label style="color:#888">현열 57 W/인 / 잠열 62 W/인 (고정)</label><input readonly value="57 / 62 W/인" style="background:var(--glr);color:var(--tsm)"></div>
+    <div class="fv"><label style="color:#888">인체발열 현열/잠열 (W/인, 실유형별)</label><input readonly value="${r.phS??57} / ${r.phL??62} W/인" style="background:var(--glr);color:var(--tsm)"></div>
     <div class="fv"><label>조명 (W/m²)</label><input type="number" value="${r.lw}" step="1" onchange="sRd('lw',parseFloat(this.value)||0)"></div>
-    <div class="fv"><label>조명발열 (W) = ×1.08 자동</label><input class="au" readonly value="${f0(lightW)}"></div>
+    <div class="fv"><label>조명발열 (W) 자동 (LED 기준)</label><input class="au" readonly value="${f0(lightW)}"></div>
     <div class="fv"><label>기기발열 (kW) ← 필수</label><input type="number" value="${r.eqKW}" step="0.1" onchange="sR('eqKW',parseFloat(this.value)||0)"></div>
   </div>
 </div></div>
@@ -1413,6 +1505,10 @@ function calcLE(room){
   const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
   const outRH_val=RHfromWB(outDB,outWB);
   const ventCMH=vol*room.ventACH;
+  // 난방 시 배기 가동: 열회수 없는 배기팬 실은 배기량만큼 보충외기가 난방부하로 유입
+  const EXH_FANS=['인라인덕트팬','천정형팬','벽부형팬','루프팬','환기유니트'];
+  const exhOn=!!room.exhHeat&&EXH_FANS.includes(room.ve)&&ventCMH>0;
+  const hExh=(exhOn&&dTh!==null)?ventCMH*0.336*dTh:0;
   // Outside Air(신선외기)는 사무실류(ia>0)에만 적용 — 건축법 별표1의2 기준 25CMH/인
   const oaPpl=room.ia>0?area/room.ia:0;          // 재실인원 (인)
   const oaCMH_raw=room.ia>0?oaPpl*25:0;          // 신선외기량 (㎥/h), 법정 25CMH/인
@@ -1420,9 +1516,11 @@ function calcLE(room){
   const isERV=room.ve==='전열교환기';
   const ervRecC=isERV?((parseFloat(room.capV?.effC)>0?parseFloat(room.capV.effC):50)/100):0;
   const ervRecH=isERV?((parseFloat(room.capV?.effH)>0?parseFloat(room.capV.effH):70)/100):0;
+  const ervRecL=isERV?((parseFloat(room.capV?.effC)>0?parseFloat(room.capV.effC):40)/100):0; // 잠열 회수율 — 카탈로그 전열효율 사용, 미선정 시 40% (현열 50%보다 보수적)
   const ervEffC=1-ervRecC, ervEffH=1-ervRecH;    // 부하로 남는 비율
   const oaCMHc=oaCMH_raw*ervEffC;                // 냉방 부담 외기량
   const oaCMHh=oaCMH_raw*ervEffH;                // 난방 부담 외기량
+  const oaCMHl=oaCMH_raw*(1-ervRecL);            // 잠열 부담 외기량
   const oaS=dTc!==null?oaCMHc*dTc*0.336:0;
   const oaH=dTh!==null?oaCMHh*dTh*0.336:0;
 
@@ -1434,13 +1532,14 @@ function calcLE(room){
     // Solar gain by direction (Is × SC/SHGC)
     const sg={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];sg[d]=wn.w*wn.h*wn.shgc*(SR[d]||SR.N)[ti];});
-    // Wall conduction — CLTD, net area = wall gross - window area
+    // Wall conduction — CLTD, net area = wall gross - window area / 실내온도 보정(표 기준 26℃)
     const {b:_bldg}=getBF(room.bldgId,room.floorId);
     const CLTD_WALL=(_bldg?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
+    const cltdAdj=26-room.cdb;
     const wc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*(CLTD_WALL[d]||CLTD_WALL.N)[ti];}});
-    // Roof — CLTD (heavy-weight roof, 26°C base)
-    const rc=room.roofOn?room.roofU*roofA*CLTD_ROOF[ti]:0;
+    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);}});
+    // Roof — CLTD (heavy-weight roof, 26°C base) + 실내온도 보정
+    const rc=room.roofOn?room.roofU*roofA*Math.max(0,CLTD_ROOF[ti]+cltdAdj):0;
     // Glass conduction — 외피(exterior) 직접 노출로 간주, ΔT 전체 적용 (내벽 ΔT/2와 구분)
     const gc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*dTc;});
@@ -1452,7 +1551,7 @@ function calcLE(room){
       room.iw3.len>0?room.iw3.u*room.iw3.len*h*dTc_iw:0,
       room.iw4.len>0?room.iw4.u*room.iw4.len*h*dTc_iw:0,
     ];
-    const flC=(room.floorOn&&dTc!==null)?room.floorU*area*(dTc/2):0; // 접지/비공조 하부 — 내벽과 동일 ΔT/2
+    const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc*((room.floorMode==='outdoor')?1:0.5):0; // 접지 ΔT/2, 외기노출 ΔT
     const infS=infCMH*dTc*0.336;
     const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS+oaS;
     const st2=occ*(room.phS??57)+eqW+lightW;
@@ -1462,7 +1561,7 @@ function calcLE(room){
 
   // Latent (time-independent)
   const infL=room.cdb!==null?infCMH*dOm*833:0;
-  const oaL=room.cdb!==null?oaCMHc*dOm*833:0;
+  const oaL=room.cdb!==null?oaCMHl*dOm*833:0;
   const pplL=room.cdb!==null?occ*(room.phL??62):0;
   const rlh=infL+oaL+pplL;
 
@@ -1477,7 +1576,7 @@ function calcLE(room){
   let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0;
   let hiw=[0,0,0,0];
   if(dTh!==null){
-    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const v=wd.u*wd.len*h*dTh*DIR_HF[d];if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}});
+    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);const v=wd.u*netA*dTh*DIR_HF[d];if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창 면적 공제 — 유리 손실과 이중계상 방지
     if(room.roofOn)hroof=room.roofU*roofA*dTh;
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];});
     hinf=infCMH*0.336*dTh;
@@ -1491,8 +1590,8 @@ function calcLE(room){
   }
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
   let hfloor=0;
-  if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*(dTh/2); // 접지/비공조 하부 — 내벽과 동일 ΔT/2
-  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor+oaH;
+  if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh*((room.floorMode==='outdoor')?1:0.5); // 접지 ΔT/2, 외기노출 ΔT
+  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor+hExh+oaH;
   const totalH=Math.max(0,hRsh*1.15);
 
   // 겨울 가습부하 (실내 습도 조건 hrh가 있는 실만): G = 1.2 × (침기+외기)CMH × Δx (kg/h)
@@ -1500,15 +1599,15 @@ function calcLE(room){
   if(dTh!==null&&room.hrh){
     const xIn=omegaRH(room.hdb,room.hrh);
     const dX=Math.max(0,xIn-(p.w_x||0));
-    humKgh=1.2*(infCMH+oaCMHh)*dX;
+    humKgh=1.2*(infCMH+oaCMHh+(exhOn?ventCMH:0))*dX;
   }
 
   return {
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infACH,infL,oaL,pplL,rlh,
-    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,
-    ventCMH,oaCMH_raw,oaCMHc,oaCMHh,oaPpl,oaS,oaH,ervEffC,ervEffH,ervRecC,ervRecH,
+    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,
+    ventCMH,oaCMH_raw,oaCMHc,oaCMHh,oaCMHl,oaPpl,oaS,oaH,ervEffC,ervEffH,ervRecC,ervRecH,
   };
 }
 
@@ -1553,6 +1652,10 @@ function renderLoadCalc(){
   });
   let html=`<div style="overflow-x:auto;margin-bottom:24px"><div class="lec" style="break-after:page">
     <div style="background:#1e3a5f;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:1.5px">LOAD SUMMARY (부하 요약표)</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 10px;border-bottom:1px solid #ccc;font-size:9px;flex-wrap:wrap">
+      <div>PROJECT : <b>${esc(p.name||'—')}</b> &nbsp;|&nbsp; 발주처 : <b>${esc(p.client||'—')}</b> &nbsp;|&nbsp; 작성일 : <b>${esc(p.date||'—')}</b></div>
+      <table style="border-collapse:collapse;font-size:8px"><tr><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">작 성</td><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">검 토</td><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">승 인</td></tr><tr><td style="border:1px solid #999;height:24px"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td></tr></table>
+    </div>
     <div style="padding:8px 10px">
     <table style="width:100%;border-collapse:collapse;font-size:9px">
       <thead><tr>
@@ -1615,11 +1718,11 @@ function renderLoadCalc(){
       const _CW=(_bldgD?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
       const cltdArr=(_CW[d]||_CW.N);
       const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
-      return cRow(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD(${cltdArr.join('/')})℃×U${wd.u}`,
+      return cRow(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD(${cltdArr.join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${wd.u}`,
         TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].wc[d]:0));
     }).join('');
     const roofRowC=room.roofOn
-      ? cRow('ROOF',`${f1(le.roofA)}㎡×CLTD(${CLTD_ROOF.join('/')})℃×U${room.roofU}`,
+      ? cRow('ROOF',`${f1(le.roofA)}㎡×CLTD(${CLTD_ROOF.join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${room.roofU}`,
           TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rc:0))
       : cRowFixed('ROOF','비활성',0);
     const glassCRows=DIRS.map(d=>{
@@ -1630,7 +1733,8 @@ function renderLoadCalc(){
       const iw=room['iw'+n];
       return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
     }).join('');
-    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT/2=${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
+    const fFacR=(room.floorMode==='outdoor')?1:0.5;
+    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const oaRowC=le.oaCMH_raw>0
       ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
@@ -1645,7 +1749,7 @@ function renderLoadCalc(){
     const sfSRow=sfCrow(TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rsh*0.1:0));
     const tshRow=grnC('TOTAL SENSIBLE HEAT',le.tsh);
     const infLRow=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.infL);
-    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHc)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
+    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
     const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×${room.phL??62}W/인`,le.pplL);
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
     const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.rlh*0.1));
@@ -1665,23 +1769,28 @@ function renderLoadCalc(){
     }).join('');
     const wallRowsH=DIRS.map(d=>{
       const wd=room['wall'+d];
+      const wn=room['win'+d];
+      const netA=Math.max(0,wd.len*room.height-wn.w*wn.h);
       const val=d==='N'?le.hwN:d==='E'?le.hwE:d==='S'?le.hwS:le.hwW;
-      return hRow(`OUT.WALL ${d}`,`${f1(wd.len*room.height)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${wd.u}×방위${DIR_HF[d]}`,val);
+      return hRow(`OUT.WALL ${d}`,`(${f1(wd.len*room.height)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${wd.u}×방위${DIR_HF[d]}`,val);
     }).join('');
     const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.hroof);
     const iwRowsH=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
       return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
     }).join('');
-    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT/2=${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
+    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const oaRowH=le.oaCMH_raw>0
       ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
       :'';
+    const exhRowH=le.exhOn
+      ?hRow('EXHAUST MAKE-UP',`배기 ${f0(le.ventCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hExh)
+      :'';
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     const hTotRow=grnH('ROOM TOTAL HEATING LOSS',le.totalH);
     const humRow=(!hn&&room.hrh&&le.humKgh>0)
-      ?`<tr><td colspan="2" style="text-align:left;padding:2px 5px;font-size:8px;color:#7c3aed;font-weight:600">가습부하 G = 1.2×(침기${f0(le.infCMH)}+외기${f0(le.oaCMHh)})㎥/h×Δx</td><td style="text-align:right;padding:2px 5px;font-size:8.5px;color:#7c3aed;font-weight:700">${le.humKgh.toFixed(1)} kg/h</td></tr>`
+      ?`<tr><td colspan="2" style="text-align:left;padding:2px 5px;font-size:8px;color:#7c3aed;font-weight:600">가습부하 G = 1.2×(침기${f0(le.infCMH)}+외기${f0(le.oaCMHh)}${le.exhOn?`+배기${f0(le.ventCMH)}`:''})㎥/h×Δx</td><td style="text-align:right;padding:2px 5px;font-size:8.5px;color:#7c3aed;font-weight:700">${le.humKgh.toFixed(1)} kg/h</td></tr>`
       :'';
 
     // ── Assemble card ──────────────────────────────────────────
@@ -1767,7 +1876,7 @@ function renderLoadCalc(){
       ${sHH('② OUTSIDE WALL HEAT LOSS')}
       ${wallRowsH}${roofRowH}
       ${sHH('③ TRANS. LOSS EXCEPT WALLS &amp; ROOF')}
-      ${iwRowsH}${floorRowH}${infRowH}${oaRowH}
+      ${iwRowsH}${floorRowH}${infRowH}${oaRowH}${exhRowH}
       ${hRshRow}${sfHrow}${hTotRow}${humRow}
     </tbody>
   </table>`}
@@ -1912,7 +2021,7 @@ function renderCapCalc(){
     });
     STATE.rooms.filter(r=>r.ve==='전열교환기').forEach((r,i)=>{
       rows.push({grp:'전열교환기 (ERV)',tag:r.capV.tag||'M-AH-ERV-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
-        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(gV(r)*r.ventACH))+' CMH(계산)')].filter(Boolean).join(' / '),
+        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(Math.max(gV(r)*r.ventACH,r.ia>0?gA(r)/r.ia*25:0)))+' CMH(계산)')].filter(Boolean).join(' / '),
         pw:r.capV.mp||'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
     });
     STATE.rooms.filter(r=>r.ve==='인라인덕트팬').forEach((r,i)=>{
@@ -2019,10 +2128,12 @@ function renderCapCalc(){
       };
       const selC=parseInt(r.capC.selC)||0;
       const selH=parseInt(r.capC.selH)||0;
+      const selHLt=parseInt(r.capC.selHLt)||0;
+      const selHEff=selHLt>0?selHLt:selH; // 저온난방능력 입력 시 그 값으로 난방 판정 (설계외기 기준 실능력)
       const selCbdr=selC&&perC!==null?(selC>=perC?'#16a34a':'#dc2626'):'#ca8a04';
-      const selHbdr=selH&&perH!==null?(selH>=perH?'#16a34a':'#dc2626'):'#ca8a04';
+      const selHbdr=selHEff&&perH!==null?(selHEff>=perH?'#16a34a':'#dc2626'):'#ca8a04';
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
-      const hMgn=selH&&perH?((selH-perH)/perH*100):null;
+      const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
       return '<div class="cap-card cap-pac-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2088,14 +2199,22 @@ function renderCapCalc(){
         +'onchange="sCC(\''+rid+'\',\'selH\',this.value);renderCapCalc()">'
         +'<span style="color:#713f12;white-space:nowrap;margin-left:2px;font-size:9px">W</span>'
         +'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;grid-column:span 2;background:rgba(255,255,255,.45);padding:4px 7px;border-radius:4px">'
+        +'<span style="min-width:130px;font-weight:600;color:#713f12">저온 난방능력 (선정·옵션)</span>'
+        +'<input type="text" value="'+esc(r.capC.selHLt||'')+'" placeholder="설계외기 기준 W" '
+        +'style="width:110px;padding:2px 6px;border:1px solid #ca8a04;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" '
+        +'onchange="sCC(\''+rid+'\',\'selHLt\',this.value);renderCapCalc()">'
+        +'<span style="color:#713f12;white-space:nowrap;margin-left:2px;font-size:9px">W</span>'
+        +'<span style="font-size:8px;color:#92400e">※ 입력 시 난방 여유율을 저온능력 기준으로 판정 (히트펌프는 설계외기에서 정격 대비 능력 저하)</span>'
+        +'</div>'
         +'</div></div>'
 
 
         // ④ SPEC TABLE
         +'<div style="padding:8px 12px 10px">'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:8px">☞ 장비 사양</div>'
-        +'<button class="btn btP btS no-print" style="margin-bottom:6px" onclick="openCatModal(\'PAC\',function(row){_catPAC(\''+rid+'\',row)})">📋 카탈로그에서 선택(냉난방)</button>'
-        +'<button class="btn btP btS no-print" style="margin-bottom:6px;margin-left:4px" onclick="openCatModal(\'PAC_C\',function(row){_catPAC(\''+rid+'\',row)})">📋 냉방전용</button>'
+        +'<button class="btn btP btS no-print" style="margin-bottom:6px" onclick="openCatModal(\'PAC\',function(row){_catPAC(\''+rid+'\',row)},{val:'+(perC||0)+',unit:\'W\',label:\'냉방능력\'})">📋 카탈로그에서 선택(냉난방)</button>'
+        +'<button class="btn btP btS no-print" style="margin-bottom:6px;margin-left:4px" onclick="openCatModal(\'PAC_C\',function(row){_catPAC(\''+rid+'\',row)},{val:'+(perC||0)+',unit:\'W\',label:\'냉방능력\'})">📋 냉방전용</button>'
         +(r.capC.model?
           '<div style="font-size:9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;padding:6px 8px;margin-bottom:8px">'
           +'<div style="font-weight:700;color:#1d4ed8;margin-bottom:4px">'+esc(r.capC.model)+(r.capC.ouModel?' / '+esc(r.capC.ouModel):'')+'</div>'
@@ -2166,10 +2285,12 @@ function renderCapCalc(){
       };
       const selC=parseInt(r.capC.selC)||0;
       const selH=parseInt(r.capC.selH)||0;
+      const selHLt=parseInt(r.capC.selHLt)||0;
+      const selHEff=selHLt>0?selHLt:selH; // 저온난방능력 입력 시 그 값으로 난방 판정 (설계외기 기준 실능력)
       const selCbdr=selC&&perC!==null?(selC>=perC?'#16a34a':'#dc2626'):'#ca8a04';
-      const selHbdr=selH&&perH!==null?(selH>=perH?'#16a34a':'#dc2626'):'#ca8a04';
+      const selHbdr=selHEff&&perH!==null?(selHEff>=perH?'#16a34a':'#dc2626'):'#ca8a04';
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
-      const hMgn=selH&&perH?((selH-perH)/perH*100):null;
+      const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
       return '<div class="cap-card cap-cth-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2248,8 +2369,8 @@ function renderCapCalc(){
         +'<div style="padding:8px 12px 10px">'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding:4px 0;margin-bottom:8px">☞ 장비 사양</div>'
         +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
-        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_WATER\',function(row){_catCTHW(\''+rid+'\',row)})">📋 수냉식 카탈로그 선택</button>'
-        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_AIR\',function(row){_catCTHA(\''+rid+'\',row)})">📋 공냉식 카탈로그 선택</button>'
+        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_WATER\',function(row){_catCTHW(\''+rid+'\',row)},{val:'+(perC||0)+',unit:\'W\',label:\'냉방능력\'})">📋 수냉식 카탈로그 선택</button>'
+        +'<button class="btn btP btS no-print" onclick="openCatModal(\'CTH_AIR\',function(row){_catCTHA(\''+rid+'\',row)},{val:'+(perC||0)+',unit:\'W\',label:\'냉방능력\'})">📋 공냉식 카탈로그 선택</button>'
         +'</div>'
         // 실내기 섹션
         +'<div style="font-weight:700;font-size:9px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;padding:4px 8px;border-radius:4px 4px 0 0;margin-top:4px">실내기 (INDOOR UNIT)</div>'
@@ -2400,7 +2521,7 @@ function renderCapCalc(){
           +'<td style="padding:2px 4px;border:1px solid #e2e8f0;text-align:center">'
           +'<div style="display:flex;align-items:center;gap:2px">'
           +'<input type="text" value="'+esc(r.capC.ehpInType||'')+'" placeholder="형식" style="width:80px;padding:1px 3px;border:1px solid #bfdbfe;border-radius:3px;font-size:9px;font-family:inherit" onchange="sCC(\''+rid+'\',\'ehpInType\',this.value)">'
-          +'<button onclick="openCatModal(\'EHP\',function(row){_catEHPRoom(\''+rid+'\',row)})" style="padding:1px 4px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px;line-height:1.4" title="카탈로그">📋</button>'
+          +'<button onclick="openCatModal(\'EHP\',function(row){_catEHPRoom(\''+rid+'\',row)},{val:'+Math.round(mcd)+',unit:\'W\',label:\'냉방능력\'})" style="padding:1px 4px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px;line-height:1.4" title="카탈로그">📋</button>'
           +'</div></td>'
           +'<td style="padding:2px 4px;border:1px solid #e2e8f0;text-align:right;'+inCcBg+'">'
           +'<input type="number" value="'+(r.capC.ehpInCc!=null?r.capC.ehpInCc:'')+'" placeholder="W" style="width:60px;padding:1px 3px;border:1px solid #bfdbfe;border-radius:3px;font-size:9px;font-family:inherit;text-align:right" onchange="sCC(\''+rid+'\',\'ehpInCc\',this.value===\'\'?null:parseInt(this.value));renderCapCalc()">'
@@ -2438,7 +2559,7 @@ function renderCapCalc(){
       html+='<div style="margin:4px 12px 10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
         +'<div style="font-weight:700;font-size:10px;color:#166534">▶ 실외기 선정</div>'
-        +'<button class="btn btP btS no-print" onclick="openCatModal(\'EHP_OUT\',function(row){_catEHP_OUT('+zi+',row)})">📋 카탈로그에서 선택</button>'
+        +'<button class="btn btP btS no-print" onclick="openCatModal(\'EHP_OUT\',function(row){_catEHP_OUT('+zi+',row)},{val:'+Math.round(totInC)+',unit:\'W\',label:\'냉방능력(존 합계)\'})">📋 카탈로그에서 선택</button>'
         +'</div>'
         +(z.ouModel?
           '<div style="font-size:9px;background:#fff;border:1px solid #bbf7d0;border-radius:4px;padding:6px 8px;margin-bottom:6px">'
@@ -2509,7 +2630,8 @@ function renderCapCalc(){
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
-      const area=gA(r),vol=gV(r),calcCMH=vol*r.ventACH;
+      const area=gA(r),vol=gV(r);
+      const calcCMH=Math.max(vol*r.ventACH,r.ia>0?(area/r.ia)*25:0); // max(체적×환기횟수, 인원×25㎥/h) — 부하계산 외기량과 동일 근거
       totCalc+=calcCMH; totSel+=(r.capV.saf||0);
       const rid=r.id;
       const autoTag='M-AH-ERV-'+String(idx+1).padStart(3,'0');
@@ -2527,7 +2649,7 @@ function renderCapCalc(){
         <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
         <td style="background:#f0fdf4"><input type="text" value="${esc(r.capV.mp||'')}" placeholder="kW" style="width:50px" onchange="sCV('${rid}','mp',this.value)"></td>
-        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.afH??'—'}&nbsp;/&nbsp;${r.capV.afM??'—'}&nbsp;/&nbsp;${r.capV.afL??'—'}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.pwH??'—'}&nbsp;/&nbsp;${r.capV.pwM??'—'}&nbsp;/&nbsp;${r.capV.pwL??'—'}</td>
         <td class="C" style="font-size:10px">${r.capV.effC??'—'}&nbsp;/&nbsp;${r.capV.effH??'—'}</td>
@@ -2541,7 +2663,7 @@ function renderCapCalc(){
       <td style="text-align:right;font-weight:700;background:#dcfce7">${fW(totSel)}</td>
       <td colspan="10" style="background:#dcfce7"></td>
     </tr>`;
-    html+=`</tbody></table></div></div></div>`;
+    html+=`</tbody></table><div style="font-size:9px;color:#64748b;margin-top:4px">※ 계산풍량 = max(체적×환기횟수, 재실인원×25㎥/h·인) — 부하계산서 법정 외기량과 동일 근거</div></div></div>`;
     // 전열교환기 상세 카드 (read-only)
     html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">전열교환기 장비 상세 사양</div>`;
     rooms.forEach((r,idx)=>{
@@ -2700,7 +2822,7 @@ function renderCapCalc(){
         <div style="padding:0 14px 12px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">③ FAN SELECTION</div>
-            <button class="btn btP btS no-print" onclick="openCatModal('FAN_INLINE',function(row){_catFAN_INLINE('${rid}',row)})">📋 카탈로그</button>
+            <button class="btn btP btS no-print" onclick="openCatModal('FAN_INLINE',function(row){_catFAN_INLINE('${rid}',row)},{val:${autoSaf},unit:'CMH',label:'풍량'})">📋 카탈로그</button>
           </div>
           ${selRow('model','TYPE',r.capV.model,'','DUCT IN-LINE')}
           ${selRow('fno','SIZE (임펠러)',r.capV.fno,'mm','')}
@@ -2739,8 +2861,8 @@ function renderCapCalc(){
     const rooms=STATE.rooms.filter(r=>r.ve===capTab);
     if(!rooms.length){el.innerHTML=`<div class="empty">${capTab}로 선택된 실이 없습니다.</div>`;return;}
     let totCalc=0,totSel=0;
-    const fanCatKey=capTab==='벽부형팬'?'FAN_WALL':'FAN_CEILING';
-    const fanCatFn =capTab==='벽부형팬'?'_catFAN_WALL':'_catFAN_CEIL';
+    const fanCatKey=capTab==='벽부형팬'?'FAN_WALL':capTab==='루프팬'?'FAN_ROOF':'FAN_CEILING';
+    const fanCatFn =capTab==='벽부형팬'?'_catFAN_WALL':capTab==='루프팬'?'_catFAN_ROOF':'_catFAN_CEIL';
 
     let html=`<div class="card"><div class="ch">${capTab} 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
@@ -2768,7 +2890,7 @@ function renderCapCalc(){
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
-        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
         <td class="C" style="font-size:11px;font-weight:600">${r.capV.pw!=null?r.capV.pw:'—'}</td>
         <td><input type="text" value="${esc(r.capV.volt||'')}" placeholder="220V 60Hz" style="width:90px" onchange="sCV('${rid}','volt',this.value)"></td>
         <td class="L"><input type="text" value="${esc(r.capV.note||capTab)}" style="width:80px" onchange="sCV('${rid}','note',this.value)"></td>
@@ -2887,7 +3009,7 @@ function renderCapCalc(){
         <td style="text-align:right;background:#fee2e2;font-weight:600">${hl!==null?fW(hl):'난방없음'}</td>
         <td class="C"><input type="number" value="${cnt}" min="1" style="width:40px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1)"></td>
         <td style="text-align:right;background:#fef9c3">${hl!==null?fW(perUnit):'—'}</td>
-        <td class="C"><button onclick="openCatModal('UNIT_HEATER',function(row){_catUH('${rid}',row)})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('UNIT_HEATER',function(row){_catUH('${rid}',row)},{val:${perUnit},unit:'W',label:'난방능력(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
         <td class="C" style="font-size:10px">${r.capH.capW!=null?fW(r.capH.capW):'—'}</td>
         <td><input type="text" value="${esc(r.capH.fp!=null?String(r.capH.fp):'')}" placeholder="kW" style="width:55px" onchange="sCH('${rid}','fp',this.value)"></td>
         <td><input type="text" value="${esc(r.capH.volt||'')}" placeholder="220V 60Hz" style="width:90px" onchange="sCH('${rid}','volt',this.value)"></td>
@@ -2968,7 +3090,7 @@ function renderCapCalc(){
           ${suggestCap>0?`<br><span style="font-size:8px;color:#64748b">▶ ${fW(suggestCap)}</span>`:''}
         </td>
         <td><input type="text" value="${esc(r.capH.sections||'')}" placeholder="쪽" style="width:50px" onchange="sCH('${rid}','sections',this.value)"></td>
-        <td class="C"><button onclick="openCatModal('RADIATOR',function(row){_catRAD('${rid}',row)})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('RADIATOR',function(row){_catRAD('${rid}',row)},{val:${hl!==null?Math.round(hl/cntR):0},unit:'W',label:'난방능력(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
         <td class="C" style="font-size:10px">${pwKw}</td>
         <td class="C" style="font-size:10px">${r.capH.volt2!=null?r.capH.volt2:'—'}</td>
         <td class="C" style="font-size:10px">${r.capH.spec?esc(r.capH.spec):'—'}</td>
@@ -3051,7 +3173,7 @@ function renderCapCalc(){
         <div style="padding:10px 14px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">WATER HEATER SELECTION</div>
-            <button class="btn btP btS no-print" onclick="openCatModal('WATER_HEATER',function(row){_catWH('${rid}',row)})">📋 카탈로그</button>
+            <button class="btn btP btS no-print" onclick="openCatModal('WATER_HEATER',function(row){_catWH('${rid}',row)},{val:${parseFloat(r.capHW.storeCap)||0},unit:'L',label:'저탕용량'})">📋 카탈로그</button>
           </div>
           <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
@@ -3143,7 +3265,7 @@ function renderCapCalc(){
       const heatHrs=defH('heatHrs',3);
       const autoKw=V>0&&heatHrs>0?Math.ceil(V*45*1.163/heatHrs/100)/10:0; // 가열능력 = V×(60-15)℃×1.163 ÷ 가열시간, 0.1kW 올림
       const STORE_CAPS=[15,30,50,80,100,150,200,300,500];
-      const reqStoreCap=Qh*1.2;
+      const reqStoreCap=V; // 저탕량 V와 동일 근거로 표준탱크 자동선정
       const autoStoreCap=STORE_CAPS.find(c=>c>=reqStoreCap)||STORE_CAPS[STORE_CAPS.length-1];
       const specRow=(fld,label,val,unit,type,ph)=>
         `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:11px;gap:6px">
@@ -3530,13 +3652,53 @@ function loadJSON(input){
     try{
       const raw=e.target.result.replace(/^﻿/,'').trim();
       STATE=JSON.parse(raw);
-      STATE.rooms.forEach(r=>{if(r.type==='generator')r.type='elec';});
+      STATE.buildings=STATE.buildings||[];
+      STATE.rooms=(STATE.rooms||[]).map(migrateRoom); // 구버전 파일: 누락 필드를 기본값으로 채움
       selRid=STATE.rooms[0]?.id||null;
+      saveState();
       loadPtoForm();renderBldgTree();renderRoomList();renderRoomDetail();
       alert('불러오기 완료');
     }catch(err){alert('JSON 파싱 오류\n\n'+err.message);}
   };
   r.readAsText(f,'UTF-8');input.value='';
+}
+
+// ══════════════════════════════════════════════
+//  AUTOSAVE (localStorage)
+// ══════════════════════════════════════════════
+const STATE_KEY='hvac_calc_state_v1';
+let _ssT=null;
+function saveState(){
+  clearTimeout(_ssT);
+  _ssT=setTimeout(function(){
+    try{localStorage.setItem(STATE_KEY,JSON.stringify(STATE));}catch(e){}
+  },400);
+}
+function restoreState(){
+  try{
+    const raw=localStorage.getItem(STATE_KEY);
+    if(!raw)return false;
+    const s=JSON.parse(raw);
+    if(!s||!Array.isArray(s.buildings))return false;
+    STATE=s;
+    STATE.rooms=(STATE.rooms||[]).map(migrateRoom);
+    return true;
+  }catch(e){return false;}
+}
+function migrateRoom(r){
+  const d=roomDefaults();
+  const m=Object.assign({},d,r||{});
+  ['wallN','wallE','wallS','wallW','winN','winE','winS','winW','iw1','iw2','iw3','iw4','capC','capEo','capH','capV','capHW'].forEach(function(k){
+    m[k]=Object.assign({},d[k],(r&&r[k])||{});
+  });
+  if(m.type==='generator')m.type='elec';
+  if(r&&r.exhHeat===undefined)m.exhHeat=(m.type==='toilet'||m.type==='kitchen'); // 기존 데이터: 화장실·주방은 배기 난방부하 기본 반영
+  return m;
+}
+function resetAll(){
+  if(!confirm('모든 입력을 지우고 새 프로젝트를 시작하시겠습니까?\n(현재 내용이 필요하면 먼저 "JSON 저장"으로 백업하세요)'))return;
+  localStorage.removeItem(STATE_KEY);
+  location.reload();
 }
 
 // ══════════════════════════════════════════════
