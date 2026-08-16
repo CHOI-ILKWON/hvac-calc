@@ -2522,8 +2522,17 @@ function renderCapCalc(){
       +'</div>';
     EZ.forEach((z,zi)=>{
       const zRooms=z.rooms.map(rid=>ehpRooms.find(r=>r.id===rid)).filter(Boolean);
-      let totInC=0,totInH=0;
-      zRooms.forEach(r=>{const mc=getMaxCool(r);const hl=getHeatLoad(r);totInC+=mc!==null?mc:0;totInH+=hl!==null?hl:0;});
+      // 기준: AC-013 — 존 최대 냉방부하는 「실별 최대의 합」이 아니라 「시각별 합의 최대」다.
+      // 실마다 피크 시각이 다르므로(동측 10시·서측 16시) 실별 최대를 더하면 존재하지 않는 순간의 합이 된다.
+      // 난방은 전 실이 동시에 최악(야간·무일사·무재실)이므로 단순 합산이 맞다.
+      let totInC=0,totInH=0,totInCsum=0;
+      const zLE=zRooms.map(r=>({r,le:(r.cdb!==null?calcLE(r):null)}));
+      TIME_SLOTS.forEach((_,ti)=>{
+        let sum=0; zLE.forEach(x=>{ if(x.le&&x.le.rth) sum+=(x.le.rth[ti]||0); });
+        if(sum>totInC) totInC=sum;
+      });
+      zRooms.forEach(r=>{const mc=getMaxCool(r);const hl=getHeatLoad(r);totInCsum+=mc!==null?mc:0;totInH+=hl!==null?hl:0;});
+      const divPct=(totInCsum>0&&totInC>0)?(1-totInC/totInCsum)*100:0;   // 동시부하 반영으로 줄어든 비율
       const ouCcN=parseFloat(z.ouCc)||0,ouHcN=parseFloat(z.ouHc)||0;
       const ouLtW=(parseFloat(z.ouLtHc)||0)*1000; // 저온난방(-15℃) kW → W
       const ouHeatW=ouLtW>0?ouLtW:ouHcN;          // 난방 판정은 저온난방능력 우선 (설계외기 기준 실능력)
@@ -2534,7 +2543,8 @@ function renderCapCalc(){
       const ccTx=(!hasRooms||ouCcN===0)?'#94a3b8':(ccOK?'#166534':'#991b1b');
       const hcBg=(!hasRooms||ouHeatW===0)?'#f1f5f9':(hcOK?'#dcfce7':'#fee2e2');
       const hcTx=(!hasRooms||ouHeatW===0)?'#94a3b8':(hcOK?'#166534':'#991b1b');
-      const ccTxt=!hasRooms?'— 실 없음':(ouCcN===0?'— 미입력':(ccOK?'✓ 냉방 OK':'✗ 냉방 부족'));
+      const ccTxt=!hasRooms?'— 실 없음':(ouCcN===0?'— 미입력':(ccOK?'✓ 냉방 OK':'✗ 냉방 부족'))
+        +(divPct>0.5?' <span style="color:#7c3aed;font-size:9px">(실별최대합 '+fW(Math.round(totInCsum))+' → 동시최대 '+fW(Math.round(totInC))+', −'+divPct.toFixed(1)+'%)</span>':'');
       const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준 — 저온난방 미입력 주의)'));
       // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 (통상 100~130% 허용)
       let totRatedInC=0; zRooms.forEach(r=>{totRatedInC+=(parseFloat(r.capC.ehpInCc)||0)*(r.capC.cnt||1);});
