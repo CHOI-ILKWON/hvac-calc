@@ -494,7 +494,7 @@ const RT = {
   locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:true,  lw:15, va:0,  eqD:9,  ce:'EHP',  he:'EHP',        ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 재실인원×25m³/h·인 (건축법 시행규칙 별표1의2); phS/phL — 경작업, 좌식 (ASHRAE Table 1); hrh:null — 겨울 가습 미실시(중앙제어실만 가습). 별표8도 난방 상대습도를 정하지 않는다
   control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, ia:10, oa:true,  lw:15, va:0,  eqD:50, ce:'CTH',  he:'PAC',       ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); phS/phL — office류와 동일; he:'PAC' — 냉방·습도는 CTH, 난방은 PAC이 담당(CTH 정지 시 백업 겸용). 24h 상주+계장패널 실이라 단일 기기 의존을 피한다
-  kitchen: {lb:'주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:15, va:15, eqD:80, ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:true, phS:100,phL:165}, // va:15 — 조리 냄새·수증기 배출 기준; 사무실류 온습도 + 환기횟수 상향; phS/phL — 중작업, 조리 활동 (ASHRAE Table 1); hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
+  kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:15, va:15, ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:true, phS:58, phL:58}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:15 — 냄새·수증기 배출; phS/phL:58 — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
   storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:5,  va:3,  eqReq:false,  ce:'없음', he:'없음',       ve:'벽부형팬', phS:57, phL:62}, // va:3 — 실무 관행 (AIK 창고류 최소 환기); phS/phL — od:0이라 미사용
 };
 
@@ -1693,7 +1693,7 @@ function renderLoadCalc(){
   // ── 부하 요약표 (전 실 1페이지 + W/㎡ 상식범위 검증) ──────────
   const SANITY={ // 단위면적당 부하 상식범위 [min,max] W/㎡ — 벗어나면 입력 오류 가능성 경고
     office:{c:[60,200],h:[40,250]}, control:{c:[80,350],h:[40,250]},
-    elec:{c:[100,600],h:null}, kitchen:{c:[120,450],h:[40,300]},
+    elec:{c:[100,600],h:null}, kitchen:{c:[60,250],h:[40,300]},   // 기준: AC-014 — 탕비실 기준(조리실 아님)
     locker:{c:[60,300],h:[50,350]}, toilet:{c:null,h:[50,400]},
     mech:{c:null,h:[30,300]}, genset:{c:null,h:null}, storage:{c:null,h:null},
   };
