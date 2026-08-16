@@ -357,7 +357,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">급탕가열기/물탱크/펌프</td><td class="L">전 건물</td><td class="L">기구수 → 동시사용률 → 용량</td></tr>
       </table>
       <div style="background:#fff7ed;border-radius:var(--r);padding:10px 14px;margin-top:10px;font-size:11px;color:#9a3412">
-        ⚠️ 안전율(냉방 10% / 난방 15%)은 ③ 부하계산서 단계에서 이미 반영됩니다.<br>
+        ⚠️ 안전율(냉방·난방 각 10%)은 ③ 부하계산서 단계에서 이미 반영됩니다.<br>
         &nbsp;&nbsp;&nbsp;용량계산서의 "계산" 값은 부하계산서 값을 그대로 사용하며, 별도로 안전율을 추가로 곱하지 않습니다.
       </div>
     </div>
@@ -392,12 +392,13 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="font-size:11px">
         <tr><th>구분</th><th>기준명</th><th>적용 항목</th></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물 에너지절약설계기준</td><td class="L">기상조건 (외기온·습도·일사량)</td></tr>
-        <tr><td class="L">국토교통부 고시</td><td class="L">별표1 지역별 단열기준</td><td class="L">외벽 U값 기준값 참조</td></tr>
+        <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창 U값 기준값 (지역구분 자동)</td></tr>
         <tr><td class="L">건축법 시행규칙</td><td class="L">별표1의2 자연환기설비</td><td class="L">실 용도별 최소 환기횟수</td></tr>
-        <tr><td class="L">ASHRAE 55</td><td class="L">Thermal Environmental Conditions</td><td class="L">실내 쾌적 설계 온습도</td></tr>
-        <tr><td class="L">ASHRAE 62.1</td><td class="L">Ventilation for Acceptable IAQ</td><td class="L">인체발열 90W/인, 재실밀도</td></tr>
+        <tr><td class="L">국토교통부 고시</td><td class="L">[별표8] 냉·난방설비의 용량계산을 위한 실내 온·습도 기준</td><td class="L">실내 설계 온습도 (제7조 제1항)</td></tr>
+        <tr><td class="L">ASHRAE 62.1</td><td class="L">Ventilation for Acceptable IAQ</td><td class="L">재실밀도</td></tr>
+        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">인체발열 (실온별 현열/잠열)</td></tr>
         <tr><td class="L">AIK</td><td class="L">공기조화·냉동공학회 설계기준</td><td class="L">조명발열 W/m², 부하계산법</td></tr>
-        <tr><td class="L">KCS 31 25 10</td><td class="L">공조설비 설계기준</td><td class="L">안전율 적용 (냉방10%, 난방15%)</td></tr>
+        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">안전율 적용 (냉방·난방 각 10%)</td></tr>
       </table>
     </div>
   </div>
@@ -1258,8 +1259,11 @@ function getBF(bldgId,floorId){
 }
 function getRi(){return STATE.rooms.findIndex(r=>r.id===selRid);}
 function getInfACH(room){
+  // 기준: AC-010 (침기율) — 외기에 면한 외벽 면 수로 산정
+  // 0면(내부실)은 0 — 침기는 외기 침입이므로 외기에 면하지 않으면 성립하지 않는다.
+  // 인접실에서 들어오는 공기는 온도차가 작고, 이미 내벽 전도(ΔT/2)로 처리된다.
   const faces=['N','E','S','W'].filter(d=>room['wall'+d].en).length;
-  return [0.5,0.5,0.6,0.8,1.0][faces];
+  return [0,0.5,0.6,0.8,1.0][faces];
 }
 
 // ══════════════════════════════════════════════
@@ -1513,7 +1517,7 @@ function renderRoomDetail(){
 <div class="card"><div class="ch">§4 INFILTRATION (침기) / 환기 팬 설정<span class="src-badge">건축법 시행규칙 별표1의2 환기기준</span></div><div class="cb">
   <div style="font-size:10px;font-weight:700;color:var(--nv);margin-bottom:5px">§4-① INFILTRATION (침기부하 계산용)</div>
   <div class="fg fg6">
-    <div class="fv"><label>INFILTRATION 횟수 (회/h) 자동</label><input class="au" readonly value="${getInfACH(r)}" title="외벽 체크 수 기준 자동: 1면=0.5, 2면=0.6, 3면=0.8, 4면=1.0"></div>
+    <div class="fv"><label>INFILTRATION 횟수 (회/h) 자동</label><input class="au" readonly value="${getInfACH(r)}" title="외벽 체크 수 기준 자동 (기준: AC-010): 0면(내부실)=0, 1면=0.5, 2면=0.6, 3면=0.8, 4면=1.0"></div>
     <div class="fv"><label>침입량 (m³/h) 자동</label><input class="au" readonly value="${f0(infCMH)}"></div>
   </div>
   <div style="font-size:10px;color:var(--bl);margin-top:4px">※ 부하계산서에 사용됩니다</div>
@@ -1636,12 +1640,12 @@ function calcLE(room){
   const pkIdx=rth.indexOf(maxRth);
 
   // Heating
-  let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0;
+  let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0,hDir=0;   // hDir: 방위할증으로 더해진 양 (기준: AC-011)
   let hiw=[0,0,0,0];
   if(dTh!==null){
-    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);const v=wd.u*netA*dTh*DIR_HF[d];if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창 면적 공제 — 유리 손실과 이중계상 방지
+    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창 면적 공제 — 유리 손실과 이중계상 방지
     if(room.roofOn)hroof=room.roofU*roofA*dTh;
-    DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];});
+    DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];hDir+=wn.u*wn.w*wn.h*dTh*(DIR_HF[d]-1);});
     hinf=infCMH*0.336*dTh;
     const dTh_iw=dTh/2;
     hiw=[
@@ -1655,7 +1659,7 @@ function calcLE(room){
   let hfloor=0;
   if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh*((room.floorMode==='outdoor')?1:0.5); // 접지 ΔT/2, 외기노출 ΔT
   const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor+hExh+oaH;
-  const totalH=Math.max(0,hRsh*1.15);
+  const totalH=Math.max(0,hRsh*1.10);   // 기준: AC-012 — 냉난방 동일 10%. 난방 계산은 일사·내부발열을 반영하지 않아 이미 보수적이다
 
   // 겨울 가습부하 (실내 습도 조건 hrh가 있는 실만): G = 1.2 × (침기+외기)CMH × Δx (kg/h)
   let humKgh=0;
@@ -1669,7 +1673,7 @@ function calcLE(room){
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infACH,infL,oaL,pplL,rlh,
-    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,
+    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,hDir,
     ventCMH,oaCMH_raw,oaCMHc,oaCMHh,oaCMHl,oaPpl,oaS,oaH,ervEffC,ervEffH,ervRecC,ervRecH,
   };
 }
@@ -1768,7 +1772,7 @@ function renderLoadCalc(){
     // ── Heating sub-totals ─────────────────────────────────────
     const grnH=(label,val)=>
       `<tr style="background:#d4edda"><td colspan="2" style="font-weight:700;color:#155724;font-size:8.5px;padding:2px 5px;border-top:1px solid #9dc9a4;border-bottom:1px solid #9dc9a4">${label}</td><td style="background:#d4edda;text-align:right;font-weight:700;font-size:8.5px;padding:2px 5px;border-top:1px solid #9dc9a4;border-bottom:1px solid #9dc9a4">${hn?'—':fW(val)}</td></tr>`;
-    const sfHrow=`<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 15%</td><td style="text-align:right;font-size:8.5px;padding:1px 5px;border-bottom:1px solid #eee">${hn?'—':fW(le.hRsh*0.15)}</td></tr>`;
+    const sfHrow=`<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10%</td><td style="text-align:right;font-size:8.5px;padding:1px 5px;border-bottom:1px solid #eee">${hn?'—':fW(le.hRsh*0.10)}</td></tr>`;
 
     // ── COOLING rows ───────────────────────────────────────────
     const solarRows=DIRS.map(d=>{
@@ -1851,7 +1855,12 @@ function renderLoadCalc(){
       ?hRow('EXHAUST MAKE-UP',`배기 ${f0(le.ventCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hExh)
       :'';
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
-    const hTotRow=grnH('ROOM TOTAL HEATING LOSS',le.totalH);
+    // 기준: AC-011 · AC-012 — 여유가 어디에 얼마나 들어갔는지 드러낸다
+    const hDirRow=le.hDir>0
+      ?hRow('└ 방위할증 포함분',`외벽·유리에만 적용 (N1.10/E·W1.05/S1.00) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
+      :'';
+    const hSfRow=hRow('SAFETY FACTOR','ROOM HEAT LOSS × 10% (기준: AC-012)',le.totalH-le.hRsh);
+    const hTotRow=grnH(`ROOM TOTAL HEATING LOSS  (누적 ×${(le.hRsh>0?le.totalH/(le.hRsh-le.hDir):1.10).toFixed(3)})`,le.totalH);
     const humRow=(!hn&&room.hrh&&le.humKgh>0)
       ?`<tr><td colspan="2" style="text-align:left;padding:2px 5px;font-size:8px;color:#7c3aed;font-weight:600">가습부하 G = 1.2×(침기${f0(le.infCMH)}+외기${f0(le.oaCMHh)}${le.exhOn?`+배기${f0(le.ventCMH)}`:''})㎥/h×Δx</td><td style="text-align:right;padding:2px 5px;font-size:8.5px;color:#7c3aed;font-weight:700">${le.humKgh.toFixed(1)} kg/h</td></tr>`
       :'';
@@ -1940,7 +1949,7 @@ function renderLoadCalc(){
       ${wallRowsH}${roofRowH}
       ${sHH('③ TRANS. LOSS EXCEPT WALLS &amp; ROOF')}
       ${iwRowsH}${floorRowH}${infRowH}${oaRowH}${exhRowH}
-      ${hRshRow}${sfHrow}${hTotRow}${humRow}
+      ${hDirRow}${hRshRow}${hSfRow}${sfHrow}${hTotRow}${humRow}
     </tbody>
   </table>`}
   </div>
@@ -2197,6 +2206,9 @@ function renderCapCalc(){
       const selHbdr=selHEff&&perH!==null?(selHEff>=perH?'#16a34a':'#dc2626'):'#ca8a04';
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
       const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
+      // 기준: AC-012 — 순부하(안전율 전) 대비 총 여유. 안전율 + 카탈로그 올림이 합쳐진 값
+      const cTot=selC&&perC?((selC/(perC/1.10)-1)*100):null;
+      const hTot=selHEff&&perH?((selHEff/(perH/1.10)-1)*100):null;
       return '<div class="cap-card cap-pac-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2225,7 +2237,7 @@ function renderCapCalc(){
         +'<td style="padding:4px 8px;border:1px solid #e2e8f0;text-align:right">'+(hl!==null?fW(hld):'난방없음')+'</td>'
         +'</tr></tbody></table>'
         +'<div style="margin-top:7px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;font-size:10px">'
-        +'<span style="color:#64748b;font-weight:600">※ 부하계산서에 안전율(냉방10%/난방15%) 기 반영됨</span>'
+        +'<span style="color:#64748b;font-weight:600">※ 부하계산서에 안전율(냉방·난방 각 10%) 기 반영됨</span>'
         +'<label style="display:flex;align-items:center;gap:5px;font-weight:600;color:#334155">설치 대수 (Q\'TY) :'
         +'<input type="number" value="'+cnt+'" min="1" style="width:50px;padding:2px 6px;border:1px solid #94a3b8;border-radius:3px;font-size:10px;font-family:inherit;text-align:center" onchange="sCC(\''+rid+'\',\'cnt\',parseInt(this.value)||1);renderCapCalc()"> 대'
         +'</label>'
@@ -2297,7 +2309,7 @@ function renderCapCalc(){
         +'</div>'
 
         // 여유율
-        +(cMgn!==null||hMgn!==null?'<div style="margin:0 12px 8px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:9px;display:flex;gap:20px;flex-wrap:wrap">'+(cMgn!==null?'<span>냉방 여유율 : <strong style="color:'+(cMgn>=10?'#16a34a':cMgn>=0?'#d97706':'#dc2626')+'">'+cMgn.toFixed(1)+'%</strong> '+(cMgn>=10?'✓ OK':cMgn>=0?'△ 주의':'✗ 부족')+'</span>':'')+(hMgn!==null?'<span>난방 여유율 : <strong style="color:'+(hMgn>=10?'#16a34a':hMgn>=0?'#d97706':'#dc2626')+'">'+hMgn.toFixed(1)+'%</strong> '+(hMgn>=10?'✓ OK':hMgn>=0?'△ 주의':'✗ 부족')+'</span>':'')+'</div>':'')
+        +(cMgn!==null||hMgn!==null?'<div style="margin:0 12px 8px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:9px;display:flex;gap:20px;flex-wrap:wrap">'+(cMgn!==null?'<span>냉방 여유율 : <strong style="color:'+(cMgn>=0?'#16a34a':'#dc2626')+'">'+cMgn.toFixed(1)+'%</strong> '+(cMgn>=0?'✓ OK':'✗ 부족')+'<span style="color:#64748b"> (안전율 10% 포함 부하 대비)</span></span>':'')+(hMgn!==null?'<span>난방 여유율 : <strong style="color:'+(hMgn>=0?'#16a34a':'#dc2626')+'">'+hMgn.toFixed(1)+'%</strong> '+(hMgn>=0?'✓ OK':'✗ 부족')+'<span style="color:#64748b"> (안전율 10% 포함 부하 대비)</span></span>':'')+(cTot!==null?'<span style="color:#7c3aed">총 여유 (순부하 대비) : <strong>'+cTot.toFixed(1)+'%</strong></span>':'')+(hTot!==null?'<span style="color:#7c3aed">난방 총 여유 : <strong>'+hTot.toFixed(1)+'%</strong></span>':'')+'</div>':'')
 
         // ⑦ FOOTER
         +'<div style="background:#f0f4f8;border-top:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:10px">'
@@ -2354,6 +2366,9 @@ function renderCapCalc(){
       const selHbdr=selHEff&&perH!==null?(selHEff>=perH?'#16a34a':'#dc2626'):'#ca8a04';
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
       const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
+      // 기준: AC-012 — 순부하(안전율 전) 대비 총 여유. 안전율 + 카탈로그 올림이 합쳐진 값
+      const cTot=selC&&perC?((selC/(perC/1.10)-1)*100):null;
+      const hTot=selHEff&&perH?((selHEff/(perH/1.10)-1)*100):null;
       return '<div class="cap-card cap-cth-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2382,7 +2397,7 @@ function renderCapCalc(){
         +'<td style="padding:4px 8px;border:1px solid #e2e8f0;text-align:right">'+(hl!==null?fW(hld):'난방없음')+'</td>'
         +'</tr></tbody></table>'
         +'<div style="margin-top:7px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;font-size:10px">'
-        +'<span style="color:#64748b;font-weight:600">※ 부하계산서에 안전율(냉방10%/난방15%) 기 반영됨</span>'
+        +'<span style="color:#64748b;font-weight:600">※ 부하계산서에 안전율(냉방·난방 각 10%) 기 반영됨</span>'
         +'<label style="display:flex;align-items:center;gap:5px;font-weight:600;color:#334155">설치 대수 (Q\'TY) :'
         +'<input type="number" value="'+cnt+'" min="1" style="width:50px;padding:2px 6px;border:1px solid #94a3b8;border-radius:3px;font-size:10px;font-family:inherit;text-align:center" onchange="sCC(\''+rid+'\',\'cnt\',parseInt(this.value)||1);renderCapCalc()"> 대'
         +'</label>'
@@ -2470,7 +2485,7 @@ function renderCapCalc(){
         +'</div>'
 
         // 여유율
-        +(cMgn!==null||hMgn!==null?'<div style="margin:0 12px 8px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:9px;display:flex;gap:20px;flex-wrap:wrap">'+(cMgn!==null?'<span>냉방 여유율 : <strong style="color:'+(cMgn>=10?'#16a34a':cMgn>=0?'#d97706':'#dc2626')+'">'+cMgn.toFixed(1)+'%</strong> '+(cMgn>=10?'✓ OK':cMgn>=0?'△ 주의':'✗ 부족')+'</span>':'')+(hMgn!==null?'<span>난방 여유율 : <strong style="color:'+(hMgn>=10?'#16a34a':hMgn>=0?'#d97706':'#dc2626')+'">'+hMgn.toFixed(1)+'%</strong> '+(hMgn>=10?'✓ OK':hMgn>=0?'△ 주의':'✗ 부족')+'</span>':'')+'</div>':'')
+        +(cMgn!==null||hMgn!==null?'<div style="margin:0 12px 8px;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:9px;display:flex;gap:20px;flex-wrap:wrap">'+(cMgn!==null?'<span>냉방 여유율 : <strong style="color:'+(cMgn>=0?'#16a34a':'#dc2626')+'">'+cMgn.toFixed(1)+'%</strong> '+(cMgn>=0?'✓ OK':'✗ 부족')+'<span style="color:#64748b"> (안전율 10% 포함 부하 대비)</span></span>':'')+(hMgn!==null?'<span>난방 여유율 : <strong style="color:'+(hMgn>=0?'#16a34a':'#dc2626')+'">'+hMgn.toFixed(1)+'%</strong> '+(hMgn>=0?'✓ OK':'✗ 부족')+'<span style="color:#64748b"> (안전율 10% 포함 부하 대비)</span></span>':'')+(cTot!==null?'<span style="color:#7c3aed">총 여유 (순부하 대비) : <strong>'+cTot.toFixed(1)+'%</strong></span>':'')+(hTot!==null?'<span style="color:#7c3aed">난방 총 여유 : <strong>'+hTot.toFixed(1)+'%</strong></span>':'')+'</div>':'')
 
         // ⑦ FOOTER
         +'<div style="background:#f0f4f8;border-top:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:10px">'
