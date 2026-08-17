@@ -3371,19 +3371,55 @@ function renderCapCalc(){
       const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
       const stTot=stAvail+rcAvail;
       const okS=stVol>0&&stTot>=pkNeed;
+      // ── 계통 형식 — 기준: AC-022 4-① (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
+      const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
+      const sysT=gs('sysT','A');
+      const sepTank=(sysT!=='A');          // 별도 저탕조가 있는가
+      const needP1 =(sysT!=='A');          // 1차(열원순환) 펌프가 필요한가
+      // 필요 저탕량 역산 — 회복으로 못 채우는 몫을 저장이 맡는다
+      const stReq=(effR*mix>0)?Math.max(0,(pkNeed-rcAvail))/(effR*mix):0;
+      const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
+      const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
+      // 1차(열원순환) 펌프 — 보일러 출력을 저탕조로 실어 나른다
+      const dT1=gv('dT1',10);
+      const p1Lph=(dT1>0)?kW*860/dT1:0;
+      const head1=gv('head1',5);
+      const sel1Q=gv('sel1Q',0), sel1H=gv('sel1H',0);
+      const ok1=sel1Q>0&&sel1H>0&&sel1Q>=p1Lph/60&&sel1H>=head1;
+      // 2차(급탕순환) 펌프 — 환탕 채용 여부
+      const hasRet=gs('hasRet','Y')==='Y';
       const cDiv=gv('circDiv',8);
       const circLph=cDiv>0?Qh/cDiv:0;
       const head=gv('head',0);
       const selKW=gv('selKW',0), selQ=gv('selQ',0), selH=gv('selH',0);
       const okB=selKW>0&&selKW>=kW;
       const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
+      const selTank=gv('selTank',0);
+      const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stTot>=pkNeed);
       const I=(k,v,st,w)=>'<input type="number" value="'+(v||'')+'" step="'+st+'" style="width:'+(w||62)+'px" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">';
+      const SEL=(k,opts,cur)=>'<select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">'
+        +opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
+      const HD=(n,t,sub)=>'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">'+n+' '+t
+        +(sub?' <span style="font-weight:400;color:#94a3b8">— '+sub+'</span>':'')+'</div>';
+      const OKM=(ok,on,yes,no)=>'<span style="margin-left:8px;font-weight:700;color:'+(ok?'#16a34a':'#dc2626')+'">'+(on?(ok?(yes||'✓ OK'):(no||'✗ 부족')):'— 미입력')+'</span>';
       html+='<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:16px">'
         +'<div style="background:#7c2d12;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">'
-        +'<span style="font-weight:700;font-size:12px">중앙식 급탕 보일러 + 급탕순환펌프 선정</span>'
+        +'<span style="font-weight:700;font-size:12px">중앙식 급탕 — 보일러 · 저탕조 · 순환펌프 선정</span>'
         +'<span style="font-size:9px;opacity:.85">기준: AC-022 · HW-001 &nbsp;|&nbsp; 대상 '+bRooms.length+'개 실</span></div>'
         +'<div style="padding:10px 14px">'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 급탕량 집계 (보일러 그룹)</div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 계통 형식 <span style="font-weight:400;color:#94a3b8">— 열을 만드는 곳과 담는 곳이 한 몸이냐 (기준: AC-022 4-①)</span></div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
+        +'<span>'+SEL('sysT',[['A','A · 저탕식 보일러 (저탕 일체형)'],['B','B · 저탕식 보일러 + 별도 저탕조'],['C','C · 순간식 보일러 + 저탕조']],sysT)+'</span>'
+        +'<span>환탕(2차 순환) '+SEL('hasRet',[['Y','채용'],['N','없음']],hasRet?'Y':'N')+'</span></div>'
+        +'<div style="margin-top:6px;padding:7px 12px;background:'+(sepTank?'#fef3c7':'#ecfdf5')+';border:1px solid '+(sepTank?'#fcd34d':'#a7f3d0')+';border-radius:4px;font-size:10px;line-height:1.8">'
+        +(sysT==='A'
+          ?'<b>저탕이 보일러 안에 있다.</b> 별도 저탕조 없음 → <b>1차(열원순환) 펌프 없음.</b> 100~500 lit 대의 우리 표준이다.'
+          :(sysT==='B'
+            ?'<b>보일러 저탕 + 별도 저탕조.</b> 회복이 모자라 증설하는 형태 → <b>1차 펌프 필요.</b>'
+            :'<b>보일러는 열만 만들고 저장은 탱크가 한다.</b> → <b>1차 펌프 필수.</b> 대형·연소식(경유) 구간이다.'))
+        +(hasRet?'':'<br><b>환탕 없음</b> — 보일러를 사용처 가까이 둔 계통. 관내 용적 3 lit 이하면 정상이다.')
+        +'</div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 급탕량 집계 (보일러 그룹)</div>'
         +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">실</th>'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1">세면기</th>'
@@ -3395,7 +3431,7 @@ function renderCapCalc(){
         +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
         +'<td colspan="4" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
         +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 보일러 용량</div>'
+        +HD('③','보일러 용량')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>동시사용률 '+I('simRate',gSim,1,50)+' % <span style="color:#94a3b8">(자동 '+(_gs||60)+')</span></span>'
         +'<span>급탕온도 '+I('tHot',Th,1,50)+' ℃</span>'
@@ -3407,9 +3443,9 @@ function renderCapCalc(){
         +'입열 기준(효율 '+effi+'%) = <b>'+f1(kWin)+' kW</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px">선정 보일러 <b>'+I('selKW',selKW,0.1,70)+'</b> kW'
         +'<span style="margin-left:8px;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">③ 저탕용량 검토 <span style="font-weight:400;color:#94a3b8">— kW 만 맞고 저탕이 모자라면 교대 시간에 찬물이 나온다</span></div>'
+        +HD('④',sepTank?'저탕조 선정':'저탕용량 검토 (보일러 내장)','kW 만 맞고 저탕이 모자라면 교대 시간에 찬물이 나온다')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
-        +'<span>저탕용량 '+I('stVol',stVol,10,60)+' lit</span>'
+        +'<span>'+(sepTank?'저탕조 용량':'보일러 저탕용량')+' '+I('stVol',stVol,10,60)+' lit</span>'
         +'<span>피크 시간 '+I('pkMin',pkMin,5,45)+' 분</span>'
         +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(샤워기 1개를 몇 명이)</span></span>'
         +'<span>사용온도 '+I('tUse',tUse,1,45)+' ℃</span>'
@@ -3421,18 +3457,71 @@ function renderCapCalc(){
         +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
         +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 저탕을 키우거나 보일러 kW 를 올린다')):'— 저탕용량 미입력')+'</div>'
+        +'<div style="margin-top:6px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
+        +'필요 저탕량 = (피크 '+f0(pkNeed)+' − 회복 '+f0(rcAvail)+') ÷ ('+effR+'×'+mix.toFixed(2)+') = <b>'+f0(stReq)+' lit</b>'
+        +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b></div>'
+        +(sepTank
+          ?('<div style="margin-top:6px;font-size:10.5px">선정 저탕조 <b>'+I('selTank',selTank,10,70)+'</b> lit'
+            +OKM(okT,selTank>0)+'</div>')
+          :'<div style="margin-top:6px;font-size:10px;color:#64748b">※ A형은 <b>보일러 사양의 저탕용량이 곧 이 값</b>이다. 장비일람표에 별도 저탕조를 올리지 않는다.</div>')
         +'<div style="margin-top:6px;font-size:9.5px;color:#64748b">※ 저탕을 키우는 쪽이 대체로 싸다 — <b>kW 는 수전 용량까지 끌고 올라간다</b> (기준: AC-022 4-④)</div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">④ 급탕순환펌프 (환탕) <span style="font-weight:400;color:#94a3b8">— 배관이 길 때만. 저탕 일체형을 샤워실 옆에 두면 불필요</span></div>'
-        +'<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
+        +(needP1
+          ?(HD('⑤','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 4-③)')
+            +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
+            +'<span>보일러 입·출구 온도차 ΔT '+I('dT1',dT1,1,45)+' ℃</span>'
+            +'<span>→ 순환유량 <b style="color:#b45309">'+f0(p1Lph)+' lit/h ('+f1(p1Lph/60)+' lit/min)</b></span>'
+            +'<span>양정 '+I('head1',head1,0.5,50)+' m <span style="color:#94a3b8">(기계실 내 짧은 회로)</span></span></div>'
+            +'<div style="margin-top:6px;padding:7px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px">'
+            +'유량 = '+f1(kW)+' kW × 860 ÷ ΔT '+dT1+'℃ = <b>'+f0(p1Lph)+' lit/h</b>'
+            +' <span style="color:#64748b">— 2차 펌프('+f1(circLph)+' lit/h)의 '+f0(circLph>0?p1Lph/circLph:0)+'배다. 목적이 다르다</span></div>'
+            +'<div style="margin-top:6px;font-size:10.5px">선정 1차펌프 <b>'+I('sel1Q',sel1Q,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('sel1H',sel1H,0.1,55)+'</b> m'
+            +OKM(ok1,sel1Q>0&&sel1H>0)+'</div>')
+          :'')
+        +HD(needP1?'⑥':'⑤','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 배관이 길 때만 (기준: AC-022 4-③)')
+        +(hasRet?'':'<div style="padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:10.5px;color:#475569">환탕 <b>없음</b>으로 선택했다 — 2차 펌프를 두지 않는다. 보일러를 사용처 가까이 두는 계통이다.</div>')
+        +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>순환비율 Q<sub>h</sub> ÷ '+I('circDiv',cDiv,1,45)+'</span>'
         +'<span>→ 순환유량 <b style="color:#b45309">'+f1(circLph)+' lit/h ('+f1(circLph/60)+' lit/min)</b></span>'
         +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'
         +'<div style="margin-top:6px;font-size:10.5px">선정 펌프 <b>'+I('selQ',selQ,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('selH',selH,0.1,55)+'</b> m'
-        +'<span style="margin-left:8px;font-weight:700;color:'+(okP?'#16a34a':'#dc2626')+'">'+((selQ>0&&selH>0)?(okP?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
+        +OKM(okP,selQ>0&&selH>0)+'</div>'):'')
+        +HD('⑦','선정 요약','장비일람표(B4)에 그대로 올라간다')
+        +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">기기</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">산정</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">선정</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">판정</th></tr></thead><tbody>'
+        +'<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>급탕 보일러</b>'+(sysT==='C'?' (순간식)':' (저탕식)')+'</td>'
+        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f1(kW)+' kW (입열 '+f1(kWin)+')'+(sysT==='A'?' · 저탕 '+f0(stRec)+' lit':'')+'</td>'
+        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(selKW>0?f1(selKW)+' kW':'—')+'</td>'
+        +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'OK':'부족'):'—')+'</td></tr>'
+        +(sepTank
+          ?('<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>저탕조</b></td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+')</td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(selTank>0?f0(selTank)+' lit':'—')+'</td>'
+            +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okT?'#16a34a':'#dc2626')+'">'+(selTank>0?(okT?'OK':'부족'):'—')+'</td></tr>')
+          :('<tr style="color:#94a3b8"><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">저탕조</td>'
+            +'<td class="L" colspan="3" style="padding:3px 8px;border:1px solid #cbd5e1">보일러 내장 (A형) — 별도 기기 없음</td></tr>'))
+        +(needP1
+          ?('<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>1차 열원순환펌프</b></td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f1(p1Lph/60)+' lit/min × '+head1+' m</td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(sel1Q>0?f1(sel1Q)+' lit/min × '+f1(sel1H)+' m':'—')+'</td>'
+            +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(ok1?'#16a34a':'#dc2626')+'">'+((sel1Q>0&&sel1H>0)?(ok1?'OK':'부족'):'—')+'</td></tr>')
+          :('<tr style="color:#94a3b8"><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">1차 열원순환펌프</td>'
+            +'<td class="L" colspan="3" style="padding:3px 8px;border:1px solid #cbd5e1">A형 — <b>불필요</b> (보일러와 저탕이 한 몸)</td></tr>'))
+        +(hasRet
+          ?('<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>2차 급탕순환펌프</b></td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f1(circLph/60)+' lit/min × '+(head||'—')+' m</td>'
+            +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(selQ>0?f1(selQ)+' lit/min × '+f1(selH)+' m':'—')+'</td>'
+            +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okP?'#16a34a':'#dc2626')+'">'+((selQ>0&&selH>0)?(okP?'OK':'부족'):'—')+'</td></tr>')
+          :('<tr style="color:#94a3b8"><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">2차 급탕순환펌프</td>'
+            +'<td class="L" colspan="3" style="padding:3px 8px;border:1px solid #cbd5e1">환탕 없음 — 두지 않는다</td></tr>'))
+        +'</tbody></table>'
         +'<div style="margin-top:8px;font-size:9.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:6px 10px">'
         +'※ <b>급탕 공급관·환탕관 관경은 위생앱(sanitary-pipe-calc)에서 산정</b>한다 — 기준: HW-001. '
-        +'여기서는 <b>기기 용량만</b> 정한다. 양정은 그 배관 산정 결과를 옮겨 넣는다.</div>'
+        +'여기서는 <b>기기 용량만</b> 정한다. <b>2차 펌프 양정</b>은 그 배관 산정 결과를 옮겨 넣는다.<br>'
+        +'※ 부속·밸브류는 <b>기준 AC-022 5절</b>의 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
         +'</div></div>';
     }
     if(!rooms.length){ el.innerHTML=html; return; }
