@@ -3337,7 +3337,7 @@ function renderCapCalc(){
       if(!STATE.project.hwB) STATE.project.hwB={};
       const HB=STATE.project.hwB;
       const gv=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
-      let gLph=0,gCnt=0;
+      let gLph=0,gCnt=0,gShBase=0;   // gShBase = 샤워기수 x 1회사용량 (피크 검토용, 기준: AC-022 4-④)
       const rowsHtml=bRooms.map(r=>{
         const bf=getBF(r.bldgId,r.floorId); const rid=r.id;
         const dh=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
@@ -3346,6 +3346,7 @@ function renderCapCalc(){
           const k=fx[0],dl=fx[2],du=fx[3];
           const cnt=dh(k+'Cnt',0),lpf=dh(k+'Lpf',dl),uph=dh(k+'Uph',du);
           rLph+=cnt*lpf*uph; rCnt+=cnt;
+          if(k==='sh') gShBase+=cnt*lpf;
           return '<td style="padding:2px 4px"><input type="number" value="'+(cnt||'')+'" min="0" style="width:44px" onchange="sCHW(\''+rid+'\',\''+k+'Cnt\',parseFloat(this.value)||0);renderCapCalc()"></td>';
         }).join('');
         gLph+=rLph; gCnt+=rCnt;
@@ -3358,8 +3359,18 @@ function renderCapCalc(){
       const Qh=gLph*gSim/100;
       const kcal=Qh*Math.max(0,Th-Tc);
       const kW=kcal/860;
-      const effi=gv('effi',85);
+      const effi=gv('effi',98);   // 기준: AC-022 — 전기온수보일러. 연소식이면 85 입력
       const kWin=effi>0?kW/(effi/100):0;
+      // ── 저탕용량 검토 — 기준: AC-022 4-④
+      const stVol=gv('stVol',300), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
+      const effR=gv('effR',0.75), tUse=gv('tUse',43);
+      const mix=(tUse>Tc)?(Th-Tc)/(tUse-Tc):1;                 // 혼합계수 (60-5)/(43-5)
+      const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*pkMin/60);      // 피크 필요량 (사용온도 기준)
+      const stAvail=stVol*effR*mix;                            // 저장분
+      const rcvLph=(Th>Tc)?kW*860/(Th-Tc):0;                   // 보일러 회복량 lit/h
+      const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
+      const stTot=stAvail+rcAvail;
+      const okS=stVol>0&&stTot>=pkNeed;
       const cDiv=gv('circDiv',8);
       const circLph=cDiv>0?Qh/cDiv:0;
       const head=gv('head',0);
@@ -3389,14 +3400,29 @@ function renderCapCalc(){
         +'<span>동시사용률 '+I('simRate',gSim,1,50)+' % <span style="color:#94a3b8">(자동 '+(_gs||60)+')</span></span>'
         +'<span>급탕온도 '+I('tHot',Th,1,50)+' ℃</span>'
         +'<span>급수온도 '+I('tCold',Tc,1,50)+' ℃</span>'
-        +'<span>보일러 효율 '+I('effi',effi,1,50)+' %</span></div>'
+        +'<span>보일러 효율 '+I('effi',effi,1,50)+' % <span style="color:#94a3b8">(전기 98 / 연소 85)</span></span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'시간당 급탕량 Q<sub>h</sub> = '+f1(gLph)+' × '+gSim+'% = <b>'+f1(Qh)+' lit/h</b><br>'
         +'가열량 = '+f1(Qh)+' × ('+Th+'−'+Tc+')℃ = '+f0(kcal)+' kcal/h = <b style="color:#b45309">'+f1(kW)+' kW</b><br>'
         +'입열 기준(효율 '+effi+'%) = <b>'+f1(kWin)+' kW</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px">선정 보일러 <b>'+I('selKW',selKW,0.1,70)+'</b> kW'
         +'<span style="margin-left:8px;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">③ 급탕순환펌프 (환탕)</div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">③ 저탕용량 검토 <span style="font-weight:400;color:#94a3b8">— kW 만 맞고 저탕이 모자라면 교대 시간에 찬물이 나온다</span></div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
+        +'<span>저탕용량 '+I('stVol',stVol,10,60)+' lit</span>'
+        +'<span>피크 시간 '+I('pkMin',pkMin,5,45)+' 분</span>'
+        +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(샤워기 1개를 몇 명이)</span></span>'
+        +'<span>사용온도 '+I('tUse',tUse,1,45)+' ℃</span>'
+        +'<span>유효율 '+I('effR',effR,0.05,45)+'</span></div>'
+        +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
+        +'혼합계수 = ('+Th+'−'+Tc+') ÷ ('+tUse+'−'+Tc+') = <b>'+mix.toFixed(2)+'</b><br>'
+        +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
+        +'가용량 = 저장 '+f0(stVol)+'×'+effR+'×'+mix.toFixed(2)+' ('+f0(stAvail)+') + 회복 '+f0(rcvLph)+' lit/h×'+pkMin+'분×'+mix.toFixed(2)+' ('+f0(rcAvail)+')'
+        +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
+        +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
+        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 저탕을 키우거나 보일러 kW 를 올린다')):'— 저탕용량 미입력')+'</div>'
+        +'<div style="margin-top:6px;font-size:9.5px;color:#64748b">※ 저탕을 키우는 쪽이 대체로 싸다 — <b>kW 는 수전 용량까지 끌고 올라간다</b> (기준: AC-022 4-④)</div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">④ 급탕순환펌프 (환탕) <span style="font-weight:400;color:#94a3b8">— 배관이 길 때만. 저탕 일체형을 샤워실 옆에 두면 불필요</span></div>'
         +'<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>순환비율 Q<sub>h</sub> ÷ '+I('circDiv',cDiv,1,45)+'</span>'
