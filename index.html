@@ -492,7 +492,8 @@ const RT = {
   elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'인라인덕트팬', phS:57, phL:62}, // 기준: AC-016·AC-017 — va:12 는 「발열 제거 기준」이며 냉방(PAC) 정지 시 백업 풍량을 겸한다. 운전은 온도연동(KDS 31 25 20) — 평소엔 PAC 이 처리하고 온도 상승 시 팬이 돈다. 급기 위주 제2종으로 가압 유지(AC-018); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:20, eqReq:false, ce:'없음', he:'없음',      ve:'인라인덕트팬', phS:57, phL:62}, // cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
   toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
-  locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:10 — 기준: AC-017 · 설계기준 표4.5 「샤워실 10」(탈의실류에 샤워실 포함). 종전 15는 근거 없음; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
+  shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'보일러(중앙식)', iw_u:2.38, phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관); iw_u:2.38 타일 마감
+  locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:10, va:5,  eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:5 — 기준: AC-017 · 설계기준 표4.5 「탈의실 5」. 샤워실은 별도 용도(shower)로 분리했다; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:true,  lw:15, va:0,  eqD:9,  ce:'EHP',  he:'EHP',        ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 재실인원×25m³/h·인. 기준: AC-017 — 우리 시설(공장·발전소 업무실)은 다중이용시설이 아니므로 법정 환기량 기준이 없다. 25는 실무 관행값(별표1의6의 지하역사·그밖의시설 값과 우연히 같은 수준); phS/phL — 경작업, 좌식 (ASHRAE Table 1); hrh:null — 겨울 가습 미실시(중앙제어실만 가습). 별표8도 난방 상대습도를 정하지 않는다
   control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, ia:10, oa:true,  lw:15, va:0,  eqD:50, ce:'CTH',  he:'PAC',       ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); phS/phL — office류와 동일; he:'PAC' — 냉방·습도는 CTH, 난방은 PAC이 담당(CTH 정지 시 백업 겸용). 24h 상주+계장패널 실이라 단일 기기 의존을 피한다
   kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:15, va:8,  ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:true, phS:58, phL:58}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:8 — 기준: AC-017 · 설계기준 표4.5 「배선실(配膳室) 8」; phS/phL:58 — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
@@ -502,7 +503,7 @@ const RT = {
 const BLDG_USAGE = ['사무/업무시설','공장/산업시설','의료시설','교육시설','숙박시설','판매/상업시설','창고/물류시설','기타'];
 const COOL_EQUIPS = ['PAC','EHP','CTH','없음'];
 const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','없음'];
-const SAN_EQUIPS  = ['전기온수기','없음'];
+const SAN_EQUIPS  = ['전기온수기','보일러(중앙식)','없음'];   // 기준: AC-022 — 보일러 급탕은 계통·환탕관을 위생앱(HW-001)이 산정한다
 const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','환기유니트','없음'];
 
 // ══════════════════════════════════════════════
@@ -1695,7 +1696,7 @@ function renderLoadCalc(){
   const SANITY={ // 단위면적당 부하 상식범위 [min,max] W/㎡ — 벗어나면 입력 오류 가능성 경고
     office:{c:[60,200],h:[40,250]}, control:{c:[80,350],h:[40,250]},
     elec:{c:[100,600],h:null}, kitchen:{c:[60,250],h:[40,300]},   // 기준: AC-014 — 탕비실 기준(조리실 아님)
-    locker:{c:[60,300],h:[50,350]}, toilet:{c:null,h:[50,400]},
+    locker:{c:[60,300],h:[50,350]}, toilet:{c:null,h:[50,400]}, shower:{c:null,h:[50,400]},
     mech:{c:null,h:[30,300]}, genset:{c:null,h:null}, storage:{c:null,h:null},
   };
   const chk=(v,rng)=>{if(v==null||!rng)return '';return (v<rng[0]||v>rng[1])?'background:#fef3c7;color:#92400e;font-weight:700':'';};
@@ -3323,14 +3324,96 @@ function renderCapCalc(){
   // ── 급수량 (급탕 가열기 선정) ────────────────────────────────
   if(capTab==='급수량'){
     const rooms=STATE.rooms.filter(r=>r.san==='전기온수기'||(r.type==='toilet'&&!r.san));
-    if(!rooms.length){el.innerHTML='<div class="empty">전기온수기로 선택된 실이 없습니다.</div>';return;}
+    const bRooms=STATE.rooms.filter(r=>r.san==='보일러(중앙식)');
+    if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르세요.</small></div>';return;}
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
     const FX=[['wb','세면기',8,6],['sh','샤워기',60,1],['ba','세탁기',40,0.5],['ks','주방싱크',10,4],['et','기타',0,0]];
     let html='';
+
+    // ── 보일러(중앙식) 그룹 선정 — 기준: AC-022 ──
+    // 여러 실을 하나의 보일러로 묶어 급탕량을 합산하고 보일러 용량과 급탕순환펌프를 선정한다.
+    // 급탕 계통·관경·환탕관은 위생앱(HW-001) 소관이며 여기서는 기기 용량만 정한다.
+    if(bRooms.length){
+      if(!STATE.project.hwB) STATE.project.hwB={};
+      const HB=STATE.project.hwB;
+      const gv=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
+      let gLph=0,gCnt=0;
+      const rowsHtml=bRooms.map(r=>{
+        const bf=getBF(r.bldgId,r.floorId); const rid=r.id;
+        const dh=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
+        let rLph=0,rCnt=0;
+        const cells=FX.filter(x=>x[0]!=='et').map(fx=>{
+          const k=fx[0],dl=fx[2],du=fx[3];
+          const cnt=dh(k+'Cnt',0),lpf=dh(k+'Lpf',dl),uph=dh(k+'Uph',du);
+          rLph+=cnt*lpf*uph; rCnt+=cnt;
+          return '<td style="padding:2px 4px"><input type="number" value="'+(cnt||'')+'" min="0" style="width:44px" onchange="sCHW(\''+rid+'\',\''+k+'Cnt\',parseFloat(this.value)||0);renderCapCalc()"></td>';
+        }).join('');
+        gLph+=rLph; gCnt+=rCnt;
+        return '<tr><td class="L" style="font-size:11px;padding:3px 8px">'+(bf.f?esc(bf.f.name)+' ':'')+esc(r.name)+'</td>'+cells+'<td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">'+f1(rLph)+'</td></tr>';
+      }).join('');
+      let _gs=gCnt<=SIM[0][0]?SIM[0][1]:gCnt>=SIM[SIM.length-1][0]?SIM[SIM.length-1][1]:0;
+      if(!_gs){for(let i=0;i<SIM.length-1;i++){if(gCnt>=SIM[i][0]&&gCnt<=SIM[i+1][0]){const t=(gCnt-SIM[i][0])/(SIM[i+1][0]-SIM[i][0]);_gs=Math.round(SIM[i][1]+(SIM[i+1][1]-SIM[i][1])*t);break;}}}
+      const gSim=gv('simRate',_gs||60);
+      const Th=gv('tHot',60), Tc=gv('tCold',5);
+      const Qh=gLph*gSim/100;
+      const kcal=Qh*Math.max(0,Th-Tc);
+      const kW=kcal/860;
+      const effi=gv('effi',85);
+      const kWin=effi>0?kW/(effi/100):0;
+      const cDiv=gv('circDiv',8);
+      const circLph=cDiv>0?Qh/cDiv:0;
+      const head=gv('head',0);
+      const selKW=gv('selKW',0), selQ=gv('selQ',0), selH=gv('selH',0);
+      const okB=selKW>0&&selKW>=kW;
+      const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
+      const I=(k,v,st,w)=>'<input type="number" value="'+(v||'')+'" step="'+st+'" style="width:'+(w||62)+'px" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">';
+      html+='<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:16px">'
+        +'<div style="background:#7c2d12;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-weight:700;font-size:12px">중앙식 급탕 보일러 + 급탕순환펌프 선정</span>'
+        +'<span style="font-size:9px;opacity:.85">기준: AC-022 · HW-001 &nbsp;|&nbsp; 대상 '+bRooms.length+'개 실</span></div>'
+        +'<div style="padding:10px 14px">'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 급탕량 집계 (보일러 그룹)</div>'
+        +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">실</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">세면기</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">샤워기</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">세탁기</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">주방싱크</th>'
+        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">소계 (lit/h)</th></tr></thead><tbody>'
+        +rowsHtml
+        +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
+        +'<td colspan="4" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
+        +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 보일러 용량</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
+        +'<span>동시사용률 '+I('simRate',gSim,1,50)+' % <span style="color:#94a3b8">(자동 '+(_gs||60)+')</span></span>'
+        +'<span>급탕온도 '+I('tHot',Th,1,50)+' ℃</span>'
+        +'<span>급수온도 '+I('tCold',Tc,1,50)+' ℃</span>'
+        +'<span>보일러 효율 '+I('effi',effi,1,50)+' %</span></div>'
+        +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
+        +'시간당 급탕량 Q<sub>h</sub> = '+f1(gLph)+' × '+gSim+'% = <b>'+f1(Qh)+' lit/h</b><br>'
+        +'가열량 = '+f1(Qh)+' × ('+Th+'−'+Tc+')℃ = '+f0(kcal)+' kcal/h = <b style="color:#b45309">'+f1(kW)+' kW</b><br>'
+        +'입열 기준(효율 '+effi+'%) = <b>'+f1(kWin)+' kW</b></div>'
+        +'<div style="margin-top:6px;font-size:10.5px">선정 보일러 <b>'+I('selKW',selKW,0.1,70)+'</b> kW'
+        +'<span style="margin-left:8px;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">③ 급탕순환펌프 (환탕)</div>'
+        +'<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
+        +'<span>순환비율 Q<sub>h</sub> ÷ '+I('circDiv',cDiv,1,45)+'</span>'
+        +'<span>→ 순환유량 <b style="color:#b45309">'+f1(circLph)+' lit/h ('+f1(circLph/60)+' lit/min)</b></span>'
+        +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'
+        +'<div style="margin-top:6px;font-size:10.5px">선정 펌프 <b>'+I('selQ',selQ,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('selH',selH,0.1,55)+'</b> m'
+        +'<span style="margin-left:8px;font-weight:700;color:'+(okP?'#16a34a':'#dc2626')+'">'+((selQ>0&&selH>0)?(okP?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
+        +'<div style="margin-top:8px;font-size:9.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:6px 10px">'
+        +'※ <b>급탕 공급관·환탕관 관경은 위생앱(sanitary-pipe-calc)에서 산정</b>한다 — 기준: HW-001. '
+        +'여기서는 <b>기기 용량만</b> 정한다. 양정은 그 배관 산정 결과를 옮겨 넣는다.</div>'
+        +'</div></div>';
+    }
+    if(!rooms.length){ el.innerHTML=html; return; }
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId); const rid=r.id;
       const autoTag='M-AG-'+String(idx+1).padStart(3,'0');
-      const defH=(k,d)=>{const v=r.capHW[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
+      const defH=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
       let totLph=0,totCnt=0;
       const fxRows=FX.map(([k,nm,dl,du])=>{
         const cnt=defH(k+'Cnt',0),lpf=defH(k+'Lpf',dl),uph=defH(k+'Uph',du),lph=cnt*lpf*uph;
