@@ -3678,7 +3678,7 @@ function renderCapCalc(){
             <tbody><tr style="background:#fef9c3">
               <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
               ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdx?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-              <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">KS B 6231 기준</td>
+              <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">출처 확인 중</td>
             </tr></tbody>
           </table></div>
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
@@ -3799,7 +3799,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxWT?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">KS B 6231 기준</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">출처 확인 중</td>
           </tr></tbody>
         </table></div>
         <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
@@ -3849,7 +3849,11 @@ function renderCapCalc(){
 
   // ── 부스터펌프 용량 계산서 ────────────────────────────────────
   if(capTab==='부스터펌프'){
-    // 기준: AC-033 — 급수펌프. 유량 = Qh/60 x 첨두배수 3, 동력 = Q x H / (6120 x 효율)
+    // 기준: AC-033 — 급수펌프.
+    // 통상의 급수량 산정 체계 (2026-08-24 확인) —
+    //   Qd 1일 급수량 / Qh 시간평균 = Qd ÷ 사용시간 / Qm 시간최대 = Qh x 1.5~2
+    //   Qp 순시최대 = (Qh ÷ 60) x 3~4   <- 부스터펌프와 관경은 이 값으로 정한다
+    // 곧 아래의 Qh/60 x 첨두배수 3 은 그 표준 방법이며 3 은 3~4 의 하단이다
     // 6120 은 단위 환산 상수다. 물의 밀도와 중력가속도가 들어 있다 (AC-033 33.3.3)
     // 양정 H1~H5 의 구성은 기준: AC-030.
     // H3 NOZZLE 10.2 m = 세정밸브(100 kPa)의 필요압력. 우리 화장실 표준이 세정밸브이므로
@@ -3932,7 +3936,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxBP?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">KS B 6231 기준</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">출처 확인 중</td>
           </tr></tbody>
         </table></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
