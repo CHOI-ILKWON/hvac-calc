@@ -506,6 +506,42 @@ const HEAT_EQUIPS = ['EHP','PAC','유니트히터','라디에이터','없음'];
 const SAN_EQUIPS  = ['전기온수기','보일러(중앙식)','없음'];   // 기준: AC-022 — 보일러 급탕은 계통·환탕관을 위생앱(HW-001)이 산정한다
 const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽부형팬','루프팬','환기유니트','없음'];
 
+// ── EPI 배점 (에너지절약계획서 검토서 [별지 1] 기계설비부문) ────
+// 기준: AC-025 — 배점(b)은 1.0/0.9/0.8/0.7/0.6 다섯 단계. 평점 = 기본배점(a) × 배점(b)
+// 기준: AC-020 20.2.2 — 6번 고효율 열회수형 환기장치
+const EPI_A_HEX = {대형:3, 소형:3, 주택1:3, 주택2:3};   // 기본배점(a)
+const EPI_HEX = {          // [배점b, 난방%, 냉방%] — 모두 「이상」
+  전열: [[1.0,74,57],[0.9,73,54],[0.8,72,51],[0.7,71,48],[0.6,70,45]],
+  현열: [[1.0,88,72],[0.9,86,69],[0.8,84,66],[0.7,82,63],[0.6,80,60]],
+};
+// 난방·냉방을 모두 충족해야 그 배점을 받는다 → 낮은 쪽을 취한다. 기준: AC-025 25.3.3
+function epiHEX(effH, effC, kind){
+  const t=EPI_HEX[kind||'전열']; if(!t) return null;
+  const h=parseFloat(effH), c=parseFloat(effC);
+  if(!isFinite(h)&&!isFinite(c)) return null;
+  const grade=(v,i)=>{ if(!isFinite(v)) return null;
+    for(const row of t) if(v>=row[i]) return row[0];
+    return 0; };                              // 최저 단계 미만이면 0점
+  const gh=grade(h,1), gc=grade(c,2);
+  if(gh===null||gc===null) return null;       // 한쪽만 입력된 경우 판정 보류
+  const b=Math.min(gh,gc);
+  const lack = b>=1 ? null : (gh<gc?'난방':(gc<gh?'냉방':'난방·냉방 둘 다'));
+  return {b:b, gh:gh, gc:gc, lack:lack, tgt:t[0]};   // tgt = 만점 목표 [1.0,74,57]
+}
+// 배점 뱃지 HTML — 만점이면 초록, 아니면 주황
+function epiBadge(r, compact){
+  const e=epiHEX(r.capV&&r.capV.effH, r.capV&&r.capV.effC, r.capV&&r.capV.hexKind);
+  if(!e) return '';
+  const a=EPI_A_HEX[STATE.epiScale||'대형'];
+  const pt=(a*e.b).toFixed(1).replace(/\.0$/,'');
+  const full=e.b>=1;
+  const col=full?'#166534':'#b45309', bg=full?'#dcfce7':'#fef3c7';
+  const tip=full?'EPI 6번 만점 (난방 '+e.tgt[1]+'% / 냉방 '+e.tgt[2]+'% 이상)'
+    :(e.b>0?'만점 기준은 난방 '+e.tgt[1]+'% / 냉방 '+e.tgt[2]+'% 이상입니다 — '+e.lack+'이 모자랍니다'
+           :'최저 단계(난방 70% / 냉방 45%)에도 못 미쳐 배점이 없습니다');
+  return '<span title="'+tip+'" style="display:inline-block;padding:0 4px;border-radius:3px;background:'+bg+';color:'+col+';font-size:9px;font-weight:700;white-space:nowrap">EPI '+e.b.toFixed(1)+(compact?'':' · '+pt+'/'+a+'점')+'</span>';
+}
+
 // ══════════════════════════════════════════════
 //  PSYCHROMETRICS
 // ══════════════════════════════════════════════
@@ -527,6 +563,7 @@ let STATE = {
      floors:[{id:'F1',name:'1층',height:4.0},{id:'F2',name:'2층',height:4.0}]}
   ],
   rooms:[],
+  epiScale:'대형',          // EPI 배점 규모구분 — 대형(연면적 3,000㎡ 이상)/소형/주택1/주택2. 기준: AC-025 25.3
   _nB:2,_nF:10,_nR:1,
 };
 let selRid = null;
@@ -702,6 +739,12 @@ function sortCatModal(key, shift) {
   renderCatModal(_catFiltered);
 }
 
+// 카탈로그 행에서 EPI 배점을 뽑는다 (현재는 HEX 전열교환기만). 기준: AC-020 20.2.2
+function catEPI(row) {
+  if (_catType !== 'HEX') return null;
+  return epiHEX(row['유효전열교환효율(%)_난방'], row['유효전열교환효율(%)_냉방'], '전열');
+}
+
 function renderCatModal(rows) {
   const el = document.getElementById('cat-modal-body');
   if (!rows || !rows.length) {
@@ -745,10 +788,13 @@ function renderCatModal(rows) {
       return 0;
     });
   } else if (_catReq && capInfo) {
-    // 추천 정렬: 충족 모델 먼저, 그 안에서 용량 오름차순 (최소 적정 모델이 맨 위)
+    // 추천 정렬: 충족 모델 먼저 → EPI 배점 높은 순 → 용량 오름차순 (최소 적정 모델이 맨 위)
+    // 기준: AC-025 25.2 — 딸 수 있는 점수는 처음부터 전부 딴다
     sorted = sorted.slice().sort(function(a, b) {
       const fa = fits(a), fb = fits(b);
       if (fa !== fb) return fa ? -1 : 1;
+      const ea = catEPI(a), eb = catEPI(b);
+      if (ea && eb && ea.b !== eb.b) return eb.b - ea.b;   // 배점 높은 쪽이 위
       const ca = capOf(a), cb = capOf(b);
       if (ca != null && cb != null) return ca - cb;
       return 0;
@@ -769,12 +815,14 @@ function renderCatModal(rows) {
     ? '<div style="font-size:11px;padding:6px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
       + '<b style="color:#1d4ed8">필요 ' + _catReq.label + ' : ' + fW(_catReq.val) + ' ' + _catReq.unit + '</b>'
       + '<span style="color:#16a34a;font-size:10px">초록 행 = 충족 모델 (최소 용량순 우선 표시)</span>'
+      + (_catType === 'HEX' ? '<span style="font-size:10px;color:#b45309;background:#fef3c7;padding:2px 6px;border-radius:3px">EPI 6번 만점 조건 : 난방 74% 이상 · 냉방 57% 이상 — 배점이 높은 모델이 위로 옵니다</span>' : '')
       + '<label style="font-size:10px;display:flex;align-items:center;gap:4px;margin-left:auto;cursor:pointer"><input type="checkbox" ' + (_catFitOnly ? 'checked' : '') + ' onchange="_catFitOnly=this.checked;renderCatModal(_catFiltered)"> 충족 모델만 보기</label>'
       + '</div>'
     : (_catReq ? '<div style="font-size:10px;color:#94a3b8;margin-bottom:6px">이 장비 유형은 필요용량 자동판정을 지원하지 않습니다.</div>' : '');
   el.innerHTML = banner + '<div class="tw"><table>'
     + '<thead><tr>'
     + '<th style="'+thStyle+'"></th>'
+    + (_catType === 'HEX' ? '<th style="'+thStyle+'">EPI 배점</th>' : '')
     + keys.map(function(k) {
         const si = _catSort.findIndex(s => s.k === k);
         const arrow = si >= 0 ? (_catSort[si].d === 'asc' ? ' ▲' : ' ▼') : '';
@@ -788,6 +836,20 @@ function renderCatModal(rows) {
         const bg = ok ? '#f0fdf4' : '';
         return '<tr style="cursor:pointer' + (bg ? ';background:' + bg : '') + '" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'' + bg + '\'">'
           + '<td><button class="btn btP btS" onclick="selectCatRow('+i+')">선택</button></td>'
+          + (function(){
+              if (_catType !== 'HEX') return '';
+              const e = catEPI(row);
+              if (!e) return '<td class="C" style="font-size:10px;color:#94a3b8">—</td>';
+              const a = EPI_A_HEX[STATE.epiScale||'대형'];
+              const full = e.b >= 1;
+              const tip = full ? 'EPI 6번 만점 (난방 74% / 냉방 57% 이상)'
+                : (e.b>0 ? '난방 74% / 냉방 57% 이상이면 만점입니다 — '+e.lack+'이 모자랍니다'
+                         : '최저 단계(난방 70% / 냉방 45%)에도 못 미쳐 배점이 없습니다');
+              return '<td class="C" style="font-size:10px;white-space:nowrap;font-weight:700;color:'
+                + (full?'#166534':'#b45309') + ';background:' + (full?'#dcfce7':'#fef3c7')
+                + '" title="'+tip+'">' + e.b.toFixed(1) + ' <span style="font-weight:400;font-size:9px">('
+                + (a*e.b).toFixed(1).replace(/\.0$/,'') + '/' + a + '점)</span></td>';
+            })()
           + keys.map(function(k){ return '<td class="L" style="font-size:10px;white-space:nowrap">'+fmtCell(row[k])+'</td>'; }).join('')
           + '</tr>';
       }).join('')
@@ -2715,7 +2777,7 @@ function renderCapCalc(){
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
       <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH)</th><th>수량</th>
       <th>풍량(CMH)</th><th>정압(Pa)</th><th style="background:#f0fdf4">동력(kW)*</th>
-      <th>장비선정</th><th>풍량 강/중/약<br>(m³/h)</th><th>소비전력 강/중/약<br>(W)</th><th>효율 냉방/난방<br>(%)</th><th>전원</th>
+      <th>장비선정</th><th>풍량 강/중/약<br>(m³/h)</th><th>소비전력 강/중/약<br>(W)</th><th>효율 냉방/난방<br>(%)</th><th>EPI 배점<br>(6번)</th><th>전원</th>
       <th style="text-align:left">비고</th>
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
@@ -2743,6 +2805,7 @@ function renderCapCalc(){
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.afH??'—'}&nbsp;/&nbsp;${r.capV.afM??'—'}&nbsp;/&nbsp;${r.capV.afL??'—'}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.pwH??'—'}&nbsp;/&nbsp;${r.capV.pwM??'—'}&nbsp;/&nbsp;${r.capV.pwL??'—'}</td>
         <td class="C" style="font-size:10px">${r.capV.effC??'—'}&nbsp;/&nbsp;${r.capV.effH??'—'}</td>
+        <td class="C">${epiBadge(r)||'<span style="font-size:9px;color:#94a3b8">—</span>'}</td>
         <td><input type="text" value="${esc(r.capV.volt||'')}" placeholder="220V 60Hz" style="width:90px" onchange="sCV('${rid}','volt',this.value)"></td>
         <td class="L"><input type="text" value="${esc(r.capV.note||'')}" style="width:90px" onchange="sCV('${rid}','note',this.value)"></td>
       </tr>`;
@@ -2751,9 +2814,17 @@ function renderCapCalc(){
       <td class="L" colspan="7" style="background:#dcfce7;font-weight:700">TOTAL</td>
       <td style="text-align:right;font-weight:700;background:#dcfce7">${fW(Math.round(totCalc))}</td>
       <td style="text-align:right;font-weight:700;background:#dcfce7">${fW(totSel)}</td>
-      <td colspan="10" style="background:#dcfce7"></td>
+      <td colspan="11" style="background:#dcfce7"></td>
     </tr>`;
-    html+=`</tbody></table><div style="font-size:9px;color:#64748b;margin-top:4px">※ 계산풍량 = max(체적×환기횟수, 재실인원×25㎥/h·인) — 부하계산서 법정 외기량과 동일 근거</div></div></div>`;
+    html+=`</tbody></table><div style="font-size:9px;color:#64748b;margin-top:4px">※ 계산풍량 = max(체적×환기횟수, 재실인원×25㎥/h·인) — 부하계산서 법정 외기량과 동일 근거</div>
+    <div style="font-size:10px;margin-top:6px;padding:5px 8px;background:#fffbeb;border:1px solid #fde68a;border-radius:4px">
+      <b style="color:#b45309">EPI 규모구분</b>
+      <select onchange="STATE.epiScale=this.value;renderCapCalc()" style="margin-left:6px;font-size:10px">
+        ${['대형','소형','주택1','주택2'].map(k=>`<option value="${k}" ${(STATE.epiScale||'대형')===k?'selected':''}>${k}</option>`).join('')}
+      </select>
+      <span style="color:#92400e;font-size:9px;margin-left:6px">대형 = 연면적 3,000㎡ 이상 · 소형 = 500~3,000㎡ 미만. 6번의 기본배점은 어느 쪽이든 3점입니다</span>
+    </div>
+    <div style="font-size:9px;color:#64748b;margin-top:2px">※ EPI 배점 = 에너지절약계획서 검토서 [별지 1] 기계설비부문 6번. <b>전열교환기는 난방 74% 이상 · 냉방 57% 이상</b>이면 배점 1.0(만점 3점)입니다. 난방·냉방 중 낮은 쪽이 배점이 됩니다 — 기준 AC-020 20.2.2</div></div></div>`;
     // 전열교환기 상세 카드 (read-only)
     html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">전열교환기 장비 상세 사양</div>`;
     rooms.forEach((r,idx)=>{
@@ -2770,7 +2841,7 @@ function renderCapCalc(){
           ${dv('TYPE / MODEL',r.capV.model,'')}
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">풍량 (강/중/약)</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${r.capV.afH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afL??'—'}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span></div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">소비전력 (강/중/약)</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${r.capV.pwH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwL??'—'}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span></div>
-          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">유효전열교환효율</span><span style="color:#94a3b8;margin-right:4px">:</span>냉방&nbsp;<b>${r.capV.effC??'—'}</b>%&nbsp;&nbsp;난방&nbsp;<b>${r.capV.effH??'—'}</b>%</div>
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">유효전열교환효율</span><span style="color:#94a3b8;margin-right:4px">:</span>냉방&nbsp;<b>${r.capV.effC??'—'}</b>%&nbsp;&nbsp;난방&nbsp;<b>${r.capV.effH??'—'}</b>%&nbsp;&nbsp;${epiBadge(r)}</div>
           ${dv('전원',r.capV.volt,'')}
           ${dv('Q\'TY',(r.capV.cnt||1)+' SET','')}
         </div>
