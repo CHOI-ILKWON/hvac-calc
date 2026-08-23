@@ -3851,8 +3851,10 @@ function renderCapCalc(){
   if(capTab==='부스터펌프'){
     // 기준: AC-033 — 급수펌프. 유량 = Qh/60 x 첨두배수 3, 동력 = Q x H / (6120 x 효율)
     // 6120 은 단위 환산 상수다. 물의 밀도와 중력가속도가 들어 있다 (AC-033 33.3.3)
-    // 양정 H1~H5 의 구성은 기준: AC-030. H3 NOZZLE 7.0 m 는 세정밸브(100 kPa)에 모자란다 —
-    // 세정밸브가 있으면 10.2 m 로 고쳐 넣는다 (AC-030 30.5.1 a)
+    // 양정 H1~H5 의 구성은 기준: AC-030.
+    // H3 NOZZLE 10.2 m = 세정밸브(100 kPa)의 필요압력. 우리 화장실 표준이 세정밸브이므로
+    //   그것을 기본값으로 둔다 (2026-08-24 결정. AC-030 30.2.5).
+    //   세정탱크만 쓰는 계통이면 5.6 m, 온도감지형 샤워가 있으면 13.3 m 로 고친다.
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
     const FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],['f5','기타',0,0]];
     const bp=STATE.project.bp||{};
@@ -3882,7 +3884,7 @@ function renderCapCalc(){
     const qpMult=defP('qpMult',3);
     const Qlpm=Qh/60*qpMult;
     const h1pipe=defP('h1pipe',0),h1ppa=defP('h1ppa',30);
-    const H1=h1pipe*h1ppa/1000,H2=H1*0.5,H3=defP('h3nozzle',7.0),H4=defP('h4pump',0),H5=defP('h5static',30);
+    const H1=h1pipe*h1ppa/1000,H2=H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
     const Hsub=H1+H2+H3+H4+H5,HSF=Hsub*0.1,Htot=Hsub+HSF;
     const selHStored=bp.selH;
     const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):Htot;
