@@ -951,6 +951,9 @@ function _catCTHA(rid, row) {
   r.capC.ouCompType= row['실외기_압축기_형식']   || r.capC.ouCompType || '';
   r.capC.ouCompKw  = row['실외기_압축기_출력(kW)'] ?? r.capC.ouCompKw;
   r.capC.ouCondType= row['실외기_열교환기형식']    || r.capC.ouCondType || '';
+  // 기준: AC-040 — 냉매배관의 관경은 우리가 정하지 않는다. 제조사의 시공지침서가
+  //   구간별로 지정하며 오일 회수가 걸려 있어 굵게 하면 오히려 압축기를 잃는다 (40.2.1·40.3.2).
+  //   여기에서 받는 값은 계산한 것이 아니라 카탈로그에서 옮긴 것이다.
   r.capC.ouRef     = row['실외기_냉매'] || r.capC.ouRef || '';
   renderCapCalc();
 }
