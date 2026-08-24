@@ -3415,7 +3415,13 @@ function renderCapCalc(){
     const bRooms=STATE.rooms.filter(r=>r.san==='보일러(중앙식)');
     if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르세요.</small></div>';return;}
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
-    const FX=[['wb','세면기',8,6],['sh','샤워기',60,1],['ba','세탁기',40,0.5],['ks','주방싱크',10,4],['et','기타',0,0]];
+    // 기준: AC-022 22.3.2 — 기구별 1회 급탕량 x 시간당 사용횟수 (사용온도 43도 기준)
+    const FX=[['wb','세면기',5,6],['sh','샤워기',40,2],['ba','세탁기',15,1],['ks','주방싱크',10,4],['et','기타',0,0]];
+    // 기준: AC-022 22.3.3 — 동시사용률과 저탕용량 계수는 건물 용도로 정한다.
+    //   기구 수의 곡선(SIM)과 다른 표다. 앞의 것은 확률이고 이것은 사용 패턴이다.
+    //   아파트(30%)가 공장(40%)보다 낮은 것이 그 증거다 — 기구 수로 보면 아파트가 훨씬 많다.
+    const HW_USE=[['factory','공장',40,1.0],['office','사무소',30,2.0],
+                  ['apt','아파트',30,1.25],['hosp','병원',25,0.6],['school','학교',40,1.0]];
     let html='';
 
     // ── 보일러(중앙식) 그룹 선정 — 기준: AC-022 ──
@@ -3440,37 +3446,42 @@ function renderCapCalc(){
         gLph+=rLph; gCnt+=rCnt;
         return '<tr><td class="L" style="font-size:11px;padding:3px 8px">'+(bf.f?esc(bf.f.name)+' ':'')+esc(r.name)+'</td>'+cells+'<td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">'+f1(rLph)+'</td></tr>';
       }).join('');
-      let _gs=gCnt<=SIM[0][0]?SIM[0][1]:gCnt>=SIM[SIM.length-1][0]?SIM[SIM.length-1][1]:0;
-      if(!_gs){for(let i=0;i<SIM.length-1;i++){if(gCnt>=SIM[i][0]&&gCnt<=SIM[i+1][0]){const t=(gCnt-SIM[i][0])/(SIM[i+1][0]-SIM[i][0]);_gs=Math.round(SIM[i][1]+(SIM[i+1][1]-SIM[i][1])*t);break;}}}
-      const gSim=gv('simRate',_gs||60);
-      const Th=gv('tHot',60), Tc=gv('tCold',5);
-      const Qh=gLph*gSim/100;
-      const kcal=Qh*Math.max(0,Th-Tc);
-      const kW=kcal/860;
-      const effi=gv('effi',98);   // 기준: AC-022 — 전기온수보일러. 연소식이면 85 입력
-      const kWin=effi>0?kW/(effi/100):0;
-      // ── 저탕용량 검토 — 기준: AC-022 4-④
-      const stVol=gv('stVol',300), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
-      const effR=gv('effR',0.75), tUse=gv('tUse',43);
+      const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
+      // ── 본 계산 — 기준: AC-022 22.3.1
+      //   집계 -> x 용도별 동시사용률 = Qh -> x 저탕용량 계수 = V -> 그 이상의 제품
+      const useK=gs('hwUse','factory');
+      const useRow=HW_USE.find(x=>x[0]===useK)||HW_USE[0];
+      const gSim=gv('simRate',useRow[2]);
+      const stC =gv('stCoef',useRow[3]);
+      const Th=gv('tHot',60), Tc=gv('tCold',5), tUse=gv('tUse',43);
+      const Qh=gLph*gSim/100;            // 시간당 급탕량
+      const stReq=Qh*stC;                // 저탕량 V
+      const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
+      const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
+      // 기준: AC-022 22.3.4 — 가열능력은 계산하지 않는다. 저장식에서는 제품 사양이다.
+      //   300 lit 에 3.0 kW 인 제품이 있으며 시간당 급탕량으로 내면 18 kW 가 나와 여섯 배 어긋난다.
+      const selKWp=gv('selKW',0);        // 제품의 소비전력 (사람이 카탈로그에서 넣는다)
       const mix=(tUse>Tc)?(Th-Tc)/(tUse-Tc):1;                 // 혼합계수 (60-5)/(43-5)
+      // 회복 시간 — 다음 교대까지 채우는가 (22.3.4 b)
+      const rcvHr=(selKWp>0&&Th>Tc)?(stRec*(Th-Tc)/(selKWp*860)):0;
+      // ── 피크 검산 — 기준: AC-022 22.4.5. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
+      const stVol=gv('stVol',stRec), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
+      const effR=gv('effR',0.75);
       const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*pkMin/60);      // 피크 필요량 (사용온도 기준)
       const stAvail=stVol*effR*mix;                            // 저장분
-      const rcvLph=(Th>Tc)?kW*860/(Th-Tc):0;                   // 보일러 회복량 lit/h
+      const rcvLph=(selKWp>0&&Th>Tc)?selKWp*860/(Th-Tc):0;     // 제품 kW 에 의한 회복량 lit/h
       const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
       const stTot=stAvail+rcAvail;
       const okS=stVol>0&&stTot>=pkNeed;
-      // ── 계통 형식 — 기준: AC-022 4-① (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
-      const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
+      // ── 계통 형식 — 기준: AC-022 22.4.1 (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
       const sysT=gs('sysT','A');
       const sepTank=(sysT!=='A');          // 별도 저탕조가 있는가
       const needP1 =(sysT!=='A');          // 1차(열원순환) 펌프가 필요한가
-      // 필요 저탕량 역산 — 회복으로 못 채우는 몫을 저장이 맡는다
-      const stReq=(effR*mix>0)?Math.max(0,(pkNeed-rcAvail))/(effR*mix):0;
-      const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
-      const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
+      // 검산이 통과하지 않으면 본 계산보다 큰 제품이 필요하다 (22.4.5 e)
+      const stReqChk=(effR*mix>0)?Math.max(0,(pkNeed-rcAvail))/(effR*mix):0;
       // 1차(열원순환) 펌프 — 보일러 출력을 저탕조로 실어 나른다
       const dT1=gv('dT1',10);
-      const p1Lph=(dT1>0)?kW*860/dT1:0;
+      const p1Lph=(dT1>0)?selKWp*860/dT1:0;
       const head1=gv('head1',5);
       const sel1Q=gv('sel1Q',0), sel1H=gv('sel1H',0);
       const ok1=sel1Q>0&&sel1H>0&&sel1Q>=p1Lph/60&&sel1H>=head1;
@@ -3479,11 +3490,11 @@ function renderCapCalc(){
       const cDiv=gv('circDiv',8);
       const circLph=cDiv>0?Qh/cDiv:0;
       const head=gv('head',0);
-      const selKW=gv('selKW',0), selQ=gv('selQ',0), selH=gv('selH',0);
-      const okB=selKW>0&&selKW>=kW;
+      const selQ=gv('selQ',0), selH=gv('selH',0);
+      const okB=stVol>0&&stVol>=stReq;   // 판정은 저탕용량으로 한다 (기준: AC-022 22.3.4)
       const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
       const selTank=gv('selTank',0);
-      const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stTot>=pkNeed);
+      const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stVol>=stReq);
       const I=(k,v,st,w)=>'<input type="number" value="'+(v||'')+'" step="'+st+'" style="width:'+(w||62)+'px" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">';
       const SEL=(k,opts,cur)=>'<select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">'
         +opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
@@ -3519,24 +3530,34 @@ function renderCapCalc(){
         +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
         +'<td colspan="4" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
         +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
-        +HD('③','보일러 용량')
+        +HD('③','시간당 급탕량과 저탕량','기준: AC-022 22.3.1 — 집계 × 용도별 동시사용률 × 저탕용량 계수')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
-        +'<span>동시사용률 '+I('simRate',gSim,1,50)+' % <span style="color:#94a3b8">(자동 '+(_gs||60)+')</span></span>'
-        +'<span>급탕온도 '+I('tHot',Th,1,50)+' ℃</span>'
-        +'<span>급수온도 '+I('tCold',Tc,1,50)+' ℃</span>'
-        +'<span>보일러 효율 '+I('effi',effi,1,50)+' % <span style="color:#94a3b8">(전기 98 / 연소 85)</span></span></div>'
+        +'<span>건물 용도 '+SEL('hwUse',HW_USE.map(x=>[x[0],x[1]+' ('+x[2]+'% · 계수 '+x[3]+')']),useK)+'</span>'
+        +'<span>동시사용률 '+I('simRate',gSim,1,50)+' %</span>'
+        +'<span>저탕용량 계수 '+I('stCoef',stC,0.05,50)+'</span></div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px;margin-top:6px">'
+        +'<span>급탕온도 '+I('tHot',Th,1,45)+' ℃</span>'
+        +'<span>급수온도 '+I('tCold',Tc,1,45)+' ℃</span>'
+        +'<span>사용온도 '+I('tUse',tUse,1,45)+' ℃</span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'시간당 급탕량 Q<sub>h</sub> = '+f1(gLph)+' × '+gSim+'% = <b>'+f1(Qh)+' lit/h</b><br>'
-        +'가열량 = '+f1(Qh)+' × ('+Th+'−'+Tc+')℃ = '+f0(kcal)+' kcal/h = <b style="color:#b45309">'+f1(kW)+' kW</b><br>'
-        +'입열 기준(효율 '+effi+'%) = <b>'+f1(kWin)+' kW</b></div>'
-        +'<div style="margin-top:6px;font-size:10.5px">선정 보일러 <b>'+I('selKW',selKW,0.1,70)+'</b> kW'
-        +'<span style="margin-left:8px;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'✓ OK':'✗ 부족'):'— 미입력')+'</span></div>'
-        +HD('④',sepTank?'저탕조 선정':'저탕용량 검토 (보일러 내장)','kW 만 맞고 저탕이 모자라면 교대 시간에 찬물이 나온다')
+        +'저탕량 V = '+f1(Qh)+' × 계수 '+stC+' = <b style="color:#b45309">'+f0(stReq)+' lit</b>'
+        +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b></div>'
+        +HD('④','기기 선정','가열능력은 계산하지 않는다 — 저장식은 제품 사양이다 (22.3.4)')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
-        +'<span>'+(sepTank?'저탕조 용량':'보일러 저탕용량')+' '+I('stVol',stVol,10,60)+' lit</span>'
+        +'<span>'+(sepTank?'선정 저탕조':'선정 저탕용량')+' '+I('stVol',stVol,10,60)+' lit'
+        +'<span style="margin-left:6px;font-weight:700;color:'+(stVol>=stReq?'#16a34a':'#dc2626')+'">'+(stVol>0?(stVol>=stReq?'✓ OK':'✗ 부족'):'— 미입력')+'</span></span>'
+        +'<span>제품 소비전력 '+I('selKW',selKWp,0.1,55)+' kW <span style="color:#94a3b8">(카탈로그)</span></span></div>'
+        +'<div style="margin-top:8px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
+        +(selKWp>0
+          ?('회복 시간 = '+f0(stRec)+' lit × ('+Th+'−'+Tc+')℃ ÷ ('+selKWp+' kW × 860) = <b>'+rcvHr.toFixed(1)+' 시간</b>'
+            +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다 (22.3.4 b)</span>')
+          :'<span style="color:#64748b">제품 소비전력을 넣으면 회복 시간을 계산한다. 저장식은 300 lit 에 3.0 kW 정도이며 6~7시간이 걸린다</span>')
+        +'</div>'
+        +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다 (22.4.5)')
+        +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>피크 시간 '+I('pkMin',pkMin,5,45)+' 분</span>'
-        +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(샤워기 1개를 몇 명이)</span></span>'
-        +'<span>사용온도 '+I('tUse',tUse,1,45)+' ℃</span>'
+        +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(교대인원 × 이용률 ÷ 샤워기수)</span></span>'
         +'<span>유효율 '+I('effR',effR,0.05,45)+'</span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'혼합계수 = ('+Th+'−'+Tc+') ÷ ('+tUse+'−'+Tc+') = <b>'+mix.toFixed(2)+'</b><br>'
@@ -3544,28 +3565,24 @@ function renderCapCalc(){
         +'가용량 = 저장 '+f0(stVol)+'×'+effR+'×'+mix.toFixed(2)+' ('+f0(stAvail)+') + 회복 '+f0(rcvLph)+' lit/h×'+pkMin+'분×'+mix.toFixed(2)+' ('+f0(rcAvail)+')'
         +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
-        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 저탕을 키우거나 보일러 kW 를 올린다')):'— 저탕용량 미입력')+'</div>'
-        +'<div style="margin-top:6px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
-        +'필요 저탕량 = (피크 '+f0(pkNeed)+' − 회복 '+f0(rcAvail)+') ÷ ('+effR+'×'+mix.toFixed(2)+') = <b>'+f0(stReq)+' lit</b>'
-        +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b></div>'
+        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 검산이 본 계산을 이긴다. '+f0(stReqChk)+' lit 이상으로 올린다 (22.4.5 e)')):'— 저탕용량 미입력')+'</div>'
         +(sepTank
           ?('<div style="margin-top:6px;font-size:10.5px">선정 저탕조 <b>'+I('selTank',selTank,10,70)+'</b> lit'
             +OKM(okT,selTank>0)+'</div>')
           :'<div style="margin-top:6px;font-size:10px;color:#64748b">※ A형은 <b>보일러 사양의 저탕용량이 곧 이 값</b>이다. 장비일람표에 별도 저탕조를 올리지 않는다.</div>')
-        +'<div style="margin-top:6px;font-size:9.5px;color:#64748b">※ 저탕을 키우는 쪽이 대체로 싸다 — <b>kW 는 수전 용량까지 끌고 올라간다</b> (기준: AC-022 4-④)</div>'
         +(needP1
-          ?(HD('⑤','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 4-③)')
+          ?(HD('⑥','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 4-③)')
             +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
             +'<span>보일러 입·출구 온도차 ΔT '+I('dT1',dT1,1,45)+' ℃</span>'
             +'<span>→ 순환유량 <b style="color:#b45309">'+f0(p1Lph)+' lit/h ('+f1(p1Lph/60)+' lit/min)</b></span>'
             +'<span>양정 '+I('head1',head1,0.5,50)+' m <span style="color:#94a3b8">(기계실 내 짧은 회로)</span></span></div>'   // 기준: AC-030 — 1차는 닫힌 회로. 실양정 0, 마찰만 (30.2.4)
             +'<div style="margin-top:6px;padding:7px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px">'
-            +'유량 = '+f1(kW)+' kW × 860 ÷ ΔT '+dT1+'℃ = <b>'+f0(p1Lph)+' lit/h</b>'
+            +'유량 = '+f1(selKWp)+' kW × 860 ÷ ΔT '+dT1+'℃ = <b>'+f0(p1Lph)+' lit/h</b>'
             +' <span style="color:#64748b">— 2차 펌프('+f1(circLph)+' lit/h)의 '+f0(circLph>0?p1Lph/circLph:0)+'배다. 목적이 다르다</span></div>'
             +'<div style="margin-top:6px;font-size:10.5px">선정 1차펌프 <b>'+I('sel1Q',sel1Q,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('sel1H',sel1H,0.1,55)+'</b> m'
             +OKM(ok1,sel1Q>0&&sel1H>0)+'</div>')
           :'')
-        +HD(needP1?'⑥':'⑤','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 배관이 길 때만 (기준: AC-022 4-③)')
+        +HD(needP1?'⑦':'⑥','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 배관이 길 때만 (기준: AC-022 4-③)')
         +(hasRet?'':'<div style="padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:10.5px;color:#475569">환탕 <b>없음</b>으로 선택했다 — 2차 펌프를 두지 않는다. 보일러를 사용처 가까이 두는 계통이다.</div>')
         +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
@@ -3574,16 +3591,16 @@ function renderCapCalc(){
         +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'   // 기준: AC-030 30.4.3 — 환탕은 닫힌 회로이므로 건물 높이를 넣지 않는다. 넣으면 펌프가 대여섯 배가 된다
         +'<div style="margin-top:6px;font-size:10.5px">선정 펌프 <b>'+I('selQ',selQ,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('selH',selH,0.1,55)+'</b> m'
         +OKM(okP,selQ>0&&selH>0)+'</div>'):'')
-        +HD('⑦','선정 요약','장비일람표(B4)에 그대로 올라간다')
+        +HD(needP1?'⑧':'⑦','선정 요약','장비일람표(B4)에 그대로 올라간다')
         +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">기기</th>'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">산정</th>'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">선정</th>'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1">판정</th></tr></thead><tbody>'
         +'<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>급탕 보일러</b>'+(sysT==='C'?' (순간식)':' (저탕식)')+'</td>'
-        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f1(kW)+' kW (입열 '+f1(kWin)+')'+(sysT==='A'?' · 저탕 '+f0(stRec)+' lit':'')+'</td>'
-        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(selKW>0?f1(selKW)+' kW':'—')+'</td>'
-        +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(selKW>0?(okB?'OK':'부족'):'—')+'</td></tr>'
+        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">저탕 '+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+')</td>'
+        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(stVol>0?f0(stVol)+' lit'+(selKWp>0?' · '+selKWp+' kW':''):'—')+'</td>'
+        +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(stVol>0?(okB?'OK':'부족'):'—')+'</td></tr>'
         +(sepTank
           ?('<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>저탕조</b></td>'
             +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+')</td>'
