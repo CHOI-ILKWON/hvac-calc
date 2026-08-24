@@ -464,7 +464,7 @@ const SR = {
 const TIME_SLOTS = [10,12,14,16];
 
 // 기준: AC-005 — 부하계산 방법. 냉방은 CLTD/SCL/CLF 법, 피크는 10·12·14·16시 네 시각을 본다
-// 난방은 정상상태 열손실이며 일사와 내부발열을 반영하지 않는다 (안전측. AC-012 12.3.2)
+// 난방은 정상상태 열손실이며 일사와 내부발열을 반영하지 않는다 (안전측. AC-012 12.3.2.2)
 // CLTD for heavy-weight exterior wall (Type IV, 70~110mm), indoor 26°C base [10h,12h,14h,16h]
 const CLTD_WALL_HEAVY = {
   N:[ 4.4, 6.4, 7.7, 8.2],
@@ -492,7 +492,7 @@ const DIR_HF = {N:1.10, E:1.05, S:1.00, W:1.05};
 const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:8,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', phS:57, phL:62}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; phS/phL — od:0이라 미사용
   // 기준: AC-021 — 24h 운전실. 전기실은 냉방(PAC) 정지 시 환기팬이 백업한다 (온도연동)
-  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이거나 덕트를 길게 끌어야 하면 인라인덕트팬으로 바꾼다 (AC-029 29.2.2); va:12 는 「발열 제거 기준」이며 냉방(PAC) 정지 시 백업 풍량을 겸한다. 운전은 온도연동(KDS 31 25 20) — 평소엔 PAC 이 처리하고 온도 상승 시 팬이 돈다. 급기 위주 제2종으로 가압 유지(AC-018); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
+  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이거나 덕트를 길게 끌어야 하면 인라인덕트팬으로 바꾼다 (AC-029 29.3.1.2); va:12 는 「발열 제거 기준」이며 냉방(PAC) 정지 시 백업 풍량을 겸한다. 운전은 온도연동(KDS 31 25 20) — 평소엔 PAC 이 처리하고 온도 상승 시 팬이 돈다. 급기 위주 제2종으로 가압 유지(AC-018); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:20, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이면 인라인덕트팬 (29.2.2); cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
   toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'보일러(중앙식)', iw_u:2.38, phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관); iw_u:2.38 타일 마감
@@ -511,7 +511,7 @@ const VENT_EQUIPS = ['전열교환기','인라인덕트팬','천정형팬','벽�
 
 // ── EPI 배점 (에너지절약계획서 검토서 [별지 1] 기계설비부문) ────
 // 기준: AC-025 — 배점(b)은 1.0/0.9/0.8/0.7/0.6 다섯 단계. 평점 = 기본배점(a) × 배점(b)
-// 기준: AC-020 20.2.2 — 6번 고효율 열회수형 환기장치
+// 기준: AC-020 20.3.1.2 — 6번 고효율 열회수형 환기장치
 const EPI_A_HEX = {대형:3, 소형:3, 주택1:3, 주택2:3};   // 기본배점(a)
 const EPI_HEX = {          // [배점b, 난방%, 냉방%] — 모두 「이상」
   전열: [[1.0,74,57],[0.9,73,54],[0.8,72,51],[0.7,71,48],[0.6,70,45]],
@@ -566,7 +566,7 @@ let STATE = {
      floors:[{id:'F1',name:'1층',height:4.0},{id:'F2',name:'2층',height:4.0}]}
   ],
   rooms:[],
-  epiScale:'대형',          // EPI 배점 규모구분 — 대형(연면적 3,000㎡ 이상)/소형/주택1/주택2. 기준: AC-025 25.3
+  epiScale:'대형',          // EPI 배점 규모구분 — 대형(연면적 3,000㎡ 이상)/소형/주택1/주택2. 기준: AC-025 25.3.2
   _nB:2,_nF:10,_nR:1,
 };
 let selRid = null;
@@ -742,7 +742,7 @@ function sortCatModal(key, shift) {
   renderCatModal(_catFiltered);
 }
 
-// 카탈로그 행에서 EPI 배점을 뽑는다 (현재는 HEX 전열교환기만). 기준: AC-020 20.2.2
+// 카탈로그 행에서 EPI 배점을 뽑는다 (현재는 HEX 전열교환기만). 기준: AC-020 20.3.1.2
 function catEPI(row) {
   if (_catType !== 'HEX') return null;
   return epiHEX(row['유효전열교환효율(%)_난방'], row['유효전열교환효율(%)_냉방'], '전열');
@@ -792,7 +792,7 @@ function renderCatModal(rows) {
     });
   } else if (_catReq && capInfo) {
     // 추천 정렬: 충족 모델 먼저 → EPI 배점 높은 순 → 용량 오름차순 (최소 적정 모델이 맨 위)
-    // 기준: AC-025 25.2 — 딸 수 있는 점수는 처음부터 전부 딴다
+    // 기준: AC-025 25.3.1 — 딸 수 있는 점수는 처음부터 전부 딴다
     sorted = sorted.slice().sort(function(a, b) {
       const fa = fits(a), fb = fits(b);
       if (fa !== fb) return fa ? -1 : 1;
@@ -2580,7 +2580,7 @@ function renderCapCalc(){
     if(!ehpRooms.length){el.innerHTML='<div class="empty">EHP로 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 냉방 설비를 EHP로 선택하세요.</small></div>';return;}
     // 기준: AC-024 — EHP 존 구성과 실외기 분할. 우선순위는
     //   ① 운전시간 → ② 층 단위 → ③ 냉매배관 길이 → ④ 방위 혼합.
-    // 실외기 사양에 맞추는 것은 우선순위가 아니라 마무리 조정이다 (AC-024 24.3).
+    // 실외기 사양에 맞추는 것은 우선순위가 아니라 마무리 조정이다 (AC-024 24.3.5).
     // 계획 기준값: 실배관 120 m, 높이차 옥상 50 / 지상 40 m. 배관길이 보정계수는 아직 앱에 없다 (24.10)
     if(!Array.isArray(STATE.project.ehpZ)||!STATE.project.ehpZ.length){
       STATE.project.ehpZ=[{rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:'',ouLtHc:null,ouPwC:null,ouPwH:null,ouPwLt:null,ouLiq:null,ouGas:null,ouRef:'',ouTempC:'',ouTempH:''}];
@@ -2835,7 +2835,7 @@ function renderCapCalc(){
       </select>
       <span style="color:#92400e;font-size:9px;margin-left:6px">대형 = 연면적 3,000㎡ 이상 · 소형 = 500~3,000㎡ 미만. 6번의 기본배점은 어느 쪽이든 3점입니다</span>
     </div>
-    <div style="font-size:9px;color:#64748b;margin-top:2px">※ EPI 배점 = 에너지절약계획서 검토서 [별지 1] 기계설비부문 6번. <b>전열교환기는 난방 74% 이상 · 냉방 57% 이상</b>이면 배점 1.0(만점 3점)입니다. 난방·냉방 중 낮은 쪽이 배점이 됩니다 — 기준 AC-020 20.2.2</div></div></div>`;
+    <div style="font-size:9px;color:#64748b;margin-top:2px">※ EPI 배점 = 에너지절약계획서 검토서 [별지 1] 기계설비부문 6번. <b>전열교환기는 난방 74% 이상 · 냉방 57% 이상</b>이면 배점 1.0(만점 3점)입니다. 난방·냉방 중 낮은 쪽이 배점이 됩니다 — 기준 AC-020 20.3.1.2</div></div></div>`;
     // 전열교환기 상세 카드 (read-only)
     html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">전열교환기 장비 상세 사양</div>`;
     rooms.forEach((r,idx)=>{
@@ -2913,23 +2913,23 @@ function renderCapCalc(){
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       const tag=r.capV.tag||autoTag;
       const defV=(k,d)=>{const v=r.capV[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
-      // 기준: AC-028 28.2.1 — ESP 산정. 지배하는 것은 덕트가 아니라 기구이다 (28.3.2)
-      // ductPa 2.0 = 계획 단계의 개략값 (AC-026 26.2.5, 2026-08-24 결정).
+      // 기준: AC-028 28.3.1.1 — ESP 산정. 지배하는 것은 덕트가 아니라 기구이다 (28.3.2.2)
+      // ductPa 2.0 = 계획 단계의 개략값 (AC-026 26.3.1.5, 2026-08-24 결정).
       //   이 탭은 덕트 크기를 아직 모르는 단계에서 팬을 잡기 위한 것이다.
       //   계통 평균 마찰이 0.67~3.16 Pa/m 이며 2.0 은 그 가운데다 (26.4.3).
       //   실시 단계에서 duct-calc 으로 덕트를 그린 뒤에는 구간별로 다시 낸다 (26.4.5).
       //   되짚어 확인하는 절차가 없으므로 낮은 쪽을 피하였다 (26.4.4)
       const ductLen=defV('ductLen',0),ductPa=defV('ductPa',2);
-      const fitPct=defV('fitPct',50);   // 기준: AC-028 28.3.4 — 여유가 아니라 국부손실이다. 빼면 정압이 모자란다
-      const diffEa=defV('diffEa',0),diffPa=defV('diffPa',30);   // 기준: AC-028 28.3.5 — 면풍속 2.5·개구율 0.65 의 동압 8.9 Pa × 손실계수 3
+      const fitPct=defV('fitPct',50);   // 기준: AC-028 28.3.2.4 — 여유가 아니라 국부손실이다. 빼면 정압이 모자란다
+      const diffEa=defV('diffEa',0),diffPa=defV('diffPa',30);   // 기준: AC-028 28.3.2.5 — 면풍속 2.5·개구율 0.65 의 동압 8.9 Pa × 손실계수 3
       const fdPa=defV('fdPa',0);
       const vdEa=defV('vdEa',0),vdPa=defV('vdPa',10);
       const louEa=defV('louEa',0),louPa=defV('louPa',50);
       const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100);
       const diffT=diffEa*diffPa,fdT=fdPa,vdT=vdEa*vdPa,louT=louEa*louPa;
       const espSub=ductT+fittT+diffT+fdT+vdT+louT;
-      const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 28.2.2 — 안전율 10%. AC-012 와 같은 값
-      const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 28.3.6 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
+      const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 28.3.1.2 — 안전율 10%. AC-012 와 같은 값
+      const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 28.3.2.6 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
       const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
       const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
@@ -3415,9 +3415,9 @@ function renderCapCalc(){
     const bRooms=STATE.rooms.filter(r=>r.san==='보일러(중앙식)');
     if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르세요.</small></div>';return;}
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
-    // 기준: AC-022 22.3.2 — 기구별 1회 급탕량 x 시간당 사용횟수 (사용온도 43도 기준)
+    // 기준: AC-022 22.3.2.2 — 기구별 1회 급탕량 x 시간당 사용횟수 (사용온도 43도 기준)
     const FX=[['wb','세면기',5,6],['sh','샤워기',40,2],['ba','세탁기',15,1],['ks','주방싱크',10,4],['et','기타',0,0]];
-    // 기준: AC-022 22.3.3 — 동시사용률과 저탕용량 계수는 건물 용도로 정한다.
+    // 기준: AC-022 22.3.2.3 — 동시사용률과 저탕용량 계수는 건물 용도로 정한다.
     //   기구 수의 곡선(SIM)과 다른 표다. 앞의 것은 확률이고 이것은 사용 패턴이다.
     //   아파트(30%)가 공장(40%)보다 낮은 것이 그 증거다 — 기구 수로 보면 아파트가 훨씬 많다.
     const HW_USE=[['factory','공장',40,1.0],['office','사무소',30,2.0],
@@ -3447,7 +3447,7 @@ function renderCapCalc(){
         return '<tr><td class="L" style="font-size:11px;padding:3px 8px">'+(bf.f?esc(bf.f.name)+' ':'')+esc(r.name)+'</td>'+cells+'<td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">'+f1(rLph)+'</td></tr>';
       }).join('');
       const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
-      // ── 본 계산 — 기준: AC-022 22.3.1
+      // ── 본 계산 — 기준: AC-022 22.3.2.1
       //   집계 -> x 용도별 동시사용률 = Qh -> x 저탕용량 계수 = V -> 그 이상의 제품
       const useK=gs('hwUse','factory');
       const useRow=HW_USE.find(x=>x[0]===useK)||HW_USE[0];
@@ -3458,13 +3458,13 @@ function renderCapCalc(){
       const stReq=Qh*stC;                // 저탕량 V
       const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
       const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
-      // 기준: AC-022 22.3.4 — 가열능력은 계산하지 않는다. 저장식에서는 제품 사양이다.
+      // 기준: AC-022 22.3.2.4 — 가열능력은 계산하지 않는다. 저장식에서는 제품 사양이다.
       //   300 lit 에 3.0 kW 인 제품이 있으며 시간당 급탕량으로 내면 18 kW 가 나와 여섯 배 어긋난다.
       const selKWp=gv('selKW',0);        // 제품의 소비전력 (사람이 카탈로그에서 넣는다)
       const mix=(tUse>Tc)?(Th-Tc)/(tUse-Tc):1;                 // 혼합계수 (60-5)/(43-5)
       // 회복 시간 — 다음 교대까지 채우는가 (22.3.4 b)
       const rcvHr=(selKWp>0&&Th>Tc)?(stRec*(Th-Tc)/(selKWp*860)):0;
-      // ── 피크 검산 — 기준: AC-022 22.4.5. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
+      // ── 피크 검산 — 기준: AC-022 22.3.3.5. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
       const stVol=gv('stVol',stRec), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
       const effR=gv('effR',0.75);
       const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*pkMin/60);      // 피크 필요량 (사용온도 기준)
@@ -3473,7 +3473,7 @@ function renderCapCalc(){
       const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
       const stTot=stAvail+rcAvail;
       const okS=stVol>0&&stTot>=pkNeed;
-      // ── 계통 형식 — 기준: AC-022 22.4.1 (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
+      // ── 계통 형식 — 기준: AC-022 22.3.3.1 (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
       const sysT=gs('sysT','A');
       const sepTank=(sysT!=='A');          // 별도 저탕조가 있는가
       const needP1 =(sysT!=='A');          // 1차(열원순환) 펌프가 필요한가
@@ -3491,7 +3491,7 @@ function renderCapCalc(){
       const circLph=cDiv>0?Qh/cDiv:0;
       const head=gv('head',0);
       const selQ=gv('selQ',0), selH=gv('selH',0);
-      const okB=stVol>0&&stVol>=stReq;   // 판정은 저탕용량으로 한다 (기준: AC-022 22.3.4)
+      const okB=stVol>0&&stVol>=stReq;   // 판정은 저탕용량으로 한다 (기준: AC-022 22.3.2.4)
       const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
       const selTank=gv('selTank',0);
       const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stVol>=stReq);
@@ -3530,7 +3530,7 @@ function renderCapCalc(){
         +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
         +'<td colspan="4" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
         +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
-        +HD('③','시간당 급탕량과 저탕량','기준: AC-022 22.3.1 — 집계 × 용도별 동시사용률 × 저탕용량 계수')
+        +HD('③','시간당 급탕량과 저탕량','기준: AC-022 22.3.2.1 — 집계 × 용도별 동시사용률 × 저탕용량 계수')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>건물 용도 '+SEL('hwUse',HW_USE.map(x=>[x[0],x[1]+' ('+x[2]+'% · 계수 '+x[3]+')']),useK)+'</span>'
         +'<span>동시사용률 '+I('simRate',gSim,1,50)+' %</span>'
@@ -3588,7 +3588,7 @@ function renderCapCalc(){
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>순환비율 Q<sub>h</sub> ÷ '+I('circDiv',cDiv,1,45)+'</span>'
         +'<span>→ 순환유량 <b style="color:#b45309">'+f1(circLph)+' lit/h ('+f1(circLph/60)+' lit/min)</b></span>'
-        +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'   // 기준: AC-030 30.4.3 — 환탕은 닫힌 회로이므로 건물 높이를 넣지 않는다. 넣으면 펌프가 대여섯 배가 된다
+        +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'   // 기준: AC-030 30.3.3.3 — 환탕은 닫힌 회로이므로 건물 높이를 넣지 않는다. 넣으면 펌프가 대여섯 배가 된다
         +'<div style="margin-top:6px;font-size:10.5px">선정 펌프 <b>'+I('selQ',selQ,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('selH',selH,0.1,55)+'</b> m'
         +OKM(okP,selQ>0&&selH>0)+'</div>'):'')
         +HD(needP1?'⑧':'⑦','선정 요약','장비일람표(B4)에 그대로 올라간다')
@@ -3875,10 +3875,10 @@ function renderCapCalc(){
     //   Qd 1일 급수량 / Qh 시간평균 = Qd ÷ 사용시간 / Qm 시간최대 = Qh x 1.5~2
     //   Qp 순시최대 = (Qh ÷ 60) x 3~4   <- 부스터펌프와 관경은 이 값으로 정한다
     // 곧 아래의 Qh/60 x 첨두배수 3 은 그 표준 방법이며 3 은 3~4 의 하단이다
-    // 6120 은 단위 환산 상수다. 물의 밀도와 중력가속도가 들어 있다 (AC-033 33.3.3)
+    // 6120 은 단위 환산 상수다. 물의 밀도와 중력가속도가 들어 있다 (AC-033 33.3.2.3)
     // 양정 H1~H5 의 구성은 기준: AC-030.
     // H3 NOZZLE 10.2 m = 세정밸브(100 kPa)의 필요압력. 우리 화장실 표준이 세정밸브이므로
-    //   그것을 기본값으로 둔다 (2026-08-24 결정. AC-030 30.2.5).
+    //   그것을 기본값으로 둔다 (2026-08-24 결정. AC-030 30.3.1.5).
     //   세정탱크만 쓰는 계통이면 5.6 m, 온도감지형 샤워가 있으면 13.3 m 로 고친다.
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
     const FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],['f5','기타',0,0]];
