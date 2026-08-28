@@ -288,7 +288,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="margin-top:8px;font-size:11px">
         <tr><th>실 유형</th><th>냉방온도</th><th>난방온도</th><th>환기횟수</th><th>주요 장비</th></tr>
         <tr><td class="L">기계실류</td><td class="C">-</td><td class="C">5℃</td><td class="C">10회/h</td><td class="L">유니트히터, 인라인팬</td></tr>
-        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC + 벽부형팬</td></tr>
+        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC (발열 전담) + 벽부형팬 (평시 환기)</td></tr>
         <tr><td class="L">비상발전기실류</td><td class="C">-</td><td class="C">-</td><td class="C">15회/h</td><td class="L">벽부형팬 (급기 루버 필수)</td></tr>
         <tr><td class="L">화장실류</td><td class="C">-</td><td class="C">20℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
         <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">5회/h</td><td class="L">라디에이터, 천정팬</td></tr>
@@ -302,13 +302,15 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         &nbsp;&nbsp;&nbsp;예) 건물 남서 코너 실 → S, W 체크<br>
         <b>④ 창호(유리) 면적</b>: 실제 창호 크기를 입력합니다.<br>
         &nbsp;&nbsp;&nbsp;SHGC(태양열취득률) 기본값 0.35 = 일반 Low-E 복층유리 기준<br>
-        <b>⑤ 내부발열</b>: 조명(W/m²)은 실 유형별 자동입력, 장비발열(kW)만 추가 입력
+        <b>⑤ 내부발열</b>: 조명(W/m²)은 실 유형별 자동입력(설계조도 ÷ 50, LED 기준), 장비발열(kW)만 추가 입력<br>&nbsp;&nbsp;&nbsp;장비발열은 <b>기준값이 없는 입력 항목</b>입니다. 전기팀에서 판넬 발열을 받아 넣으십시오.<br>&nbsp;&nbsp;&nbsp;미입력이면 계산서에 「⚠ 기기발열 미입력」, 기본값으로 계산 중이면 「기본값 N W/㎡×면적」이 찍힙니다.
       </div>
       <div style="background:#fef3c7;border-radius:var(--r);padding:10px 14px;margin-top:10px;font-size:11px;color:#92400e">
         ⚠️ 주의: 냉방이 없는 실(기계실·화장실 등)은 냉방설계온도를 비워두면
         부하계산서에서 냉방 항목이 자동으로 제외됩니다.<br>
         화장실·주방처럼 겨울에도 배기팬이 도는 실은 §4-②의 "난방 시 배기 가동"을 체크하면
-        배기 보충외기 부하가 난방에 가산됩니다. (화장실류·주방류는 기본 체크)
+        배기 보충외기 부하가 난방에 가산됩니다. <b>기본은 미적용</b>입니다 — 보충공기가 그 실의
+        외기 창문으로 직접 들어와 인접실에 영향을 주지 않고, 라디에이터는 외피·침기만 감당하기
+        때문입니다. 외기 창문이 없는 내부 화장실에서만 체크하십시오.
       </div>
     </div>
   </div>
@@ -395,12 +397,15 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물 에너지절약설계기준</td><td class="L">기상조건 (외기온·습도·일사량)</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창 U값 기준값 (지역구분 자동)</td></tr>
         <tr><td class="L">건축물의 설비기준 등에 관한 규칙</td><td class="L">제11조 [별표 1의6] 다중이용시설 필요환기량</td><td class="L" style="color:#b45309">참고 — <b>다중이용시설 대상</b>. 업무시설·공장은 대상 아님</td></tr>
-        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">인당 외기량 25㎥/h · 실 용도별 환기횟수</td></tr>
+        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">인당 외기량 25㎥/h — 법정 적용대상 아님</td></tr>
+        <tr><td class="L">AIK</td><td class="L">건축기계설비 설계기준 표 4.5 「부속실의 환기방식」</td><td class="L">실 용도별 환기횟수 (회/h) — 전기실·발전기실은 준용</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표8] 냉·난방설비의 용량계산을 위한 실내 온·습도 기준</td><td class="L">실내 설계 온습도 (제7조 제1항)</td></tr>
-        <tr><td class="L">ASHRAE 62.1</td><td class="L">Ventilation for Acceptable IAQ</td><td class="L">재실밀도</td></tr>
-        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">인체발열 (실온별 현열/잠열)</td></tr>
-        <tr><td class="L">AIK</td><td class="L">공기조화·냉동공학회 설계기준</td><td class="L">조명발열 W/m², 부하계산법</td></tr>
-        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">안전율 적용 (냉방·난방 각 10%)</td></tr>
+        <tr><td class="L" style="color:#b45309">당사 설계기준</td><td class="L" style="color:#b45309">ASHRAE 계열보다 밀집한 안전측 값</td><td class="L">재실밀도 (사무실 10 · 부속실 50 ㎡/인)</td></tr>
+        <tr><td class="L">ASHRAE</td><td class="L">Handbook—Fundamentals 「Heat and Moisture Given Off by Human Beings」</td><td class="L">인체발열 현열/잠열 — 좌식 경작업 조정 M/F</td></tr>
+        <tr><td class="L" style="color:#b45309">AIK</td><td class="L" style="color:#b45309">설계기준 — 문헌명·표 번호 확인 중</td><td class="L">부하계산법 (CLTD/SC) · 일사량표</td></tr>
+        <tr><td class="L">물리 환산</td><td class="L">설계조도 ÷ 유효 광효율 50 lm/W (LED 보급형)</td><td class="L">조명발열 W/m²</td></tr>
+        <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중 — 법정·학회에 백분율 조항 없음</td><td class="L">안전율 적용 (냉방·난방 각 10%)</td></tr>
+        <tr><td class="L" style="color:#b45309">입력 항목</td><td class="L" style="color:#b45309">기준값 없음 — 전기팀·발주처에서 받음</td><td class="L">기기발열 (kW). 미입력·기본값 적용 시 계산서에 표기됨</td></tr>
       </table>
     </div>
   </div>
