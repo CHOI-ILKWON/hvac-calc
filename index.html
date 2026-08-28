@@ -288,7 +288,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="margin-top:8px;font-size:11px">
         <tr><th>실 유형</th><th>냉방온도</th><th>난방온도</th><th>환기횟수</th><th>주요 장비</th></tr>
         <tr><td class="L">기계실류</td><td class="C">-</td><td class="C">5℃</td><td class="C">10회/h</td><td class="L">유니트히터, 인라인팬</td></tr>
-        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC (발열 전담) + 벽부형팬 (평시 환기)</td></tr>
+        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC (발열 전담) + 벽부형팬 (환기용)</td></tr>
         <tr><td class="L">비상발전기실류</td><td class="C">-</td><td class="C">-</td><td class="C">15회/h</td><td class="L">벽부형팬 (급기 루버 필수)</td></tr>
         <tr><td class="L">화장실류</td><td class="C">-</td><td class="C">20℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
         <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">5회/h</td><td class="L">라디에이터, 천정팬</td></tr>
@@ -310,7 +310,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         화장실·주방처럼 겨울에도 배기팬이 도는 실은 §4-②의 "난방 시 배기 가동"을 체크하면
         배기 보충외기 부하가 난방에 가산됩니다. <b>기본은 미적용</b>입니다 — 보충공기가 그 실의
         외기 창문으로 직접 들어와 인접실에 영향을 주지 않고, 라디에이터는 외피·침기만 감당하기
-        때문입니다. 외기 창문이 없는 내부 화장실에서만 체크하십시오.
+        때문입니다. <b>그리고 화장실 배기팬은 수동 스위치 운전이라 상시 돌지 않습니다.</b><br>
+        &nbsp;&nbsp;&nbsp;외기 창문이 없는 내부 화장실에서만 체크하십시오.
       </div>
     </div>
   </div>
@@ -500,10 +501,11 @@ const DIR_HF = {N:1.10, E:1.05, S:1.00, W:1.05};
 // 2026-08-28 이전에는 ÷20 이었고 그것은 자기식 안정기를 쓰던 구형 형광등 수준(유효 20 lm/W)이었다. 주석만 「LED 기준」이라 적혀 있었다
 const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:3 ,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', phS:57, phL:62}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; phS/phL — od:0이라 미사용
-  // 기준: AC-021 — 24h 운전실. 전기실은 냉방(PAC) 정지 시 환기팬이 백업한다 (온도연동)
+  // 기준: AC-021 — 24h 운전실. 전기실의 발열은 PAC 이 전담하고 배기팬은 환기용이다 (온도연동 아님 — AC-017 4.3.1)
   elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
            // va:12 는 「평시 환기」의 값이다. 발열 제거는 PAC 이 전담한다 — 여름 외기 31.2℃ 가 허용 30℃ 보다 높아 환기로는 성립하지 않는다 (AC-017 3.2.1)
-           // 실압은 균형. 온도연동이면 평시에 팬이 정지하여 가압이 생기지 않으므로 가압을 두지 않는다 (AC-018 3.5)
+           // 그래서 온도로 제어하지 않는다. KDS 31 25 20 의 온도연동 조항은 「환기로 발열을 제거하는」 경우를 전제한 것이라 우리와 전제가 다르다 (AC-017 4.3.1)
+           // 실압은 균형~약한 부압. 급기팬이 없어 가압을 만들 수단이 없으므로 가압을 두지 않는다 (AC-018 3.5.1)
            // 가스계 소화설비가 있으면 급기 루버에도 MD 를 달고 방출신호에 닫는다 (AC-016 Rule 6)
            // cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:15, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-017 4.4 — va:15 는 「정지 중·평시」의 값이다 (학회 설계기준 표 4.5 기계실 10~15 의 상한 준용)
