@@ -288,11 +288,12 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="margin-top:8px;font-size:11px">
         <tr><th>실 유형</th><th>냉방온도</th><th>난방온도</th><th>환기횟수</th><th>주요 장비</th></tr>
         <tr><td class="L">기계실류</td><td class="C">-</td><td class="C">5℃</td><td class="C">10회/h</td><td class="L">유니트히터, 인라인팬</td></tr>
-        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC</td></tr>
+        <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC + 벽부형팬</td></tr>
+        <tr><td class="L">비상발전기실류</td><td class="C">-</td><td class="C">-</td><td class="C">15회/h</td><td class="L">벽부형팬 (급기 루버 필수)</td></tr>
         <tr><td class="L">화장실류</td><td class="C">-</td><td class="C">20℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
-        <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
+        <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">5회/h</td><td class="L">라디에이터, 천정팬</td></tr>
         <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">25㎥/h·인</td><td class="L">EHP</td></tr>
-        <tr><td class="L">중앙제어실류</td><td class="C">24℃ / 50%</td><td class="C">24℃ / 50%</td><td class="C">10회/h</td><td class="L">PAC, 항온항습기</td></tr>
+        <tr><td class="L">중앙제어실류</td><td class="C">24℃ / 50%</td><td class="C">24℃ / 50%</td><td class="C">25㎥/h·인</td><td class="L">PAC, 항온항습기</td></tr>
         <tr><td class="L">주방류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">15회/h</td><td class="L">EHP, 천정형팬</td></tr>
         <tr><td class="L">창고류</td><td class="C">-</td><td class="C">-</td><td class="C">3회/h</td><td class="L">벽부형팬</td></tr>
       </table>
@@ -492,8 +493,17 @@ const DIR_HF = {N:1.10, E:1.05, S:1.00, W:1.05};
 const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:8,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', phS:57, phL:62}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; phS/phL — od:0이라 미사용
   // 기준: AC-021 — 24h 운전실. 전기실은 냉방(PAC) 정지 시 환기팬이 백업한다 (온도연동)
-  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이거나 덕트를 길게 끌어야 하면 인라인덕트팬으로 바꾼다 (AC-029 29.3.1.2); va:12 는 「발열 제거 기준」이며 냉방(PAC) 정지 시 백업 풍량을 겸한다. 운전은 온도연동(KDS 31 25 20) — 평소엔 PAC 이 처리하고 온도 상승 시 팬이 돈다. 급기 위주 제2종으로 가압 유지(AC-018); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
-  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:20, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이면 인라인덕트팬 (29.2.2); cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
+  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
+           // va:12 는 「평시 환기」의 값이다. 발열 제거는 PAC 이 전담한다 — 여름 외기 31.2℃ 가 허용 30℃ 보다 높아 환기로는 성립하지 않는다 (AC-017 3.2.1)
+           // 실압은 균형. 온도연동이면 평시에 팬이 정지하여 가압이 생기지 않으므로 가압을 두지 않는다 (AC-018 3.5)
+           // 가스계 소화설비가 있으면 급기 루버에도 MD 를 달고 방출신호에 닫는다 (AC-016 Rule 6)
+           // cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
+  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:15, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-017 4.4 — va:15 는 「정지 중·평시」의 값이다 (학회 설계기준 표 4.5 기계실 10~15 의 상한 준용)
+           // 운전 중의 열은 팬이 아니라 엔진 라디에이터 냉각풍이 가져간다 — 500 kW 급 약 88,500 ㎥/h 가 급기루버→실→라디에이터→배기덕트 로 실을 관통한다 (AC-017 3.3.1)
+           // 그래서 설계의 핵심은 회/h 가 아니라 급기 루버 면적이다: 300 kW 약 12 ㎡ · 500 kW 약 20 ㎡ · 1,000 kW 약 39 ㎡ (실면적) — AC-018 4.3.1
+           // 배기팬은 급기 루버 반대편 상부에 둔다(기류분포용). ve 는 지상이면 벽부형팬, 지하·덕트면 인라인덕트팬 (AC-029)
+           // cdb:null — 냉방하지 않는다. 실온은 외기 + 약 2.4 K 로 유지된다
+           // 가스계 소화설비가 방출되면 급기 루버 MD 가 닫혀 엔진이 정지한다 — 소화방식을 전기·소방팀과 협의 (AC-016 4.5.1)
   toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'보일러(중앙식)', iw_u:2.38, phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관); iw_u:2.38 타일 마감
   locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:10, va:5,  eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:5 — 기준: AC-017 · 설계기준 표4.5 「탈의실 5」. 샤워실은 별도 용도(shower)로 분리했다; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
