@@ -494,12 +494,12 @@ const RT = {
   // 기준: AC-021 — 24h 운전실. 전기실은 냉방(PAC) 정지 시 환기팬이 백업한다 (온도연동)
   elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이거나 덕트를 길게 끌어야 하면 인라인덕트팬으로 바꾼다 (AC-029 29.3.1.2); va:12 는 「발열 제거 기준」이며 냉방(PAC) 정지 시 백업 풍량을 겸한다. 운전은 온도연동(KDS 31 25 20) — 평소엔 PAC 이 처리하고 온도 상승 시 팬이 돈다. 급기 위주 제2종으로 가압 유지(AC-018); cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:8,  va:20, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-029 — ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준. 지하이면 인라인덕트팬 (29.2.2); cdb:null — 발전기 복사열·배기열로 냉방 불가, 강제 환기만; va:20 — 엔진 발열 배출 기준 (AIK 발전기실 권장)
-  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
-  shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:true, san:'보일러(중앙식)', iw_u:2.38, phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관); iw_u:2.38 타일 마감
+  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:10, va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'전기온수기', iw_u:2.38, phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; iw_u:2.38 — 타일 마감 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
+  shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:10, va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'보일러(중앙식)', iw_u:2.38, phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관); iw_u:2.38 타일 마감
   locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:10, va:5,  eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:5 — 기준: AC-017 · 설계기준 표4.5 「탈의실 5」. 샤워실은 별도 용도(shower)로 분리했다; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
   office:  {lb:'사무실/크레인조정실류',     cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:true,  lw:15, va:0,  eqD:9,  ce:'EHP',  he:'EHP',        ve:'전열교환기', phS:57, phL:62}, // lw:15 — 기준: AC-008 (조명발열); ce/he:'EHP' — 기준: AC-015 (개별식 표준); ia:10m²/인, va:0 — 재실인원×25m³/h·인. 기준: AC-017 — 우리 시설(공장·발전소 업무실)은 다중이용시설이 아니므로 법정 환기량 기준이 없다. 25는 실무 관행값(별표1의6의 지하역사·그밖의시설 값과 우연히 같은 수준); phS/phL — 경작업, 좌식 (ASHRAE Table 1); hrh:null — 기준: AC-004 — 겨울 가습 미실시(중앙제어실만 가습). 별표8도 난방 상대습도를 정하지 않는다
   control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, ia:10, oa:true,  lw:15, va:0,  eqD:50, ce:'CTH',  he:'PAC',       ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); phS/phL — office류와 동일; he:'PAC' — 기준: AC-015 · AC-021 — 냉방·습도는 CTH, 난방은 PAC이 담당(CTH 정지 시 백업 겸용). 24h 상주+계장패널 실이라 단일 기기 의존을 피한다; hrh:50 — 기준: AC-004 — 습도 제어 대상실
-  kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:15, va:8,  ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:true, phS:58, phL:58}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:8 — 기준: AC-017 · 설계기준 표4.5 「배선실(配膳室) 8」; phS/phL:58 — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
+  kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:15, va:8,  ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:false, phS:58, phL:58}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:8 — 기준: AC-017 · 설계기준 표4.5 「배선실(配膳室) 8」; phS/phL:58 — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
   storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:5,  va:5,  eqReq:false,  ce:'없음', he:'없음',       ve:'벽부형팬', phS:57, phL:62}, // va:5 — 기준: AC-017 · 설계기준 표4.5 「서고·창고 5」. 종전 3은 기준보다 낮았다; phS/phL — od:0이라 미사용
 };
 
@@ -1643,6 +1643,9 @@ function calcLE(room){
   const outRH_val=RHfromWB(outDB,outWB);
   const ventCMH=vol*room.ventACH;
   // 난방 시 배기 가동: 열회수 없는 배기팬 실은 배기량만큼 보충외기가 난방부하로 유입
+  // 기준: AC-005 — 기본 미적용(exhH:false). 그 보충공기는 화장실 자체의 외기 창문으로 직접 들어오며
+  // 인접실(전열교환기로 자체 균형)을 끌어당기지 않는다. 라디에이터는 외피·침기만 감당하고
+  // 배기 가동 중 실온이 20℃보다 낮아지는 것을 받아들인 설계다. 필요하면 체크박스로 켠다
   const EXH_FANS=['인라인덕트팬','천정형팬','벽부형팬','루프팬','환기유니트'];
   const exhOn=!!room.exhHeat&&EXH_FANS.includes(room.ve)&&ventCMH>0;
   const hExh=(exhOn&&dTh!==null)?ventCMH*0.336*dTh:0;
@@ -4100,7 +4103,7 @@ function migrateRoom(r){
     m[k]=Object.assign({},d[k],(r&&r[k])||{});
   });
   if(m.type==='generator')m.type='elec';
-  if(r&&r.exhHeat===undefined)m.exhHeat=(m.type==='toilet'||m.type==='kitchen'); // 기존 데이터: 화장실·주방은 배기 난방부하 기본 반영
+  if(r&&r.exhHeat===undefined)m.exhHeat=false; // 기존 데이터: 배기 보충외기는 기본 미적용 — 기준: AC-005
   return m;
 }
 function resetAll(){
