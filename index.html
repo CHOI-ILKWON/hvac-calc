@@ -2941,9 +2941,13 @@ function renderCapCalc(){
       const fdPa=defV('fdPa',0);
       const vdEa=defV('vdEa',0),vdPa=defV('vdPa',10);
       const louEa=defV('louEa',0),louPa=defV('louPa',50);
+      // 기준: AC-083 Rule 2 — 별도 필터가 있는 계통은 말기(최종) 압손을 넣는다. 초기로 잡으면
+      //   필터가 막히면서 풍량이 20~25% 떨어진다 (AC-083 3.3.1). 중성능 말기 240~380 Pa.
+      //   전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 반영되어 있으므로 여기 넣지 않는다 (AC-083 Rule 4).
+      const filtPa=defV('filtPa',0);
       const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100);
-      const diffT=diffEa*diffPa,fdT=fdPa,vdT=vdEa*vdPa,louT=louEa*louPa;
-      const espSub=ductT+fittT+diffT+fdT+vdT+louT;
+      const diffT=diffEa*diffPa,fdT=fdPa,vdT=vdEa*vdPa,louT=louEa*louPa,filtT=filtPa;
+      const espSub=ductT+fittT+diffT+fdT+vdT+louT+filtT;
       const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 28.3.1.2 — 안전율 10%. AC-012 와 같은 값
       const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 28.3.2.6 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
@@ -2998,6 +3002,9 @@ function renderCapCalc(){
                 <tr><td style="padding:3px 6px;color:#475569">LOUVER</td>
                   <td style="padding:3px 6px">${inp('louEa',louEa,32,'EA')} EA &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(louT)} Pa</td></tr>
+                <tr><td style="padding:3px 6px;color:#475569" title="별도 필터가 있는 계통만. 말기(최종) 압손을 넣는다 — 중성능 240~380 Pa. 전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 있으므로 넣지 않는다 (AC-083)">FILTER</td>
+                  <td style="padding:3px 6px">${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">말기 압손</span></td>
+                  <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(filtT)} Pa</td></tr>
                 <tr style="border-top:1px solid #e2e8f0">
                   <td colspan="2" style="padding:3px 6px;color:#475569">소 계</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(espSub)} Pa</td></tr>
