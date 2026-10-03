@@ -291,11 +291,11 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">전기실/계측실류</td><td class="C">30℃</td><td class="C">-</td><td class="C">12회/h</td><td class="L">PAC (발열 전담) + 벽부형팬 (환기용)</td></tr>
         <tr><td class="L">비상발전기실류</td><td class="C">-</td><td class="C">-</td><td class="C">15회/h</td><td class="L">벽부형팬 (급기 루버 필수)</td></tr>
         <tr><td class="L">화장실류</td><td class="C">-</td><td class="C">20℃</td><td class="C">15회/h</td><td class="L">라디에이터, 천정팬</td></tr>
-        <tr><td class="L">탈의실류</td><td class="C">-</td><td class="C">22℃</td><td class="C">5회/h</td><td class="L">라디에이터, 천정팬</td></tr>
-        <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">25㎥/h·인</td><td class="L">EHP</td></tr>
+        <tr><td class="L">탈의실류</td><td class="C">26℃ / 60%</td><td class="C">22℃</td><td class="C">5회/h</td><td class="L">EHP, 천정형팬</td></tr>
+        <tr><td class="L">사무실류</td><td class="C">26℃ / 50%</td><td class="C">21℃</td><td class="C">25㎥/h·인</td><td class="L">EHP</td></tr>
         <tr><td class="L">중앙제어실류</td><td class="C">24℃ / 50%</td><td class="C">24℃ / 50%</td><td class="C">25㎥/h·인</td><td class="L">PAC, 항온항습기</td></tr>
-        <tr><td class="L">주방류</td><td class="C">26℃ / 50%</td><td class="C">21℃ / 50%</td><td class="C">15회/h</td><td class="L">EHP, 천정형팬</td></tr>
-        <tr><td class="L">창고류</td><td class="C">-</td><td class="C">-</td><td class="C">3회/h</td><td class="L">벽부형팬</td></tr>
+        <tr><td class="L">탕비실/간이주방류</td><td class="C">26℃ / 50%</td><td class="C">21℃</td><td class="C">8회/h</td><td class="L">EHP, 천정형팬</td></tr>
+        <tr><td class="L">창고류</td><td class="C">-</td><td class="C">-</td><td class="C">5회/h</td><td class="L">벽부형팬</td></tr>
       </table>
       <div style="font-size:12px;line-height:1.9;margin-top:10px">
         <b>③ 외벽 방위 체크박스</b>: 외기에 면한 벽만 체크합니다.<br>
@@ -1526,7 +1526,7 @@ function renderRoomDetail(){
   </div>
 </div></div>
 
-<div class="card"><div class="ch">§2 실내 설계조건<span class="src-badge">ASHRAE 55 / [별표7] 냉난방 설계온도</span></div><div class="cb">
+<div class="card"><div class="ch">§2 실내 설계조건<span class="src-badge">[별표8] 실내 온·습도 기준 / AC-003</span></div><div class="cb">
   <div class="fg c2">
     <div>
       <div style="font-weight:700;color:var(--bl);font-size:11px;margin-bottom:6px">여름 (냉방)</div>
