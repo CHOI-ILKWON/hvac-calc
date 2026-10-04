@@ -186,7 +186,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
     <div class="cb">
       <div class="fg c3">
         <div class="fv"><label>지역 선택</label><select id="p-loc" onchange="onLocChange()"></select></div>
-        <div class="fv" style="grid-column:span 2"><label>외기온 직접입력 냉방 (℃ DB, 선택)</label><input type="number" id="p-cust" placeholder="직접 입력 시" onchange="updP()"></div>
+        <div class="fv" style="grid-column:span 2"><label>외기온 직접입력 냉방 (℃ DB, 선택) <span style="color:#b45309;font-weight:400">— 국내 지역 보정용. 습구온도는 선택 지역 값을 유지하므로 해외 현장에는 쓰지 마세요 (AC-002)</span></label><input type="number" id="p-cust" placeholder="직접 입력 시" onchange="updP()"></div>
       </div>
       <div class="fg c4" style="margin-top:8px">
         <div class="fv"><label>단열 지역구분 [별표1]</label><input type="text" id="p-zone" class="au" readonly></div>
@@ -1171,6 +1171,10 @@ function switchTab(i){
 // ══════════════════════════════════════════════
 function loadPtoForm(){
   const p=STATE.project;
+  // 저장된 프로젝트의 외기값을 현재 WEATHER_DATA(AC-001 확정값)로 갱신한다.
+  // 지역 값은 화면에서 수정할 수 없는 읽기 전용이므로, 예전에 저장된 파생값(s_x 0.02051 등)이 남지 않게 한다.
+  const wc=WEATHER_DATA[p.loc];
+  if(wc) Object.assign(p,{cdb:wc.s_db,cwb:wc.s_wb,s_rh:wc.s_rh,s_x:wc.s_x,hdb:wc.w_db,w_wb:wc.w_wb,w_rh:wc.w_rh,w_x:wc.w_x});
   document.getElementById('p-name').value=p.name;
   document.getElementById('p-client').value=p.client;
   document.getElementById('p-date').value=p.date;
