@@ -469,6 +469,8 @@ const UFLOOR = {
   '남부'  :{ground:0.350, outdoor:0.250},
   '제주도':{ground:0.470, outdoor:0.330},
 };
+// 종전 기본값 3.13 이 남은 저장본은 계산서에 출처 경고를 붙인다 (AC-006: 출처를 설명할 수 없는 값)
+function floorLegacy(r){ return (r&&r.floorOn&&Math.abs((r.floorU||0)-3.13)<1e-9)?' ⚠ U 3.13 — 종전 기본값, 출처 확인 필요 (AC-006 [별표1] '+uFloor(r.floorMode)+')':''; }
 function uFloor(mode,zone){ return (UFLOOR[zone||insulZone()]||UFLOOR['중부2'])[mode==='outdoor'?'outdoor':'ground']; }
 function insulZone(){ return INSUL_ZONE[(typeof STATE!=='undefined'&&STATE.project&&STATE.project.loc)||'서울']||'중부2'; }
 function uRef(){ return UREF[insulZone()]; }
@@ -1932,7 +1934,7 @@ function renderLoadCalc(){
       return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
     }).join('');
     const fFacR=(room.floorMode==='outdoor')?1:0.5;
-    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
+    const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const oaRowC=le.oaCMH_raw>0
       ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
@@ -1977,7 +1979,7 @@ function renderLoadCalc(){
       const iw=room['iw'+n];
       return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
     }).join('');
-    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}`:'비활성',le.hfloor||0);
+    const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const oaRowH=le.oaCMH_raw>0
       ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
