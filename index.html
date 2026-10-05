@@ -395,15 +395,16 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
     <div class="cb">
       <table style="font-size:11px">
         <tr><th>구분</th><th>기준명</th><th>적용 항목</th></tr>
-        <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물 에너지절약설계기준</td><td class="L">기상조건 (외기온·습도·일사량)</td></tr>
+        <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물 에너지절약설계기준</td><td class="L">기상조건 (외기온·습도)</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창 U값 기준값 (지역구분 자동)</td></tr>
         <tr><td class="L">건축물의 설비기준 등에 관한 규칙</td><td class="L">제11조 [별표 1의6] 다중이용시설 필요환기량</td><td class="L" style="color:#b45309">참고 — <b>다중이용시설 대상</b>. 업무시설·공장은 대상 아님</td></tr>
         <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중</td><td class="L">인당 외기량 25㎥/h — 법정 적용대상 아님</td></tr>
-        <tr><td class="L">AIK</td><td class="L">건축기계설비 설계기준 표 4.5 「부속실의 환기방식」</td><td class="L">실 용도별 환기횟수 (회/h) — 전기실·발전기실은 준용</td></tr>
+        <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 4.5 「부속실의 환기방식」</td><td class="L">실 용도별 환기횟수 (회/h) — 전기실·발전기실은 준용</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표8] 냉·난방설비의 용량계산을 위한 실내 온·습도 기준</td><td class="L">실내 설계 온습도 (제7조 제1항)</td></tr>
         <tr><td class="L" style="color:#b45309">당사 설계기준</td><td class="L" style="color:#b45309">ASHRAE 계열보다 밀집한 안전측 값</td><td class="L">재실밀도 (사무실 10 · 부속실 50 ㎡/인)</td></tr>
         <tr><td class="L">ASHRAE</td><td class="L">Handbook—Fundamentals 「Heat and Moisture Given Off by Human Beings」</td><td class="L">인체발열 현열/잠열 — 좌식 경작업 조정 M/F</td></tr>
-        <tr><td class="L" style="color:#b45309">AIK</td><td class="L" style="color:#b45309">설계기준 — 문헌명·표 번호 확인 중</td><td class="L">부하계산법 (CLTD/SC) · 일사량표</td></tr>
+        <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 2.22 ETD · 표 2.36 방위계수</td><td class="L">외벽 CLTD 교차검토 · 난방 방위계수 (AC-005)</td></tr>
+        <tr><td class="L" style="color:#b45309">출처 확인 중</td><td class="L" style="color:#b45309">방위·시각별 일사량표 (서울 약 37°N)</td><td class="L">유리 일사취득 (AC-005 4.1.5)</td></tr>
         <tr><td class="L">물리 환산</td><td class="L">설계조도 ÷ 유효 광효율 50 lm/W (LED 보급형)</td><td class="L">조명발열 W/m²</td></tr>
         <tr><td class="L" style="color:#b45309">실무 관행</td><td class="L" style="color:#b45309">출처 확인 중 — 법정·학회에 백분율 조항 없음</td><td class="L">안전율 적용 (냉방·난방 각 10%)</td></tr>
         <tr><td class="L" style="color:#b45309">입력 항목</td><td class="L" style="color:#b45309">기준값 없음 — 전기팀·발주처에서 받음</td><td class="L">기기발열 (kW). 미입력·기본값 적용 시 계산서에 표기됨</td></tr>
@@ -458,11 +459,21 @@ const UREF = {          //  거실외벽  최상층지붕  창(공동주택 외)
   '남부'  :{wall:0.320, roof:0.180, win:1.800},
   '제주도':{wall:0.410, roof:0.250, win:2.200},
 };
-// 바닥은 별표1의 「최하층 거실의 바닥」과 앱의 접지바닥(ΔT/2 적용)이 서로 다른 대상이라 자동 적용하지 않는다.
+// 최하층 거실 바닥 (비바닥난방) — 기준: AC-006 2.2, 6조 6·7항
+//   ground : 지면·토양 접촉 = 별표1 「외기에 간접 면하는 경우」
+//   outdoor: 필로티 등     = 별표1 「외기에 직접 면하는 경우」
+// U값은 AC-006, 지중측 ΔT/2 단순화는 AC-005 에서 관리한다 (두 값의 역할을 분리).
+const UFLOOR = {
+  '중부1' :{ground:0.240, outdoor:0.170},
+  '중부2' :{ground:0.290, outdoor:0.200},
+  '남부'  :{ground:0.350, outdoor:0.250},
+  '제주도':{ground:0.470, outdoor:0.330},
+};
+function uFloor(mode,zone){ return (UFLOOR[zone||insulZone()]||UFLOOR['중부2'])[mode==='outdoor'?'outdoor':'ground']; }
 function insulZone(){ return INSUL_ZONE[(typeof STATE!=='undefined'&&STATE.project&&STATE.project.loc)||'서울']||'중부2'; }
 function uRef(){ return UREF[insulZone()]; }
 
-// Solar radiation Is(W/m²), Seoul ~37°N, [10h,12h,14h,16h] — from KS/AIK standard table
+// Solar radiation Is(W/m²), Seoul ~37°N, [10h,12h,14h,16h] — 원 출처 미확정 (AC-005 4.1.5). 남부·해외는 별도 검토
 const SR = {
   N:[ 50.2, 50.2, 50.2, 50.2],
   E:[332.5,166.2,137.6,108.9],
@@ -1199,8 +1210,26 @@ function updP(){
   p.cust=parseFloat(document.getElementById('p-cust').value)||null;
   document.getElementById('pndisp').textContent=p.name||'[ 프로젝트명 미설정 ]';
 }
+// 지역을 바꾸면 이미 만든 실의 외피 U값 중 「이전 지역의 별표1 기본값 그대로인 것」만 새 지역 값으로 바꾼다.
+// 사용자가 단열검토서 값을 입력한 칸은 건드리지 않는다 (AC-006 1순위). 기준: AC-006 3.2
+function retargetU(oldZ,newZ){
+  if(!oldZ||!newZ||oldZ===newZ) return 0;
+  const o=UREF[oldZ], n=UREF[newZ], of=UFLOOR[oldZ], nf=UFLOOR[newZ]; if(!o||!n)return 0;
+  const eq=(a,b)=>Math.abs((a||0)-b)<1e-9; let cnt=0;
+  (STATE.rooms||[]).forEach(r=>{
+    ['N','E','S','W'].forEach(d=>{
+      if(r['wall'+d]&&eq(r['wall'+d].u,o.wall)){r['wall'+d].u=n.wall;cnt++;}
+      if(r['win'+d]&&eq(r['win'+d].u,o.win)){r['win'+d].u=n.win;cnt++;}
+    });
+    if(eq(r.roofU,o.roof)){r.roofU=n.roof;cnt++;}
+    const fm=r.floorMode==='outdoor'?'outdoor':'ground';
+    if(of&&nf&&eq(r.floorU,of[fm])){r.floorU=nf[fm];cnt++;}
+  });
+  return cnt;
+}
 function onLocChange(){
   const v=document.getElementById('p-loc').value, c=WEATHER_DATA[v]; if(!c)return;
+  const _oldZone=INSUL_ZONE[STATE.project.loc], _newZone=INSUL_ZONE[v];
   Object.assign(STATE.project,{loc:v,
     cdb:c.s_db,cwb:c.s_wb,s_rh:c.s_rh,s_x:c.s_x,
     hdb:c.w_db,w_wb:c.w_wb,w_rh:c.w_rh,w_x:c.w_x});
@@ -1213,6 +1242,8 @@ function onLocChange(){
   document.getElementById('p-hrh').value=c.w_rh;
   document.getElementById('p-hx').value=c.w_x;
   renderInsulZone();
+  const _n=retargetU(_oldZone,_newZone);
+  if(_n>0){ if(typeof renderRoomDetail==='function')renderRoomDetail(); console.log('[AC-006] 지역 변경: 별표1 기본 U값 '+_n+'곳을 '+_oldZone+' → '+_newZone+' 값으로 갱신'); }
 }
 function renderInsulZone(){ // 별표1 지역구분 · 부위별 U 기준값 표시
   const z=insulZone(), U=UREF[z]; if(!U)return;
@@ -1327,7 +1358,7 @@ function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 
     winS:{w:0,h:0,shgc:0.35,u:U.win}, winW:{w:0,h:0,shgc:0.35,u:U.win},
     iw1:{len:0,u:2.08}, iw2:{len:0,u:2.08}, iw3:{len:0,u:2.08}, iw4:{len:0,u:2.08}, // 내벽은 별표1 대상 아님
     roofOn:false, roofA:0, roofU:U.roof,
-    floorOn:false, floorMode:'ground', floorU:3.13,
+    floorOn:false, floorMode:'ground', floorU:uFloor('ground'),   // 기준: AC-006 — 종전 3.13 은 출처 불명
     infACH:0.5, ventACH:0, ia:10, oa:true,
     lw:15, eqKW:0, phS:57, phL:62,
     exhHeat:false,
@@ -1425,6 +1456,10 @@ function renderRoomList(){
 //  ROOM DETAIL
 // ══════════════════════════════════════════════
 function sR(k,v){const i=getRi();if(i<0)return;STATE.rooms[i][k]=v;}
+// 바닥 조건을 바꾸면, 사용자가 손대지 않은 별표1 기본값만 새 조건의 기본값으로 바꾼다 (AC-006)
+function onFloorMode(m){const i=getRi();if(i<0)return;const r=STATE.rooms[i];
+  if(Math.abs((r.floorU||0)-uFloor(r.floorMode||'ground'))<1e-9) r.floorU=uFloor(m);
+  r.floorMode=m; if(typeof renderRoomDetail==='function')renderRoomDetail(); }
 function sRr(k,v){sR(k,v);renderRoomDetail();renderRoomList();}
 function sRd(k,v){sR(k,v);renderRoomDetail();}
 function sW(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['wall'+dir][k]=v;}
@@ -1592,7 +1627,7 @@ function renderRoomDetail(){
     </div>
     <div class="fv"><label>지붕 U값 (W/m²K)</label>
       <input type="number" value="${r.roofU}" step="0.01" ${!r.roofOn?'disabled':''}
-        onchange="sR('roofU',parseFloat(this.value)||0.11)">
+        onchange="sR('roofU',parseFloat(this.value)||uRef().roof)">
     </div>
   </div>
   <div class="fg c3" style="margin-top:8px">
@@ -1603,14 +1638,14 @@ function renderRoomDetail(){
       </select>
     </div>
     <div class="fv"><label>바닥 조건</label>
-      <select ${!r.floorOn?'disabled':''} onchange="sR('floorMode',this.value)">
+      <select ${!r.floorOn?'disabled':''} onchange="onFloorMode(this.value)">
         <option value="ground" ${(r.floorMode||'ground')==='ground'?'selected':''}>접지·비공조 하부 (ΔT/2)</option>
         <option value="outdoor" ${r.floorMode==='outdoor'?'selected':''}>외기 직접 노출·필로티 (ΔT)</option>
       </select>
     </div>
     <div class="fv"><label>바닥 U값 (W/m²K)</label>
       <input type="number" value="${r.floorU}" step="0.01" ${!r.floorOn?'disabled':''}
-        onchange="sR('floorU',parseFloat(this.value)||3.13)">
+        onchange="sR('floorU',parseFloat(this.value)||uFloor('${r.floorMode||'ground'}'))">
     </div>
   </div>
 </div></div>
@@ -1632,7 +1667,7 @@ function renderRoomDetail(){
   <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 팬 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
 </div></div>
 
-<div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AIK / ASHRAE 62.1 W/m² 기준</span></div><div class="cb">
+<div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AC-007 인체 · AC-008 조명 · AC-009 기기</span></div><div class="cb">
   <div class="fg fg6">
     <div class="fv"><label>재실 밀도 (m²/인)</label><input type="number" value="${occDens(r)||''}" step="1" placeholder="무인" onchange="sRd('ia',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="${f1(occ)}"></div>
@@ -1770,7 +1805,8 @@ function calcLE(room){
   if(dTh!==null&&room.hrh){
     const xIn=omegaRH(room.hdb,room.hrh);
     const dX=Math.max(0,xIn-(p.w_x||0));
-    humKgh=1.2*(infCMH+oaCMHh+(exhOn?ventCMH:0))*dX;
+    // 외기 수분 회수는 잠열 회수율(oaCMHl)로 본다. 종전에는 현열 난방효율(oaCMHh, 기본 70%)을 써서 가습량을 작게 계산했다 (AC-004)
+    humKgh=1.2*(infCMH+oaCMHl+(exhOn?ventCMH:0))*dX;
   }
 
   return {
@@ -2005,14 +2041,14 @@ function renderLoadCalc(){
       </tr>
     </thead>
     <tbody>
-      ${sHC('① 태양복사열에 의한 부하 (SOLAR GAIN — GLASS)<span class="src-badge">SHGC × 일사량 [별표7] 37°N 기준</span>')}
+      ${sHC('① 태양복사열에 의한 부하 (SOLAR GAIN — GLASS)<span class="src-badge">SHGC × 일사량 (서울 37°N 표, 출처 확인 중)</span>')}
       ${solarRows}
       ${sHC('② 전열에 의한 부하 (SOLAR &amp; TRANS GAIN — WALLS &amp; ROOF)<span class="src-badge">Q = U × A × ΔT (정상상태 전도)</span>')}
       ${wallRowsC}${roofRowC}
       ${sHC('③ 전열에 의한 부하 (TRANS. GAIN EXCEPT WALLS &amp; ROOF)<span class="src-badge">Q = 1.2 × V × ΔT (현열) / 2501 × V × Δω (잠열)</span>')}
       ${glassCRows}${iwRowsC}${floorRowC}${infRowC}${oaRowC}
       ${st1Row}
-      ${sHC('④ 내부 발열 (INTERNAL HEAT GAIN)<span class="src-badge">AIK 표준 내부발열 기준</span>')}
+      ${sHC('④ 내부 발열 (INTERNAL HEAT GAIN)<span class="src-badge">AC-007·008·009 내부발열 기준</span>')}
       ${pplRowC}${eqRowC}${ltRowC}${miscRowC}
       ${st2Row}
       ${rshRow}${sfSRow}${tshRow}
