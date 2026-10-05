@@ -504,8 +504,10 @@ const CLTD_WALL_LIGHT = {
 // CLTD for heavy-weight roof (110~160mm), indoor 26°C base [10h,12h,14h,16h]
 const CLTD_ROOF = [12.4, 21.0, 26.8, 27.8];
 
-// 난방 방위할증계수 — 북측(무일사·풍향), 동/서측 할증 (국내 설계 관행)
-const DIR_HF = {N:1.10, E:1.05, S:1.00, W:1.05};
+// 난방 방위계수 — 기준: AC-005 4.1.3 (2026-10-05 채택), 국토해양부·대한설비공학회 「건축기계설비 설계기준」(2010) 표 2.36
+// 종전 N1.10/E·W1.05 는 근거가 확인되지 않아 폐기. 사선 방위(NE·NW 1.15, SE·SW 1.05)는 앱이 4방위만 다루므로 미사용
+const DIR_HF = {N:1.20, E:1.10, S:1.00, W:1.10};
+const DIR_HF_ROOF = 1.20;
 
 // Room type definitions
 // 기준: AC-003 (실별 실내설계온습도) — cdb/crh/hdb, AC-004 (습도제어 대상실) — hrh
@@ -1785,7 +1787,7 @@ function calcLE(room){
   let hiw=[0,0,0,0];
   if(dTh!==null){
     DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창 면적 공제 — 유리 손실과 이중계상 방지
-    if(room.roofOn)hroof=room.roofU*roofA*dTh;
+    if(room.roofOn){hroof=room.roofU*roofA*dTh*DIR_HF_ROOF;hDir+=room.roofU*roofA*dTh*(DIR_HF_ROOF-1);}
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];hDir+=wn.u*wn.w*wn.h*dTh*(DIR_HF[d]-1);});
     hinf=infCMH*0.336*dTh;
     const dTh_iw=dTh/2;
@@ -1974,7 +1976,7 @@ function renderLoadCalc(){
       const val=d==='N'?le.hwN:d==='E'?le.hwE:d==='S'?le.hwS:le.hwW;
       return hRow(`OUT.WALL ${d}`,`(${f1(wd.len*room.height)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${wd.u}×방위${DIR_HF[d]}`,val);
     }).join('');
-    const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}`:'비활성',le.hroof);
+    const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}×방위${DIR_HF_ROOF}`:'비활성',le.hroof);
     const iwRowsH=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
       return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
@@ -1990,7 +1992,7 @@ function renderLoadCalc(){
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     // 기준: AC-011 · AC-012 — 여유가 어디에 얼마나 들어갔는지 드러낸다
     const hDirRow=le.hDir>0
-      ?hRow('└ 방위할증 포함분',`외벽·유리에만 적용 (N1.10/E·W1.05/S1.00) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
+      ?hRow('└ 방위할증 포함분',`외벽·유리·지붕 (N1.20/E·W1.10/S1.00/지붕1.20, 학회 표 2.36) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
       :'';
     const hSfRow=hRow('SAFETY FACTOR','ROOM HEAT LOSS × 10% (기준: AC-012)',le.totalH-le.hRsh);
     const hTotRow=grnH(`ROOM TOTAL HEATING LOSS  (누적 ×${(le.hRsh>0?le.totalH/(le.hRsh-le.hDir):1.10).toFixed(3)})`,le.totalH);

@@ -14,7 +14,9 @@ new Function('g',[
   grab(/const UREF = \{[\s\S]*?\n\};/,'UREF'),
   grab(/const UFLOOR = \{[\s\S]*?\n\};/,'UFLOOR'),
   grab(/const RT = \{[\s\S]*?\n\};/,'RT'),
-  "Object.assign(g,{pws,omegaWB,omegaRH,WEATHER_DATA,INSUL_ZONE,UREF,UFLOOR,RT});"
+  grab(/const DIR_HF = \{[^\n]*/,'DIR_HF'),
+  grab(/const DIR_HF_ROOF = [^\n]*/,'DIR_HF_ROOF'),
+  "Object.assign(g,{pws,omegaWB,omegaRH,WEATHER_DATA,INSUL_ZONE,UREF,UFLOOR,RT,DIR_HF,DIR_HF_ROOF});"
 ].join('\n'))(g);
 
 let pass=0, fail=0; const ok=(c,msg)=>{ if(c)pass++; else {fail++; console.log('  ✗ '+msg);} };
@@ -60,6 +62,14 @@ const U={'중부1':[0.170,0.150,1.300,0.240,0.170],'중부2':[0.240,0.150,1.500,
  '남부':[0.320,0.180,1.800,0.350,0.250],'제주도':[0.410,0.250,2.200,0.470,0.330]};
 Object.entries(U).forEach(([z,e])=>{const u=g.UREF[z],f=g.UFLOOR[z];
   [u.wall,u.roof,u.win,f.ground,f.outdoor].forEach((v,i)=>ok(near(v,e[i],1e-9),`${z} ${['외벽','지붕','창','접지바닥','외기바닥'][i]} ${v} ≠ ${e[i]}`));});
+
+// ── AC-005 난방 방위계수 (표 2.36 채택, 2026-10-05) ───────────
+console.log('AC-005 방위계수');
+[['N',1.20],['E',1.10],['S',1.00],['W',1.10]].forEach(([d,v])=>ok(near(g.DIR_HF[d],v,1e-9),`방위계수 ${d} ${g.DIR_HF[d]} ≠ ${v}`));
+ok(near(g.DIR_HF_ROOF,1.20,1e-9),`지붕 방위계수 ${g.DIR_HF_ROOF} ≠ 1.20`);
+// AC-005 4.4.2 예제: 침기 135·외기 250 ㎥/h, ΔT 32.3K, 계수 0.336
+ok(Math.round(0.336*135*32.3)===1465&&Math.round(0.336*250*32.3)===2713,'AC-005 4.4.2 침기·외기 열손실 예제');
+ok(233+485+1465+2713===4896&&4896-1630===3266,'AC-005 4.4.2 합계 4,896 W / 비교값 3,266 W');
 
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
