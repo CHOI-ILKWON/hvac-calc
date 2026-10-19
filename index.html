@@ -92,8 +92,10 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700}
 .bg{background:var(--blbg);color:var(--bl)}.br{background:#fee2e2;color:var(--red)}.bgr{background:#dcfce7;color:var(--gr)}
 .empty{text-align:center;padding:32px;color:var(--tsm)}
+.print-only{display:none}
 /* PRINT */
 @media print{
+  .print-only{display:inline !important}
   @page{size:A4 portrait;margin:8mm}
   /* ── 항상 숨김 ── */
   #tab-bar,#tbar,#rlp,.no-print{display:none !important}
@@ -1148,6 +1150,7 @@ function _catWH(rid, row) {
   r.capHW.model   =row['모델명']          ||r.capHW.model;
   r.capHW.type    =row['타입']            ||r.capHW.type;
   r.capHW.vol     =row['용량(L)']         ??r.capHW.vol;
+  if(row['용량(L)']!=null&&row['용량(L)']!=='') r.capHW.storeCap=row['용량(L)'];   // 선정 제품의 저탕용량
   r.capHW.kw      =row['전력(kW)']        ??r.capHW.kw;
   r.capHW.volt    =row['전원']            ||r.capHW.volt;
   r.capHW.maxTemp =row['최고온도(℃)']     ??r.capHW.maxTemp;
@@ -1405,6 +1408,22 @@ function getInfACH(room){
 // ══════════════════════════════════════════════
 //  ROOM LIST
 // ══════════════════════════════════════════════
+// 전기온수기·급탕 탭에서 화장실을 하나 더 만든다 (화장실 유형 기본값, 전기온수기)
+function addHWRoom(){
+  const r=newRoom(), rt=RT.toilet;
+  const last=STATE.rooms.filter(x=>x.san==='전기온수기'||(x.type==='toilet'&&!x.san)).slice(-1)[0];
+  if(last){r.bldgId=last.bldgId; r.floorId=last.floorId; r.height=last.height;}
+  r.name='새 화장실';
+  r.type='toilet'; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
+  r.ia=rt.ia; r.oa=rt.oa; r.lw=rt.lw; r.ventACH=rt.va;
+  r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve; r.san='전기온수기';
+  r.phS=rt.phS; r.phL=rt.phL; r.exhHeat=!!rt.exhH;
+  if(rt.iw_u!=null){[1,2,3,4].forEach(n=>{if(r['iw'+n])r['iw'+n].u=rt.iw_u;});}
+  STATE.rooms.push(r);
+  if(typeof renderRoomList==='function')renderRoomList();
+  renderCapCalc();
+}
+function sRoomName(rid,v){const r=STATE.rooms.find(x=>x.id===rid);if(r){r.name=v;if(typeof renderRoomList==='function')renderRoomList();}}
 function addRoom(){
   const r=newRoom(); STATE.rooms.push(r);
   selRid=r.id; renderRoomList(); renderRoomDetail();
@@ -2167,11 +2186,20 @@ const CAP_TABS=[
   {k:'벽부형팬',lb:'벽부형팬'},{k:'루프팬',lb:'루프팬'},
   {k:'환기유니트',lb:'환기유니트'},
   {k:'유니트히터',lb:'유니트히터'},{k:'라디에이터',lb:'라디에이터'},
-  {k:'전기온수기',lb:'전기온수기'},
-  {k:'급수량',lb:'급수량'},{k:'물탱크',lb:'물탱크'},{k:'부스터펌프',lb:'부스터펌프'},
+  {k:'물탱크',lb:'물탱크'},{k:'부스터펌프',lb:'부스터펌프'},
+  {k:'전기온수기',lb:'전기온수기·급탕'},
 ];
+// 급수소요량 집계 기구 (물탱크·부스터펌프 공용). [키, 기구명, 1회 사용수량(L/회), 시간당 사용횟수(회/h)]
+//   세면기·변기·소변기·샤워기 — 기준: AC-032 2.1 회사 예비값
+//   주방싱크·세탁기 1회 15 L — 사용자 지정 (2026-10-19). AC-032 2.1 채택값에 없는 기구다.
+//     시간당 사용횟수는 정하지 않았다 → 빈칸, 수량을 넣으면 입력하라고 표시한다 ⚠
+//   키 f5(기타)는 예전 저장본과 맞추려고 그대로 둔다
+const WT_FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],
+             ['f6','주방싱크',15,0],['f7','세탁기',15,0],['f5','기타',0,0]];
+// 저수조용 동시사용률 — 기준: AC-032 2.2 「위생기구의 동시사용율」 (2026-10-05판). 기구 수 2 이하 100%
+const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
 
-function setCapTab(k){capTab=k;renderCapCalc();}
+function setCapTab(k){if(k==='급수량')k='전기온수기';capTab=k;renderCapCalc();}
 
 function sCC(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capC[f]=v;}
 function sCEo(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capEo[f]=v;}
@@ -3383,109 +3411,15 @@ function renderCapCalc(){
     el.innerHTML=html; return;
   }
 
-  // 전기온수기
+  // ── 전기온수기·급탕 (실별 전기온수기 선정 + 중앙식 보일러 묶음) ─────────
+  //   예전 「급수량」 탭(급탕 가열기 선정)과 「전기온수기」 탭(수기 입력 표)을 하나로 합쳤다 (2026-10-19).
+  //   실마다: 급탕량 집계 → 동시사용률 → 저탕량·가열능력 → 카탈로그 제품 선택 → 장비 스펙
   if(capTab==='전기온수기'){
     const rooms=STATE.rooms.filter(r=>r.san==='전기온수기'||(r.type==='toilet'&&!r.san));
-    if(!rooms.length){el.innerHTML='<div class="empty">전기온수기로 선택된 실이 없습니다.</div>';return;}
-    let html=`<div class="card"><div class="ch">전기온수기 용량계산서</div><div class="cb"><div class="tw"><table>
-    <thead><tr>
-      <th>실명</th><th>건물</th><th>층</th>
-      <th>수량</th><th>형식/모델</th><th>용량(L/h)</th><th>용량(kW)</th><th>전원</th><th>비고</th>
-    </tr></thead><tbody>`;
-    rooms.forEach(r=>{
-      const {b,f}=getBF(r.bldgId,r.floorId); const rid=r.id;
-      html+=`<tr>
-        <td class="L">${esc(r.name)}</td><td class="L">${esc(b?.name||'—')}</td><td class="C">${esc(f?.name||'—')}</td>
-        <td><input type="number" value="${r.capHW.cnt||1}" min="1" style="width:45px" onchange="sCHW('${rid}','cnt',parseInt(this.value)||1)"></td>
-        <td><input type="text" value="${esc(r.capHW.model)}" placeholder="형식/모델" onchange="sCHW('${rid}','model',this.value)"></td>
-        <td><input type="number" value="${r.capHW.lph||''}" step="10" placeholder="L/h" onchange="sCHW('${rid}','lph',parseFloat(this.value)||0)"></td>
-        <td><input type="number" value="${r.capHW.kw||''}" step="0.1" placeholder="kW" onchange="sCHW('${rid}','kw',parseFloat(this.value)||0)"></td>
-        <td><input type="text" value="${esc(r.capHW.volt)}" onchange="sCHW('${rid}','volt',this.value)"></td>
-        <td><input type="text" value="${esc(r.capHW.note)}" onchange="sCHW('${rid}','note',this.value)"></td>
-      </tr>`;
-    });
-    html+=`</tbody></table></div></div></div>`;
-
-    // 장비별 상세 카드
-    html+=`<div style="margin-top:16px">`;
-    html+=`<div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div>`;
-    rooms.forEach((r,idx)=>{
-      const {b,f}=getBF(r.bldgId,r.floorId);
-      const rid=r.id;
-      const autoTag='M-WH-'+String(idx+1).padStart(3,'0');
-      const tag=r.capHW.tag||autoTag;
-      const svc=(f?esc(f.name)+' ':'')+esc(r.name);
-      html+=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:12px;page-break-inside:avoid">
-        <div style="background:#1e3a5f;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:700;font-size:11px">장비번호 : ${esc(tag)}</span>
-          <span style="font-size:10px;opacity:.85">서비스지역 : ${svc}</span>
-        </div>
-        <div style="padding:10px 14px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">WATER HEATER SELECTION</div>
-            <button class="btn btP btS no-print" onclick="openCatModal('WATER_HEATER',function(row){_catWH('${rid}',row)},{val:${parseFloat(r.capHW.storeCap)||0},unit:'L',label:'저탕용량'})">📋 카탈로그</button>
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">모델명</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            <input type="text" value="${esc(r.capHW.model||'')}" placeholder="모델명" style="flex:1;max-width:160px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit" onchange="sCHW('${rid}','model',this.value)">
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">타입</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.type?`<b>${esc(r.capHW.type)}</b>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">용량</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.vol!=null?`<b style="color:#1d4ed8">${fW(r.capHW.vol)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">L</span>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">최고온도</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.maxTemp!=null?`<b>${r.capHW.maxTemp}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">℃</span>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">최고사용압력</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.maxPres?`<b>${esc(r.capHW.maxPres)}</b>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">냉온수구경</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.pipeDia!=null?`<b>${r.capHW.pipeDia}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">A</span>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">전력</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.kw!=null&&r.capHW.kw?`<b style="color:#1d4ed8">${r.capHW.kw}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">kW</span>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-          <div style="display:flex;align-items:center;padding:5px 0;font-size:10px;gap:4px">
-            <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
-            <span style="min-width:130px;color:#334155">전원</span>
-            <span style="color:#94a3b8;margin-right:6px">:</span>
-            ${r.capHW.volt?`<b>${esc(r.capHW.volt)}</b>`:`<span style="color:#94a3b8">—</span>`}
-          </div>
-        </div>
-      </div>`;
-    });
-    html+=`</div>`;
-
-    el.innerHTML=html; return;
-  }
-
-  // ── 급수량 (급탕 가열기 선정) ────────────────────────────────
-  if(capTab==='급수량'){
-    const rooms=STATE.rooms.filter(r=>r.san==='전기온수기'||(r.type==='toilet'&&!r.san));
     const bRooms=STATE.rooms.filter(r=>r.san==='보일러(중앙식)');
-    if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르세요.</small></div>';return;}
+    const addBtn='<div class="no-print" style="margin:4px 0 18px"><button class="btn btP" onclick="addHWRoom()">＋ 새 실(화장실) 추가 — 전기온수기 선정</button>'
+      +'<span style="font-size:10px;color:#64748b;margin-left:8px">추가한 실의 이름·층·크기는 ② 실 목록에서 고칩니다</span></div>';
+    if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르거나 아래에서 실을 추가하세요.</small></div>'+addBtn;return;}
     const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
     // 기준: AC-022 22.3.2.2 — 기구별 1회 급탕량 x 시간당 사용횟수 (사용온도 43도 기준)
     const FX=[['wb','세면기',5,6],['sh','샤워기',40,2],['ba','세탁기',15,1],['ks','주방싱크',10,4],['et','기타',0,0]];
@@ -3701,10 +3635,10 @@ function renderCapCalc(){
         +'※ 부속·밸브류는 <b>기준 AC-022 5절</b>의 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
         +'</div></div>';
     }
-    if(!rooms.length){ el.innerHTML=html; return; }
+    const boilerHtml=html; html='';
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId); const rid=r.id;
-      const autoTag='M-AG-'+String(idx+1).padStart(3,'0');
+      const autoTag='M-WH-'+String(idx+1).padStart(3,'0');   // 장비일람표와 같은 번호
       const defH=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
       let totLph=0,totCnt=0;
       const fxRows=FX.map(([k,nm,dl,du])=>{
@@ -3741,7 +3675,7 @@ function renderCapCalc(){
         </div>`;
       html+=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:20px">
         <div style="background:#1e3a5f;color:#fff;padding:9px 14px">
-          <span style="font-weight:700;font-size:12px">${f?esc(f.name)+' ':''}${esc(r.name)} 급탕 가열기 선정(저장식)</span>
+          <span style="font-weight:700;font-size:12px">${f?esc(f.name)+' ':''}<input type="text" value="${esc(r.name)}" title="실명" class="no-print" style="width:130px;font-size:12px;font-weight:700;padding:1px 5px;border:1px solid #64748b;border-radius:3px;background:#27466e;color:#fff;font-family:inherit" onchange="sRoomName('${rid}',this.value)"><span class="print-only">${esc(r.name)}</span> 전기온수기 선정(저장식)</span>
         </div>
         <div style="padding:14px">
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">급탕량 집계</div>
@@ -3799,10 +3733,16 @@ function renderCapCalc(){
               <span style="font-weight:700;color:#1e3a5f;margin-left:4px">SELECTION ⇒ ${autoStoreCap} lit</span>
             </div>
           </div>
-          <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">장비 스펙</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">장비 스펙 (WATER HEATER SELECTION)</div>
+            <button class="btn btP btS no-print" onclick="openCatModal('WATER_HEATER',function(row){_catWH('${rid}',row)},{val:${parseFloat(r.capHW.storeCap)||autoStoreCap},unit:'L',label:'저탕용량'})">📋 카탈로그에서 선택</button>
+          </div>
           <div style="max-width:420px">
             ${specRow('tag','장비번호',r.capHW.tag||autoTag,'','text',autoTag)}
+            ${specRow('model','모델명',r.capHW.model||'','','text','카탈로그 또는 직접 입력')}
+            ${r.capHW.type||r.capHW.maxTemp!=null||r.capHW.maxPres||r.capHW.pipeDia!=null?`<div style="font-size:10px;color:#475569;padding:4px 0 4px 20px;border-bottom:1px solid #f1f5f9">카탈로그: ${[r.capHW.type?esc(r.capHW.type):'',r.capHW.vol!=null?fW(r.capHW.vol)+' L':'',r.capHW.maxTemp!=null?'최고 '+r.capHW.maxTemp+'℃':'',r.capHW.maxPres?'최고압 '+esc(r.capHW.maxPres):'',r.capHW.pipeDia!=null?'냉·온수 '+r.capHW.pipeDia+'A':''].filter(Boolean).join(' · ')}</div>`:''}
             ${specRow('storeCap','저탕용량',r.capHW.storeCap||autoStoreCap,'lit','number','')}
+            ${(parseFloat(r.capHW.storeCap)||autoStoreCap)<V?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 저탕량 ${f1(V)} lit 보다 작습니다</div>`:''}
             ${specRow('dims','규격',r.capHW.dims||'','mm','text','W×D×H mm')}
             ${specRow('kw','소비전력',r.capHW.kw||autoKw,'kW','number',String(autoKw)+' (자동)')}
             ${specRow('volt','전원',r.capHW.volt||'1P × 220V × 60Hz','','text','1P × 220V × 60Hz')}
@@ -3816,7 +3756,7 @@ function renderCapCalc(){
         </div>
       </div>`;
     });
-    el.innerHTML=html; return;
+    el.innerHTML=html+addBtn+boilerHtml; return;
   }
 
   // ── 물탱크 용량 계산서 ────────────────────────────────────────
@@ -3827,8 +3767,7 @@ function renderCapCalc(){
     //   재는 것이 다르다. 동시사용률이 이미 그 몫을 하므로 다시 곱하면 이중 적용이다 (32.3.5)
     // opHours 는 상주 시간대. 3교대여도 24 가 아니라 8 을 넣는다 —
     //   한 교대가 지나는 동안 시수가 다시 채우기 때문이다 (32.2.4 a)
-    const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
-    const FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],['f5','기타',0,0]];
+    const SIM=WT_SIM, FX=WT_FX;
     const wt=STATE.project.wt||{};
     const defP=(k,d)=>{const v=wt[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
     let totLph=0,totCntWT=0;
@@ -3840,7 +3779,7 @@ function renderCapCalc(){
         <td class="L" style="font-size:11px;padding:3px 8px">${nc}</td>
         <td style="padding:2px 4px"><input type="number" value="${cnt||''}" min="0" style="width:42px" onchange="sPWT('${k}c',parseFloat(this.value)||0);renderCapCalc()"></td>
         <td style="padding:2px 4px"><input type="number" value="${lpf}" step="0.1" style="width:55px" onchange="sPWT('${k}l',parseFloat(this.value)||0);renderCapCalc()"></td>
-        <td style="padding:2px 4px"><input type="number" value="${uph}" step="0.1" style="width:50px" onchange="sPWT('${k}u',parseFloat(this.value)||0);renderCapCalc()"></td>
+        <td style="padding:2px 4px"><input type="number" value="${uph||''}" step="0.1" placeholder="${cnt&&!uph?'입력':''}" title="${cnt&&!uph?'시간당 사용횟수를 넣어야 급수량에 들어갑니다':''}" style="width:50px;${cnt&&!uph?'border:1.5px solid #dc2626;background:#fef2f2':''}" onchange="sPWT('${k}u',parseFloat(this.value)||0);renderCapCalc()"></td>
         <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">${f1(lph)}</td>
         <td style="padding:2px 4px"><input type="text" value="${esc(wt[k+'note']||'')}" style="width:70px" onchange="sPWT('${k}note',this.value)"></td>
       </tr>`;
@@ -3892,7 +3831,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxWT?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">출처 확인 중</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 (2026-10-05)</td>
           </tr></tbody>
         </table></div>
         <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
@@ -3952,8 +3891,7 @@ function renderCapCalc(){
     // H3 NOZZLE 10.2 m = 세정밸브(100 kPa)의 필요압력. 우리 화장실 표준이 세정밸브이므로
     //   그것을 기본값으로 둔다 (2026-08-24 결정. AC-030 30.3.1.5).
     //   세정탱크만 쓰는 계통이면 5.6 m, 온도감지형 샤워가 있으면 13.3 m 로 고친다.
-    const SIM=[[3,100],[4,90],[5,80],[10,70],[15,65],[20,60],[30,55],[50,50],[100,45]];
-    const FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],['f5','기타',0,0]];
+    const SIM=WT_SIM, FX=WT_FX;
     const bp=STATE.project.bp||{};
     const wt=STATE.project.wt||{};
     const defP=(k,d)=>{const v=bp[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
@@ -3969,7 +3907,7 @@ function renderCapCalc(){
         <td style="text-align:right;padding:3px 8px;color:#475569">${lpf}</td>
         <td style="text-align:right;padding:3px 8px;color:#475569">${uph}</td>
         <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">${f1(lph)}</td>
-        <td style="padding:3px 8px;font-size:9px;color:#94a3b8">물탱크 연동</td>
+        <td style="padding:3px 8px;font-size:9px;color:${cnt&&!uph?'#dc2626;font-weight:700':'#94a3b8'}">${cnt&&!uph?'사용횟수 미입력 (물탱크 탭)':'물탱크 연동'}</td>
       </tr>`;
     }).join('');
     let _asrBP=totCntBP<=SIM[0][0]?SIM[0][1]:totCntBP>=SIM[SIM.length-1][0]?SIM[SIM.length-1][1]:0;
@@ -4029,7 +3967,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxBP?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">출처 확인 중</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 (2026-10-05)</td>
           </tr></tbody>
         </table></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">

@@ -71,5 +71,14 @@ ok(near(g.DIR_HF_ROOF,1.20,1e-9),`지붕 방위계수 ${g.DIR_HF_ROOF} ≠ 1.20`
 ok(Math.round(0.336*135*32.3)===1465&&Math.round(0.336*250*32.3)===2713,'AC-005 4.4.2 침기·외기 열손실 예제');
 ok(233+485+1465+2713===4896&&4896-1630===3266,'AC-005 4.4.2 합계 4,896 W / 비교값 3,266 W');
 
+// ── AC-032 저수조 동시사용률·기구 (2026-10-05판 2.1·2.2, 주방싱크·세탁기 사용자 지정 2026-10-19) ──
+console.log('AC-032 저수조');
+const wt={};new Function('g',[grab(/const WT_FX=\[[\s\S]*?\]\];/,'WT_FX'),grab(/const WT_SIM=[^\n]*/,'WT_SIM'),'Object.assign(g,{WT_FX,WT_SIM});'].join('\n'))(wt);
+const SIM032=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
+ok(JSON.stringify(wt.WT_SIM)===JSON.stringify(SIM032),`저수조 동시사용률 ${JSON.stringify(wt.WT_SIM)} ≠ AC-032 2.2`);
+[['세면기',10,8],['변기(WC)',10,5],['소변기',5,5],['샤워기',80,1],['주방싱크',15,0],['세탁기',15,0]].forEach(([n,l,u])=>{
+  const r=wt.WT_FX.find(x=>x[1]===n);ok(r&&r[2]===l&&r[3]===u,`${n} 1회 ${r&&r[2]} L·${r&&r[3]} 회/h ≠ ${l}·${u}`);});
+ok(new Set(wt.WT_FX.map(x=>x[0])).size===wt.WT_FX.length&&wt.WT_FX.some(x=>x[0]==='f5'),'기구 키 중복 없음·기타(f5) 유지');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
