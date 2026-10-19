@@ -76,8 +76,12 @@ console.log('AC-032 저수조');
 const wt={};new Function('g',[grab(/const WT_FX=\[[\s\S]*?\]\];/,'WT_FX'),grab(/const WT_SIM=[^\n]*/,'WT_SIM'),'Object.assign(g,{WT_FX,WT_SIM});'].join('\n'))(wt);
 const SIM032=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
 ok(JSON.stringify(wt.WT_SIM)===JSON.stringify(SIM032),`저수조 동시사용률 ${JSON.stringify(wt.WT_SIM)} ≠ AC-032 2.2`);
-[['세면기',10,8],['변기(WC)',10,5],['소변기',5,5],['샤워기',80,1],['주방싱크',15,0],['세탁기',15,0]].forEach(([n,l,u])=>{
+[['대변기(세정밸브)',15,6],['소변기(세정밸브)',6,15],['세면기',10,12],['샤워기',16,3],['주방싱크',15,6],['세탁기',15,1]].forEach(([n,l,u])=>{
   const r=wt.WT_FX.find(x=>x[1]===n);ok(r&&r[2]===l&&r[3]===u,`${n} 1회 ${r&&r[2]} L·${r&&r[3]} 회/h ≠ ${l}·${u}`);});
+new Function('g',[grab(/const WT_SIM=[^\n]*/,'WT_SIM'),grab(/function wtSimRate\(n\)[^\n]*/,'wtSimRate'),'g.f=wtSimRate;'].join('\n'))(wt);
+[[1,100],[2,100],[3,80],[9,53],[10,53],[17,44],[19,44],[21,40],[36,36],[100,30],[150,30]].forEach(([n,v])=>ok(wt.f(n)===v,`기구 ${n}개 동시사용률 ${wt.f(n)} ≠ ${v} (다음 큰 행)`));
+// 회사 엑셀 예제: 대변기 16·소변기 6·세면기 4·샤워 10 = 36개, 2,940 L/h
+ok([[15,6,16],[6,15,6],[10,12,4],[16,3,10]].reduce((s,[l,u,c])=>s+l*u*c,0)===2940,'회사 엑셀 예제 2,940 L/h');
 ok(new Set(wt.WT_FX.map(x=>x[0])).size===wt.WT_FX.length&&wt.WT_FX.some(x=>x[0]==='f5'),'기구 키 중복 없음·기타(f5) 유지');
 
 console.log(`\n${pass} 통과 / ${fail} 실패`);

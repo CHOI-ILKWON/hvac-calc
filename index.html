@@ -2190,14 +2190,16 @@ const CAP_TABS=[
   {k:'전기온수기',lb:'전기온수기·급탕'},
 ];
 // 급수소요량 집계 기구 (물탱크·부스터펌프 공용). [키, 기구명, 1회 사용수량(L/회), 시간당 사용횟수(회/h)]
-//   세면기·변기·소변기·샤워기 — 기준: AC-032 2.1 회사 예비값
-//   주방싱크·세탁기 1회 15 L — 사용자 지정 (2026-10-19). AC-032 2.1 채택값에 없는 기구다.
-//     시간당 사용횟수는 정하지 않았다 → 빈칸, 수량을 넣으면 입력하라고 표시한다 ⚠
+//   기준: 회사 급수 부스터펌프 선정 엑셀 (2026-10-19 사용자 확정) —
+//   「한국엔지니어링진흥협회 가이드북 <표 1.10>」, (사)대한설비공학회·한국급수설비협회 문헌 동일 참조.
+//   같은 교재 계열의 표 2.7(1회 사용량·사용회수 범위) 안에서 고른 값이다 (AC-032 2.1).
 //   키 f5(기타)는 예전 저장본과 맞추려고 그대로 둔다
-const WT_FX=[['f1','세면기',10,8],['f2','변기(WC)',10,5],['f3','소변기',5,5],['f4','샤워기',80,1],
-             ['f6','주방싱크',15,0],['f7','세탁기',15,0],['f5','기타',0,0]];
-// 저수조용 동시사용률 — 기준: AC-032 2.2 「위생기구의 동시사용율」 (2026-10-05판). 기구 수 2 이하 100%
+const WT_FX=[['f2','대변기(세정밸브)',15,6],['f3','소변기(세정밸브)',6,15],['f1','세면기',10,12],['f4','샤워기',16,3],
+             ['f6','주방싱크',15,6],['f7','세탁기',15,1],['f5','기타',0,0]];
+// 저수조용 동시사용률 — 기준: AC-032 2.2 「위생기구의 동시사용율」 (표 2.8 (a)). 기구 수 2 이하 100%
 const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
+// 행 선택 — AC-032 2.2: 실제 기구 수 이상인 가장 가까운 행 (보간하지 않음). 1개 이하 100%, 100개 초과 30% 평탄
+function wtSimRate(n){ if(n<=1)return 100; const r=WT_SIM.find(x=>x[0]>=n); return r?r[1]:WT_SIM[WT_SIM.length-1][1]; }
 
 function setCapTab(k){if(k==='급수량')k='전기온수기';capTab=k;renderCapCalc();}
 
@@ -3784,9 +3786,7 @@ function renderCapCalc(){
         <td style="padding:2px 4px"><input type="text" value="${esc(wt[k+'note']||'')}" style="width:70px" onchange="sPWT('${k}note',this.value)"></td>
       </tr>`;
     }).join('');
-    let _asrWT=totCntWT<=SIM[0][0]?SIM[0][1]:totCntWT>=SIM[SIM.length-1][0]?SIM[SIM.length-1][1]:0;
-    if(!_asrWT){for(let _i=0;_i<SIM.length-1;_i++){if(totCntWT>=SIM[_i][0]&&totCntWT<=SIM[_i+1][0]){const _t=(totCntWT-SIM[_i][0])/(SIM[_i+1][0]-SIM[_i][0]);_asrWT=Math.round(SIM[_i][1]+(SIM[_i+1][1]-SIM[_i][1])*_t);break;}}}
-    const autoSimRateWT=_asrWT||50;
+    const autoSimRateWT=wtSimRate(totCntWT);   // 다음 큰 행 (AC-032 2.2)
     let simMatchIdxWT=SIM.length-1;for(let _i=0;_i<SIM.length;_i++){if(SIM[_i][0]>=totCntWT){simMatchIdxWT=_i;break;}}
     const simRate=defP('simRate',autoSimRateWT),opHours=defP('opHours',8);
     const Qh=totLph*simRate/100,Qd=Qh*opHours,V=Qd;
@@ -3831,7 +3831,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxWT?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 (2026-10-05)</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 · 표 2.8 (a)</td>
           </tr></tbody>
         </table></div>
         <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
@@ -3910,9 +3910,7 @@ function renderCapCalc(){
         <td style="padding:3px 8px;font-size:9px;color:${cnt&&!uph?'#dc2626;font-weight:700':'#94a3b8'}">${cnt&&!uph?'사용횟수 미입력 (물탱크 탭)':'물탱크 연동'}</td>
       </tr>`;
     }).join('');
-    let _asrBP=totCntBP<=SIM[0][0]?SIM[0][1]:totCntBP>=SIM[SIM.length-1][0]?SIM[SIM.length-1][1]:0;
-    if(!_asrBP){for(let _i=0;_i<SIM.length-1;_i++){if(totCntBP>=SIM[_i][0]&&totCntBP<=SIM[_i+1][0]){const _t=(totCntBP-SIM[_i][0])/(SIM[_i+1][0]-SIM[_i][0]);_asrBP=Math.round(SIM[_i][1]+(SIM[_i+1][1]-SIM[_i][1])*_t);break;}}}
-    const autoSimRateBP=_asrBP||50;
+    const autoSimRateBP=wtSimRate(totCntBP);   // 다음 큰 행 (AC-032 2.2)
     let simMatchIdxBP=SIM.length-1;for(let _i=0;_i<SIM.length;_i++){if(SIM[_i][0]>=totCntBP){simMatchIdxBP=_i;break;}}
     const simRate=defP('simRate',autoSimRateBP);
     const Qh=totLph*simRate/100;
@@ -3967,7 +3965,7 @@ function renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxBP?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 (2026-10-05)</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 · 표 2.8 (a)</td>
           </tr></tbody>
         </table></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
