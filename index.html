@@ -3960,7 +3960,9 @@ function renderCapCalc(){
     const Qgen=fr?fr.q:0, Qcont=defP('qCont',0);
     const Qlpm=Qgen+Qcont;
     const h1pipe=defP('h1pipe',0),h1ppa=defP('h1ppa',30);
-    const H1=h1pipe*h1ppa/1000,H2=H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
+    // 2026-10-19 — 관경 앱 「부하계산서 입력값」 의 마찰손실(m)을 그대로 넣는 칸. 그 값에는 등가장(부속) 손실이 이미 들어 있어 H2 를 0 으로 한다
+    const h1d=defP('h1direct',0);
+    const H1=h1d>0?h1d:h1pipe*h1ppa/1000,H2=h1d>0?0:H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
     const Hsub=H1+H2+H3+H4+H5,HSF=Hsub*0.1,Htot=Hsub+HSF;
     const selHStored=bp.selH;
     const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):Htot;
@@ -4032,11 +4034,14 @@ function renderCapCalc(){
           <div>
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">수두 계산 (TOTAL HEAD)</div>
             <table style="width:100%;font-size:11px;border-collapse:collapse">
-              <tr><td style="padding:3px 8px;color:#475569;white-space:nowrap">H<sub>1</sub> PIPE LOSS</td>
+              <tr><td style="padding:3px 8px;color:#475569;white-space:nowrap">H<sub>1</sub> 관경 앱 마찰손실</td>
+                <td style="padding:3px 8px">${inp('h1direct',h1d||'',60,0.1)} m <span style="font-size:9px;color:#64748b">관경 앱 압력검토 「부하계산서 입력값」 — 넣으면 아래 길이 계산과 H<sub>2</sub> 는 쓰지 않음</span></td>
+                <td style="text-align:right;padding:3px 8px">${h1d>0?'=&nbsp;'+f1(h1d)+' m':''}</td></tr>
+              <tr style="${h1d>0?'opacity:.45':''}"><td style="padding:3px 8px;color:#475569;white-space:nowrap">H<sub>1</sub> PIPE LOSS</td>
                 <td style="padding:3px 8px">${inp('h1pipe',h1pipe,50,1)} m &times; ${inp('h1ppa',h1ppa,50,1)} mmaq/m</td>
                 <td style="text-align:right;padding:3px 8px">=&nbsp;${f1(H1)} m</td></tr>
               <tr><td style="padding:3px 8px;color:#475569">H<sub>2</sub> FITTING LOSS</td>
-                <td style="padding:3px 8px;font-size:10px;color:#64748b">H₁ &times; 50%</td>
+                <td style="padding:3px 8px;font-size:10px;color:#64748b">${h1d>0?'관경 앱 값에 포함 — 0':'H₁ &times; 50%'}</td>
                 <td style="text-align:right;padding:3px 8px">=&nbsp;${f1(H2)} m</td></tr>
               <tr><td style="padding:3px 8px;color:#475569">H<sub>3</sub> NOZZLE</td>
                 <td style="padding:3px 8px">${inp('h3nozzle',H3,55,0.1)} m</td>
