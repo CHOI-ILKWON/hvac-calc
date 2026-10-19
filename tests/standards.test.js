@@ -80,6 +80,10 @@ ok(JSON.stringify(wt.WT_SIM)===JSON.stringify(SIM032),`저수조 동시사용률
   const r=wt.WT_FX.find(x=>x[1]===n);ok(r&&r[2]===l&&r[3]===u,`${n} 1회 ${r&&r[2]} L·${r&&r[3]} 회/h ≠ ${l}·${u}`);});
 new Function('g',[grab(/const WT_SIM=[^\n]*/,'WT_SIM'),grab(/function wtSimRate\(n\)[^\n]*/,'wtSimRate'),'g.f=wtSimRate;'].join('\n'))(wt);
 [[1,100],[2,100],[3,80],[9,53],[10,53],[17,44],[19,44],[21,40],[36,36],[100,30],[150,30]].forEach(([n,v])=>ok(wt.f(n)===v,`기구 ${n}개 동시사용률 ${wt.f(n)} ≠ ${v} (다음 큰 행)`));
+// AC-033 표 3.5 행 선택 (위로 근접, 공란 건너뜀) — 5.4 예제 68 → 80행 235, 43 → 50행 193
+const bpx={};new Function('g',[grab(/const BP_T35=\[[\s\S]*?\]\];/,'BP_T35'),grab(/function bpFlow\(w,valve\)[^\n]*/,'bpFlow'),'g.f=bpFlow;g.T=BP_T35;'].join('\n'))(bpx);
+[[68,true,80,235],[72,true,80,235],[43,true,50,193],[45,true,50,193],[275,false,300,322],[4,true,5,83],[3,false,3,11]].forEach(([w,v,row,q])=>{const r=bpx.f(w,v);ok(r&&r.row===row&&r.q===q,`WSFU ${w} ${v?'밸브':'탱크'} → ${r&&r.row}행 ${r&&r.q} ≠ ${row}행 ${q}`);});
+ok(bpx.T.length===55&&bpx.T.find(r=>r[0]===358)===undefined,'표 3.5 행 수');
 // 회사 엑셀 예제: 대변기 16·소변기 6·세면기 4·샤워 10 = 36개, 2,940 L/h
 ok([[15,6,16],[6,15,6],[10,12,4],[16,3,10]].reduce((s,[l,u,c])=>s+l*u*c,0)===2940,'회사 엑셀 예제 2,940 L/h');
 ok(new Set(wt.WT_FX.map(x=>x[0])).size===wt.WT_FX.length&&wt.WT_FX.some(x=>x[0]==='f5'),'기구 키 중복 없음·기타(f5) 유지');

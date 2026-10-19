@@ -2199,6 +2199,21 @@ const WT_FX=[['f2','대변기(세정밸브)',15,6],['f3','소변기(세정밸브
 // 저수조용 동시사용률 — 기준: AC-032 2.2 「위생기구의 동시사용율」 (표 2.8 (a)). 기구 수 2 이하 100%
 const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
 // 행 선택 — AC-032 2.2: 실제 기구 수 이상인 가장 가까운 행 (보간하지 않음). 1개 이하 100%, 100개 초과 30% 평탄
+// 부스터펌프 유량 — 기준: AC-033 2.1~2.4. 「건축기계설비 설계기준」(대한설비공학회·국토해양부 제정, 2010) 제2편 3.1
+//   표 3.4 기구급수부하단위 상업용 열. 키는 WT_FX 와 같다. null = 원표 미확보 → 사용자가 넣는다(추정하지 않는다, AC-033 2.2)
+const BP_WSFU={f2:5.0,f3:4.0,f1:1.0,f4:2.0,f6:null,f7:null,f5:null};
+//   혼합수전(급탕 원수 포함) 기구 — 부스터가 냉수 가지만 공급할 때만 주 6) 3/4 보정 (AC-033 2.3)
+const BP_MIX={f1:true,f4:true,f6:true};
+//   표 3.5 동시사용유량표 (358쪽) [WSFU, 세정탱크형, 세정밸브형] L/min. null = 원표 공란
+const BP_T35=[[3,11,null],[4,15,null],[5,17,83],[6,19,87],[7,23,91],[8,26,95],[9,28,98],[10,30,102],[11,32,106],[12,34,110],
+  [13,38,112],[14,40,114],[15,42,117],[16,45,121],[17,47,125],[18,49,127],[19,51,129],[20,53,132],[25,64,144],[30,76,155],
+  [35,null,null],[40,95,178],[45,null,null],[50,110,193],[60,125,208],[70,null,null],[80,148,235],[90,null,null],[100,167,257],
+  [120,185,280],[140,201,295],[160,216,314],[180,231,329],[200,246,344],[225,265,360],[250,284,379],[275,null,null],[300,322,416],
+  [400,397,473],[500,473,530],[750,643,662],[1000,795,795],[1250,908,908],[1500,1022,1022],[1750,1136,1136],[2000,1230,1230],
+  [2500,1438,1438],[3000,1646,1649],[4000,1987,1987],[5000,2271,2271],[6000,2460,2460],[7000,2650,2650],[8000,2763,2763],
+  [9000,2877,2877],[10000,2990,2990]];
+// 행 선택 — 「위로 근접하는 값」, 공란 행은 건너뛴다. 보간하지 않는다 (AC-033 2.4)
+function bpFlow(w,valve){ if(!(w>0))return null; for(const r of BP_T35){ if(r[0]>=w){ const q=valve?r[2]:r[1]; if(q!=null)return {row:r[0],q}; } } return null; }
 function wtSimRate(n){ if(n<=1)return 100; const r=WT_SIM.find(x=>x[0]>=n); return r?r[1]:WT_SIM[WT_SIM.length-1][1]; }
 
 function setCapTab(k){if(k==='급수량')k='전기온수기';capTab=k;renderCapCalc();}
@@ -3910,12 +3925,30 @@ function renderCapCalc(){
         <td style="padding:3px 8px;font-size:9px;color:${cnt&&!uph?'#dc2626;font-weight:700':'#94a3b8'}">${cnt&&!uph?'사용횟수 미입력 (물탱크 탭)':'물탱크 연동'}</td>
       </tr>`;
     }).join('');
-    const autoSimRateBP=wtSimRate(totCntBP);   // 다음 큰 행 (AC-032 2.2)
-    let simMatchIdxBP=SIM.length-1;for(let _i=0;_i<SIM.length;_i++){if(SIM[_i][0]>=totCntBP){simMatchIdxBP=_i;break;}}
-    const simRate=defP('simRate',autoSimRateBP);
-    const Qh=totLph*simRate/100;
-    const qpMult=defP('qpMult',3);
-    const Qlpm=Qh/60*qpMult;
+    // ── 유량: 기준 AC-033 — Q(펌프) = 표 3.5 Q(WSFU, 일반기구) + 연속부하.
+    //   시간평균 × 첨두배수(Qh/60×3)는 쓰지 않는다 (AC-033 33.3, 밸브 계통도 계산서와 같은 방식)
+    const mixMode=bp.mixMode||'all';                 // all = 급수원 전체(3/4 미적용) / cold = 냉수 가지만(3/4 적용)
+    let wsfu=0; const wsMissing=[];
+    const wsRows=FX.map(([k,nm])=>{
+      const cnt=defWT(k+'c',0);
+      const uIn=bp['ws_'+k]; let u=BP_WSFU[k];
+      const user=(uIn!==undefined&&uIn!=='');
+      if(user) u=parseFloat(uIn)||0;
+      const f34=(mixMode==='cold'&&BP_MIX[k])?0.75:1;
+      if(cnt&&u==null) wsMissing.push(k==='f5'?(wt.f5n||'기타'):nm);
+      const sub=cnt*(u||0)*f34; wsfu+=sub;
+      if(!cnt&&k==='f5') return '';
+      return `<tr><td class="L" style="font-size:11px;padding:3px 8px">${k==='f5'?esc(wt.f5n||'기타'):nm}</td>
+        <td style="text-align:right;padding:3px 8px">${cnt||'—'}</td>
+        <td style="padding:2px 4px;text-align:right"><input type="number" value="${u==null?'':u}" step="0.5" placeholder="${u==null?'원표 확인':''}" style="width:60px;${cnt&&u==null?'border:1.5px solid #dc2626;background:#fef2f2':''}" onchange="sPBP('ws_${k}',this.value);renderCapCalc()"></td>
+        <td style="text-align:center;padding:3px 8px;font-size:10px;color:#64748b">${f34<1?'× 3/4':'—'}</td>
+        <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600">${f1(sub)}</td>
+        <td style="padding:3px 8px;font-size:9px;color:${cnt&&u==null?'#dc2626;font-weight:700':'#94a3b8'}">${u==null?(cnt?'표 3.4 원표 미확보 — 값을 넣어야 합산됩니다':'표 3.4 원표 미확보'):(user?'사용자 입력':'표 3.4 상업용')}</td></tr>`;
+    }).join('');
+    const colValve=(bp.col?bp.col==='valve':defWT('f2c',0)>0);   // 세정밸브 대변기가 있으면 세정밸브형 열 (AC-033 2.4 주)
+    const fr=bpFlow(wsfu,colValve);
+    const Qgen=fr?fr.q:0, Qcont=defP('qCont',0);
+    const Qlpm=Qgen+Qcont;
     const h1pipe=defP('h1pipe',0),h1ppa=defP('h1ppa',30);
     const H1=h1pipe*h1ppa/1000,H2=H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
     const Hsub=H1+H2+H3+H4+H5,HSF=Hsub*0.1,Htot=Hsub+HSF;
@@ -3955,35 +3988,35 @@ function renderCapCalc(){
             </tr>
           </tbody>
         </table></div>
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">동시사용률 (기준표)</div>
-        <div class="tw" style="margin-bottom:14px"><table style="white-space:nowrap;font-size:10px;border-collapse:collapse">
+        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 기준: AC-033 · 표 3.4 상업용 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:10.5px;margin-bottom:6px" class="no-print">
+          <span>급수 범위 <select style="font-size:10.5px" onchange="sPBP('mixMode',this.value);renderCapCalc()"><option value="all"${mixMode==='all'?' selected':''}>급수원 전체 (냉수+급탕 원수) — 3/4 미적용</option><option value="cold"${mixMode==='cold'?' selected':''}>냉수 가지만 — 혼합수전 기구 3/4</option></select></span>
+          <span>표 3.5 열 <select style="font-size:10.5px" onchange="sPBP('col',this.value);renderCapCalc()"><option value=""${!bp.col?' selected':''}>자동 (${defWT('f2c',0)>0?'세정밸브형':'세정탱크형'})</option><option value="valve"${bp.col==='valve'?' selected':''}>세정밸브형</option><option value="tank"${bp.col==='tank'?' selected':''}>세정탱크형</option></select></span>
+        </div>
+        <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse;font-size:11px">
           <thead><tr style="background:#e2e8f0">
-            <th style="padding:3px 8px;border:1px solid #cbd5e1">기구수</th>
-            ${SIM.map(([n],i)=>`<th style="padding:3px 8px;border:1px solid #cbd5e1;${i===simMatchIdxBP?'background:#bfdbfe;color:#1d4ed8':''}">${n}${i===simMatchIdxBP?'<br><span style="font-size:8px">▲</span>':''}</th>`).join('')}
-            <th style="padding:3px 8px;border:1px solid #cbd5e1">비고</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">기구명</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1">수량</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1">WSFU/개</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1">주 6)</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1">WSFU</th>
+            <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">비고</th>
           </tr></thead>
-          <tbody><tr style="background:#fef9c3">
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
-            ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxBP?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 · 표 2.8 (a)</td>
-          </tr></tbody>
-        </table></div>
+          <tbody>${wsRows}
+            <tr style="background:#dcfce7;font-weight:700"><td colspan="4" style="padding:4px 8px">합 계</td><td style="text-align:right;padding:4px 8px">${f1(wsfu)}</td><td></td></tr>
+          </tbody></table></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
           <div>
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">유량 계산</div>
             <div style="font-size:11px;padding:10px 14px;background:#f8fafc;border-radius:4px;display:flex;flex-direction:column;gap:8px">
+              <div>WSFU 합계 <b>${f1(wsfu)}</b> → 표 3.5 <b>${colValve?'세정밸브형':'세정탱크형'}</b> 열 ${fr?`<b>${fW(fr.row)}</b> 행 (위로 근접, 공란 행 건너뜀)`:'<span style="color:#dc2626">해당 행 없음</span>'}</div>
+              <div>Q<sub>일반</sub> = <b>${fr?fW(fr.q):'—'} L/min</b></div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span>Q<sub>h</sub> = ${f1(totLph)} lit/h &times;</span>
-                <input type="number" value="${simRate}" step="5" min="1" max="100" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('simRate',parseFloat(this.value)||${autoSimRateBP});renderCapCalc()"> %
-                <span style="font-size:9px;color:#2563eb">(기구수 ${totCntBP}개 자동: ${autoSimRateBP}%)</span>
-                <span style="font-weight:700;color:#1e3a5f">=&nbsp;${f1(Qh)} lit/h</span>
+                <span>+ 연속사용 부하</span>${inp('qCont',Qcont,60,1)}<span>L/min</span>
+                <span style="font-size:9px;color:#64748b">(WSFU 에서 뺀 연속사용 기구 — 기구유량 × 동시운전 대수)</span>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                <span>Q<sub>p</sub> = ${f1(Qh)} / 60 &times;</span>
-                <input type="number" value="${qpMult}" step="0.5" min="1" style="width:50px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('qpMult',parseFloat(this.value)||3);renderCapCalc()">
-                <span style="font-size:9px;color:#64748b">(첨두배수)</span>
-                <span style="font-weight:700;color:#1e3a5f">=&nbsp;${f1(Qlpm)} lit/min</span>
-              </div>
+              <div style="font-weight:700;color:#1e3a5f">Q<sub>펌프</sub> = ${f1(Qlpm)} L/min <span style="font-weight:400;font-size:9.5px;color:#64748b">— 유닛 전체 유량 (AC-033)</span></div>
+              ${wsMissing.length?`<div style="color:#dc2626;font-weight:700;font-size:10px">⚠ ${wsMissing.map(esc).join('·')} — 표 3.4 원표 값이 없어 합산에서 빠졌습니다. WSFU 를 넣으세요</div>`:''}
             </div>
           </div>
           <div>
@@ -4039,10 +4072,22 @@ function renderCapCalc(){
           ${specRow('volt','전원',bp.volt||'3P × 460V × 60Hz','','text','3P × 460V × 60Hz')}
           <div style="display:flex;align-items:center;padding:4px 0;font-size:11px;gap:6px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:90px;color:#334155">수량</span><span style="color:#94a3b8">:</span>
-            <input type="number" value="${defP('cnt',2)||2}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('cnt',parseInt(this.value)||1)">
+            <input type="number" value="${defP('cnt',2)||2}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('cnt',parseInt(this.value)||1);renderCapCalc()">
             <span style="font-size:10px;color:#94a3b8">EA (2-PUMP SYSTEM)</span>
           </div>
         </div>
+        ${(()=>{const n=defP('cnt',2)||2, tW=defWT('wtW',0)*defWT('wtL',0)*defWT('wtH',0);
+          const R=(a,b,c)=>`<tr><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0">${a}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:700;color:#1d4ed8">${b}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9.5px;color:#64748b">${c}</td></tr>`;
+          return `<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:16px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">밸브 계통도 계산서(valve-calc) 입력값 <span style="font-weight:400;color:#94a3b8">— 이 값을 그대로 옮겨 넣는다</span></div>
+          <table style="width:100%;max-width:820px;border-collapse:collapse;font-size:10.5px"><thead><tr style="background:#f1f5f9"><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">밸브 앱 항목</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">입력값</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">근거</th></tr></thead><tbody>
+          ${R('주펌프 대수',n===1?'1대 (주펌프 단독)':n===2?'2대 (주+예비)':n===3?'3대 (주2+예비1)':n+'대 — 밸브 앱은 1~3대','수량 '+n+' EA')}
+          ${R('토출압력 (kgf/cm²)',f1(selHVal/10),'선정 양정 '+f1(selHVal)+' m ÷ 10 — 설계유량 운전점 예비값. ⚠ 흡입측 압력 미포함, 정지양정(최대 토출압)은 펌프 곡선으로 따로 확인')}
+          ${R('토출유량 (L/min)',f1(Qlpm),'유닛 전체 유량 — WSFU '+f1(wsfu)+' → 표 3.5'+(Qcont?' + 연속부하 '+f1(Qcont):''))}
+          ${R('펌프 접속 관경',esc(String(bp.pipeSize||'50A / 50A').split('/')[0].trim()),'장비 스펙 PIPE SIZE')}
+          ${R('저수조 총용량 (㎥)',tW?f1(tW):'— (물탱크 탭 규격 입력)','물탱크 탭 W×L×H. 5㎥ 초과면 2칸 (수도법 시행규칙 별표 3의2)')}
+          ${R('유효용량 (㎥)',tW?f1(tW*0.8):'—','총용량 × 0.8 (AC-032 예비 유효율) — 참고값')}
+          ${R('메인관 · 수도 인입관 관경','—','이 탭에서 정하지 않는다 — 메인관은 관경 앱, 인입관은 관할 수도사업자 인입 조건')}
+          </tbody></table>`;})()}
       </div>
     </div>`;
     el.innerHTML=html; return;
