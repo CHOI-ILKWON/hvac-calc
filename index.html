@@ -2323,7 +2323,7 @@ function renderCapCalc(){
     });
     const wt=STATE.project.wt||{};
     if(wt.tag||wt.cap||wt.wtW){rows.push({grp:'물탱크',tag:wt.tag||'M-WT-001',on:"sPWT('tag',this.value);renderCapCalc()",loc:'—',
-      spec:[(wt.cap?wt.cap+' ㎥':''),(wt.dims||''),(wt.material||'STS304')].filter(Boolean).join(' / '),pw:'',volt:'',cnt:wt.cnt||1});}
+      spec:[(wt.cap?wt.cap+' ㎥':''),(wt.dims||''),(wt.material||'SMC')].filter(Boolean).join(' / '),pw:'',volt:'',cnt:wt.cnt||1});}
     const bp=STATE.project.bp||{};
     if(bp.tag||bp.spec||bp.selH){rows.push({grp:'부스터펌프',tag:bp.tag||'M-BP-001',on:"sPBP('tag',this.value);renderCapCalc()",loc:'—',
       spec:bp.spec||'',pw:'',volt:bp.volt||'',cnt:bp.cnt||2});}
@@ -3891,7 +3891,7 @@ function renderCapCalc(){
           ${specRow('tag','장비번호',wt.tag||'M-WT-001','','text','M-WT-001')}
           ${specRow('cap','장비용량(㎥)',wt.cap||f1(wtTotCap/1000),'㎥','text','')}
           ${specRow('dims','사이즈',wt.dims||(wtW?`${Math.round(wtW*1000)}×${Math.round(wtL*1000)}×${Math.round(wtH*1000)}`:''),'mm','text','W×L×H mm')}
-          ${specRow('material','재질',wt.material||'STS304','','text','STS304')}
+          ${specRow('material','재질',wt.material||'SMC','','text','SMC')}
           <div style="display:flex;align-items:center;padding:4px 0;font-size:11px;gap:6px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:90px;color:#334155">수량</span><span style="color:#94a3b8">:</span>
             <input type="number" value="${defP('cnt',1)||1}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPWT('cnt',parseInt(this.value)||1)">
