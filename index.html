@@ -2200,8 +2200,17 @@ const WT_FX=[['f2','대변기(세정밸브)',15,6],['f3','소변기(세정밸브
 const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,36],[100,30]];
 // 행 선택 — AC-032 2.2: 실제 기구 수 이상인 가장 가까운 행 (보간하지 않음). 1개 이하 100%, 100개 초과 30% 평탄
 // 부스터펌프 유량 — 기준: AC-033 2.1~2.4. 「건축기계설비 설계기준」(대한설비공학회·국토해양부 제정, 2010) 제2편 3.1
-//   표 3.4 기구급수부하단위 상업용 열. 키는 WT_FX 와 같다. null = 원표 미확보 → 사용자가 넣는다(추정하지 않는다, AC-033 2.2)
-const BP_WSFU={f2:5.0,f3:4.0,f1:1.0,f4:2.0,f6:null,f7:null,f5:null};
+//   표 3.4 (b) 개별기구 기준 — 상업용 건물 열 (제2편 위생설비 356쪽, 2026-10-19 사용자 제공 원표로 확인)
+//     대변기 세정밸브 13 L/회 8.0 · 6 L/회 5.0 / 세정탱크 13 L/회 5.5 · 6 L/회 2.5
+//     소변기 3.8 L/회 4.0 · 3.8 L 이상 5.0 / 세면기 1.0 / 주방싱크(가정용) 1.0 / 식기세척기(가정용) 1.5
+//     샤워 2.0 — AC-033 2.2 전사 기록 (사용자 제공 사진 범위 밖)
+//   대변기·소변기는 1회 세정량으로 행이 나뉜다 → 물탱크 탭의 1회 사용량으로 행을 고른다
+//   null = 원표 미확보 → 사용자가 넣는다 (추정하지 않는다)
+function bpUnit(k,lpf){
+  if(k==='f2') return lpf>6 ?[8.0,'표 3.4(b) 대변기 세정밸브 13 L/회 행']:[5.0,'표 3.4(b) 대변기 세정밸브 6 L/회 행'];
+  if(k==='f3') return lpf>3.8?[5.0,'표 3.4(b) 소변기 3.8 L 이상/회 행']:[4.0,'표 3.4(b) 소변기 3.8 L/회 행'];
+  return ({f1:[1.0,'표 3.4(b) 세면기'],f4:[2.0,'샤워 — AC-033 전사값'],f6:[1.0,'표 3.4(b) 주방싱크(가정용) 행']})[k]||[null,'표 3.4 원표 미확보'];
+}
 //   혼합수전(급탕 원수 포함) 기구 — 부스터가 냉수 가지만 공급할 때만 주 6) 3/4 보정 (AC-033 2.3)
 const BP_MIX={f1:true,f4:true,f6:true};
 //   표 3.5 동시사용유량표 (358쪽) [WSFU, 세정탱크형, 세정밸브형] L/min. null = 원표 공란
@@ -3929,9 +3938,10 @@ function renderCapCalc(){
     //   시간평균 × 첨두배수(Qh/60×3)는 쓰지 않는다 (AC-033 33.3, 밸브 계통도 계산서와 같은 방식)
     const mixMode=bp.mixMode||'all';                 // all = 급수원 전체(3/4 미적용) / cold = 냉수 가지만(3/4 적용)
     let wsfu=0; const wsMissing=[];
-    const wsRows=FX.map(([k,nm])=>{
+    const wsRows=FX.map(([k,nm,dl])=>{
       const cnt=defWT(k+'c',0);
-      const uIn=bp['ws_'+k]; let u=BP_WSFU[k];
+      const [u0,src]=bpUnit(k,defWT(k+'l',dl));
+      const uIn=bp['ws_'+k]; let u=u0;
       const user=(uIn!==undefined&&uIn!=='');
       if(user) u=parseFloat(uIn)||0;
       const f34=(mixMode==='cold'&&BP_MIX[k])?0.75:1;
@@ -3943,7 +3953,7 @@ function renderCapCalc(){
         <td style="padding:2px 4px;text-align:right"><input type="number" value="${u==null?'':u}" step="0.5" placeholder="${u==null?'원표 확인':''}" style="width:60px;${cnt&&u==null?'border:1.5px solid #dc2626;background:#fef2f2':''}" onchange="sPBP('ws_${k}',this.value);renderCapCalc()"></td>
         <td style="text-align:center;padding:3px 8px;font-size:10px;color:#64748b">${f34<1?'× 3/4':'—'}</td>
         <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600">${f1(sub)}</td>
-        <td style="padding:3px 8px;font-size:9px;color:${cnt&&u==null?'#dc2626;font-weight:700':'#94a3b8'}">${u==null?(cnt?'표 3.4 원표 미확보 — 값을 넣어야 합산됩니다':'표 3.4 원표 미확보'):(user?'사용자 입력':'표 3.4 상업용')}</td></tr>`;
+        <td style="padding:3px 8px;font-size:9px;color:${cnt&&u==null?'#dc2626;font-weight:700':'#94a3b8'}">${u==null?(cnt?'표 3.4 원표 미확보 — 값을 넣어야 합산됩니다':'표 3.4 원표 미확보'):(user?'사용자 입력 (기본 '+(u0==null?'없음':u0)+')':src+' · 상업용')}</td></tr>`;
     }).join('');
     const colValve=(bp.col?bp.col==='valve':defWT('f2c',0)>0);   // 세정밸브 대변기가 있으면 세정밸브형 열 (AC-033 2.4 주)
     const fr=bpFlow(wsfu,colValve);
@@ -3988,9 +3998,9 @@ function renderCapCalc(){
             </tr>
           </tbody>
         </table></div>
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 기준: AC-033 · 표 3.4 상업용 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
+        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 표 3.4 (b) 개별기구 · 상업용 건물 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
         <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:10.5px;margin-bottom:6px" class="no-print">
-          <span>급수 범위 <select style="font-size:10.5px" onchange="sPBP('mixMode',this.value);renderCapCalc()"><option value="all"${mixMode==='all'?' selected':''}>급수원 전체 (냉수+급탕 원수) — 3/4 미적용</option><option value="cold"${mixMode==='cold'?' selected':''}>냉수 가지만 — 혼합수전 기구 3/4</option></select></span>
+          <span>급수 범위 <select style="font-size:10.5px" onchange="sPBP('mixMode',this.value);renderCapCalc()"><option value="all"${mixMode==='all'?' selected':''}>이 펌프가 온수기 급수까지 공급 (일반) — 점수 그대로</option><option value="cold"${mixMode==='cold'?' selected':''}>냉수만 공급 — 급탕은 별도 펌프 (혼합수전 기구 3/4)</option></select></span>
           <span>표 3.5 열 <select style="font-size:10.5px" onchange="sPBP('col',this.value);renderCapCalc()"><option value=""${!bp.col?' selected':''}>자동 (${defWT('f2c',0)>0?'세정밸브형':'세정탱크형'})</option><option value="valve"${bp.col==='valve'?' selected':''}>세정밸브형</option><option value="tank"${bp.col==='tank'?' selected':''}>세정탱크형</option></select></span>
         </div>
         <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse;font-size:11px">
