@@ -4095,7 +4095,7 @@ function renderCapCalc(){
           const R=(a,b,c)=>`<tr><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0">${a}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:700;color:#1d4ed8">${b}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9.5px;color:#64748b">${c}</td></tr>`;
           return `<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:16px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">밸브 계통도 계산서(valve-calc) 입력값 <span style="font-weight:400;color:#94a3b8">— 이 값을 그대로 옮겨 넣는다</span></div>
           <table style="width:100%;max-width:820px;border-collapse:collapse;font-size:10.5px"><thead><tr style="background:#f1f5f9"><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">밸브 앱 항목</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">입력값</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">근거</th></tr></thead><tbody>
-          ${R('주펌프 대수',n===1?'1대 (주펌프 단독)':n===2?'2대 (주+예비)':n===3?'3대 (주2+예비1)':n+'대 — 밸브 앱은 1~3대','수량 '+n+' EA')}
+          ${R('주펌프 대수',n===1?'1대 (단독)':n===2?'2대 (1대 예비, SET) — 따로 설치면 「2대 (단독)」':n===3?'3대 (단독)':n+'대 — 밸브 앱은 1~3대','수량 '+n+' EA')}
           ${R('토출압력 (kgf/cm²)',f1(selHVal/10),'선정 양정 '+f1(selHVal)+' m ÷ 10 — 설계유량 운전점 예비값. ⚠ 흡입측 압력 미포함, 정지양정(최대 토출압)은 펌프 곡선으로 따로 확인')}
           ${R('토출유량 (L/min)',f1(Qlpm),'유닛 전체 유량 — WSFU '+f1(wsfu)+' → 표 3.5'+(Qcont?' + 연속부하 '+f1(Qcont):''))}
           ${R('펌프 접속 관경',esc(String(bp.pipeSize||'50A / 50A').split('/')[0].trim()),'장비 스펙 PIPE SIZE')}
