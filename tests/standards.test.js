@@ -91,5 +91,17 @@ const bu={};new Function('g',[grab(/function bpUnit\(k,lpf\)\{[\s\S]*?\n\}/,'bpU
 ok([[15,6,16],[6,15,6],[10,12,4],[16,3,10]].reduce((s,[l,u,c])=>s+l*u*c,0)===2940,'회사 엑셀 예제 2,940 L/h');
 ok(new Set(wt.WT_FX.map(x=>x[0])).size===wt.WT_FX.length&&wt.WT_FX.some(x=>x[0]==='f5'),'기구 키 중복 없음·기타(f5) 유지');
 
+// ── 2026-10-23 최종 검토 확정값 ─────────────────────────────
+console.log('2026-10-23 검토 확정값');
+ok(/const SC_REF = 0\.87;/.test(src),'일사 SC 기준 0.87 (SC=SHGC÷0.87)');
+ok(/sg\[d\]=wn\.w\*wn\.h\*\(wn\.shgc\/SC_REF\)/.test(src),'일사부하에 SC 적용');
+ok(/const IW_U=2\.71;/.test(src),'내벽 기본 U 2.71 (콘크리트 200·양면 미장)');
+ok(near(1/(0.11+0.11+0.2/1.6+0.036/1.5),2.71,0.005),'내벽 U 계산식 = 2.71');
+ok(/lw:6, eqKW:0/.test(src)&&g.RT.office.lw===6,'새 실 조명 기본값 = 사무실 6 W/㎡');
+ok((src.match(/shgc:0\.6,/g)||[]).length===4,'창 SHGC 기본값 0.6 (4방위)');
+ok(!/iw_u/.test(src),'화장실 내벽 별도 U(2.38) 폐지');
+ok(/function fFacC\(r\)\{ const m=fMode\(r\); return m==='outdoor'\?1:\(m==='soil'\?0:0\.5\); \}/.test(src),'바닥 냉방계수: 땅 0 · 비공조실 위 0.5 · 필로티 1');
+ok(g.RT.office.lb==='사무실류','실 유형 명칭: 사무실류');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
