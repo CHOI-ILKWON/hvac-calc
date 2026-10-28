@@ -8,6 +8,12 @@
 // 예전 주소(choi-ilkwon.github.io/hvac-calc/)로 들어오면 새 주소로 보냄
 if(location.hostname==='choi-ilkwon.github.io'){location.replace('https://hvac-calc-3ey.pages.dev/'+location.search+location.hash);}
 </script>
+<!-- 방문 측정 (GA4) — 위생·덕트 앱과 같은 속성. app_name·호스트로 앱을 나눠 본다 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BL4VM4LDVL"></script>
+<script>
+  window.dataLayer=window.dataLayer||[]; function gtag(){ dataLayer.push(arguments); }
+  gtag('js',new Date()); gtag('config','G-BL4VM4LDVL',{app_name:'hvac-calc'});
+</script>
 <style>
 :root{
   --bg:#f1f5f9;--sur:#fff;--nv:#1e3a5f;--nv2:#2d5a8e;
