@@ -103,5 +103,13 @@ ok(!/iw_u/.test(src),'화장실 내벽 별도 U(2.38) 폐지');
 ok(/function fFacC\(r\)\{ const m=fMode\(r\); return m==='outdoor'\?1:\(m==='soil'\?0:0\.5\); \}/.test(src),'바닥 냉방계수: 땅 0 · 비공조실 위 0.5 · 필로티 1');
 ok(g.RT.office.lb==='사무실류','실 유형 명칭: 사무실류');
 
+// ── 2026-11-02 전기온수기 가열능력 (학회 설계기준 표 4.2-1 주 1) ──────
+console.log('2026-11-02 전기온수기 가열능력');
+ok(!/heatHrs/.test(src),'가열시간으로 나누는 식 폐지');
+{const line=grab(/const autoKw=Qh>0[^\n]*/,'autoKw');
+ const kw=new Function('Qh','dTw',line+'\nreturn autoKw;');
+ ok(kw(45,45)===2.4,'세면기 5개 예제: 45 L/h × 45℃ × 1.163 = 2.36 → 2.4 kW');
+ ok(kw(0,45)===0&&kw(45,0)===0,'급탕량·온도차 0 이면 0 kW');}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);

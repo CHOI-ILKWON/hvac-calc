@@ -3792,8 +3792,11 @@ function renderCapCalc(){
       let simMatchIdx=SIM.length-1;for(let _i=0;_i<SIM.length;_i++){if(SIM[_i][0]>=totCnt){simMatchIdx=_i;break;}}
       const simRate=defH('simRate',autoSimRate),storeFactor=defH('storeFactor',1.0);
       const Qh=totLph*simRate/100,V=Qh*storeFactor;
-      const heatHrs=defH('heatHrs',3);
-      const autoKw=V>0&&heatHrs>0?Math.ceil(V*45*1.163/heatHrs/100)/10:0; // 가열능력 = V×(60-15)℃×1.163 ÷ 가열시간, 0.1kW 올림
+      // 가열능력 — 학회 설계기준 표 4.2-1 주 1): 급탕량 누계 × 동시사용률(=Qh) × (급탕온도−급수온도).
+      //   저탕량 V 를 가열시간으로 나누던 식은 폐지 (2026-11-02). 탱크가 피크를 받는 몫은 저탕용량계수에 이미 들어 있어
+      //   가열능력을 다시 시간으로 나누면 같은 효과를 두 번 깎는다 (기본값 3h 에서 기준값의 1/3).
+      const tHot=defH('tHot',60),tCold=defH('tCold',15),dTw=Math.max(tHot-tCold,0);
+      const autoKw=Qh>0&&dTw>0?Math.ceil(Qh*dTw*1.163/100)/10:0; // kW, 0.1kW 올림
       const STORE_CAPS=[15,30,50,80,100,150,200,300,500];
       const reqStoreCap=V; // 저탕량 V와 동일 근거로 표준탱크 자동선정
       const autoStoreCap=STORE_CAPS.find(c=>c>=reqStoreCap)||STORE_CAPS[STORE_CAPS.length-1];
@@ -3855,9 +3858,11 @@ function renderCapCalc(){
               <span style="font-weight:700;color:#1e3a5f">=&nbsp;&nbsp;${f1(V)} lit</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span>가열능력 = ${f1(V)} lit &times; (60&minus;15)℃ &times; 1.163 &div; (</span>
-              <input type="number" value="${heatHrs}" step="0.5" min="0.5" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','heatHrs',parseFloat(this.value)||3);renderCapCalc()"> h &times; 1,000 )
+              <span>가열능력 = ${f1(Qh)} lit/h &times; (</span>
+              <input type="number" value="${tHot}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tHot',parseFloat(this.value)||60);renderCapCalc()"> &minus;
+              <input type="number" value="${tCold}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tCold',parseFloat(this.value)||15);renderCapCalc()"> )℃ &times; 1.163 &div; 1,000
               <span style="font-weight:700;color:#1e3a5f">=&nbsp;&nbsp;${autoKw} kW</span>
+              <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.2-1 주 1)</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #e2e8f0">
               <span style="color:#475569">표준 저탕탱크:</span>
