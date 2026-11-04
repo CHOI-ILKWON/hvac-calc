@@ -120,5 +120,17 @@ console.log('2026-11-04 급탕 동시사용률 표 4.5');
 ok(!/const SIM=\[\[3,100\]/.test(src),'실별 전기온수기 기구 수 곡선 폐지');
 ok(/storeFactor=defH\('storeFactor',useRowR\[3\]\)/.test(src),'실별 저탕용량 계수 = 용도별 표 값');
 
+// ── 2026-11-04 표 4.5 기구별 급탕량·보일러 가열능력 ──────
+console.log('2026-11-04 표 4.5 기구별 급탕량');
+{const fx={};new Function('g',grab(/const HW_USE=\[[\s\S]*?\]\];/,'HW_USE')+'\n'+grab(/const FX45=\[[\s\S]*?\]\]\];/,'FX45')+'\ng.U=HW_USE;g.F=FX45;')(fx);
+ const col=k=>fx.U.findIndex(x=>x[0]===k), v=(f,k)=>{const r=fx.F.find(x=>x[0]===f);return r&&r[2][col(k)];};
+ ok(fx.F.length===11&&fx.F.every(r=>r[2].length===9),'표 4.5 기구 11종 × 용도 9종');
+ [['wb','factory',5.5],['wb','school',57],['sh','factory',850],['sh','hotel',284],['sh','office',114],['ks','hotel',114],['mop','apt',76],['ba','ymca',106],['hub','hosp',2270],['hydro','hosp',1520],['tub','gym',114],['cafe','factory',0],['pwb','gym',7.6]]
+   .forEach(([f,k,e])=>ok(v(f,k)===e,`표 4.5 ${f}/${k}: ${v(f,k)} ≠ ${e}`));
+ ok(JSON.stringify(v('dw','hotel'))==='[190,570]'&&JSON.stringify(v('dw','factory'))==='[75,380]','식기세척기 범위값');}
+ok(!/가열능력은 계산하지 않는다/.test(src),'보일러: 가열능력 미계산 판단 폐지');
+ok(/const reqKW=\(Qh>0&&Th>Tc\)\?Math\.ceil\(Qh\*\(Th-Tc\)\*1\.163\/100\)\/10:0;/.test(src),'보일러 가열능력 = Qh × (Th−Tc) × 1.163 (표 4.5 주 1)');
+ok(/Qh\*mix\*pkMin\/60/.test(src),'피크 검산: 60℃ 기준 Qh 에 혼합계수');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);

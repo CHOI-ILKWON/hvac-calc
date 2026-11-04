@@ -3552,8 +3552,6 @@ function renderCapCalc(){
     const addBtn='<div class="no-print" style="margin:4px 0 18px"><button class="btn btP" onclick="addHWRoom()">＋ 새 실(화장실) 추가 — 전기온수기 선정</button>'
       +'<span style="font-size:10px;color:#64748b;margin-left:8px">추가한 실의 이름·층·크기는 ② 실 목록에서 고칩니다</span></div>';
     if(!rooms.length&&!bRooms.length){el.innerHTML='<div class="empty">급탕 기기가 선택된 실이 없습니다.<br><small>② 실 → §6 설비 선정에서 급탕 설비를 고르거나 아래에서 실을 추가하세요.</small></div>'+addBtn;return;}
-    // 기준: AC-022 22.3.2.2 — 기구별 1회 급탕량 x 시간당 사용횟수 (사용온도 43도 기준)
-    const FX=[['wb','세면기',5,6],['sh','샤워기',40,2],['ba','세탁기',15,1],['ks','주방싱크',10,4],['et','기타',0,0]];
     // 기준: 학회 설계기준 제4장 표 4.5 「각종 건물에서의 기구별 급탕량」(2003 ASHRAE) — 동시사용률·저탕용량 계수.
     //   실별 전기온수기와 중앙식 보일러 모두 이 표의 건물 용도 값을 쓴다 (2026-11-04).
     //   예전 실별 기구 수 곡선(3개 이하 100% … 100개 45%)은 이 표에 근거가 없어 폐지했다.
@@ -3562,6 +3560,24 @@ function renderCapCalc(){
                   ['hotel','호텔',25,0.80],['hosp','병원',25,0.60],['factory','공장',40,1.00],
                   ['school','학교',40,1.00],['ymca','YMCA',40,1.00],['gym','체육관',40,1.00]];
     const hwUseRow=k=>HW_USE.find(x=>x[0]===k)||HW_USE.find(x=>x[0]==='factory');
+    // 기준: 표 4.5 기구별 급탕량 [L/기구 1개·h] — 급탕온도 60℃ 기준. 값의 순서 = HW_USE 순서. '−' 는 0.
+    //   식기세척기 범위값은 [하한, 상한] — 기본값은 상한(안전측). 기기를 알면 제조업체 자료로 산출 (주 *1).
+    //   (예전 「1회 급탕량 × 시간당 횟수, 사용온도 43℃」 방식은 2026-11-04 폐지)
+    const FX45=[
+      ['pwb','개인 세면기',  [7.6,7.6,7.6,7.6,7.6,7.6,7.6,7.6,7.6]],
+      ['wb', '일반 세면기',  [0,15,23,30,23,5.5,57,30,30]],
+      ['tub','서양식 욕조',  [76,76,0,76,76,0,0,114,114]],
+      ['sh', '샤워',         [114,114,114,284,284,850,850,850,850]],
+      ['ks', '부엌 싱크',    [38,38,76,114,76,76,76,76,0]],
+      ['cafe','급식 싱크',   [19,19,38,38,38,0,38,38,0]],
+      ['dw', '식기세척기',   [57,57,0,[190,570],[190,570],[75,380],[76,380],[76,380],0]],
+      ['mop','청소 싱크',    [57,76,57,114,76,76,76,76,0]],
+      ['ba', '세탁 싱크',    [76,76,0,106,106,0,0,106,0]],
+      ['hub','하바드 탱크',  [0,0,0,0,2270,0,0,0,0]],
+      ['hydro','물치료용 샤워',[0,0,0,0,1520,0,0,0,0]]];
+    const fxRaw=(fx,uk)=>fx[2][HW_USE.findIndex(x=>x[0]===uk)];
+    const fxVal=(fx,uk)=>{const v=fxRaw(fx,uk);return Array.isArray(v)?v[1]:(v||0);};
+    const fxTxt=(fx,uk)=>{const v=fxRaw(fx,uk);return Array.isArray(v)?v[0]+'~'+v[1]:(v?String(v):'−');};
     let html='';
 
     // ── 보일러(중앙식) 그룹 선정 — 기준: AC-022 ──
@@ -3571,26 +3587,28 @@ function renderCapCalc(){
       if(!STATE.project.hwB) STATE.project.hwB={};
       const HB=STATE.project.hwB;
       const gv=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
-      let gLph=0,gCnt=0,gShBase=0;   // gShBase = 샤워기수 x 1회사용량 (피크 검토용, 기준: AC-022 4-④)
+      const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
+      const useK=gs('hwUse','factory');
+      const useRow=hwUseRow(useK);
+      // 보일러 그룹에 보이는 기구 = 이 용도에 표 값이 있거나 이미 수량이 들어간 기구
+      const gFX=FX45.filter(fx=>fxVal(fx,useK)>0||bRooms.some(r=>parseFloat((r.capHW||{})[fx[0]+'Cnt'])>0));
+      let gLph=0,gCnt=0,gShBase=0;   // gShBase = 샤워기수 x 1회사용량(사용온도 기준) — 피크 검산 전용 (AC-022 4-④)
       const rowsHtml=bRooms.map(r=>{
         const bf=getBF(r.bldgId,r.floorId); const rid=r.id;
         const dh=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
         let rLph=0,rCnt=0;
-        const cells=FX.filter(x=>x[0]!=='et').map(fx=>{
-          const k=fx[0],dl=fx[2],du=fx[3];
-          const cnt=dh(k+'Cnt',0),lpf=dh(k+'Lpf',dl),uph=dh(k+'Uph',du);
-          rLph+=cnt*lpf*uph; rCnt+=cnt;
-          if(k==='sh') gShBase+=cnt*lpf;
+        const cells=gFX.map(fx=>{
+          const k=fx[0];
+          const cnt=dh(k+'Cnt',0),lph=dh(k+'Lph',fxVal(fx,useK));   // 표 4.5 기구별 급탕량 (60℃)
+          rLph+=cnt*lph; rCnt+=cnt;
+          if(k==='sh') gShBase+=cnt*dh('shLpf',40);
           return '<td style="padding:2px 4px"><input type="number" value="'+(cnt||'')+'" min="0" style="width:44px" onchange="sCHW(\''+rid+'\',\''+k+'Cnt\',parseFloat(this.value)||0);renderCapCalc()"></td>';
         }).join('');
         gLph+=rLph; gCnt+=rCnt;
         return '<tr><td class="L" style="font-size:11px;padding:3px 8px">'+(bf.f?esc(bf.f.name)+' ':'')+esc(r.name)+'</td>'+cells+'<td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">'+f1(rLph)+'</td></tr>';
       }).join('');
-      const gs=(k,d)=>{const v=HB[k];return(v!==undefined&&v!=='')?v:d;};
-      // ── 본 계산 — 기준: AC-022 22.3.2.1
-      //   집계 -> x 용도별 동시사용률 = Qh -> x 저탕용량 계수 = V -> 그 이상의 제품
-      const useK=gs('hwUse','factory');
-      const useRow=hwUseRow(useK);
+      // ── 본 계산 — 기준: 표 4.5 및 주 1)·2)
+      //   기구별 급탕량 집계 x 동시사용률 = Qh -> x 저탕용량 계수 = V,  가열능력 = Qh x (급탕온도 - 급수온도)
       const gSim=gv('simRate',useRow[2]);
       const stC =gv('stCoef',useRow[3]);
       const Th=gv('tHot',60), Tc=gv('tCold',5), tUse=gv('tUse',43);
@@ -3598,8 +3616,10 @@ function renderCapCalc(){
       const stReq=Qh*stC;                // 저탕량 V
       const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
       const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
-      // 기준: AC-022 22.3.2.4 — 가열능력은 계산하지 않는다. 저장식에서는 제품 사양이다.
-      //   300 lit 에 3.0 kW 인 제품이 있으며 시간당 급탕량으로 내면 18 kW 가 나와 여섯 배 어긋난다.
+      // 기준: 표 4.5 주 1) — 가열능력 = 기구 급탕량 누계 x 동시사용률(=Qh) x (60℃ - 급수온도). 0.1 kW 올림
+      //   주 2) 저탕용량 계수를 줄이면 그만큼 가열능력을 키워야 한다 — 표의 계수와 이 가열능력이 한 세트다.
+      //   (예전 「가열능력은 계산하지 않고 제품 사양을 따른다」는 판단은 2026-11-04 폐지)
+      const reqKW=(Qh>0&&Th>Tc)?Math.ceil(Qh*(Th-Tc)*1.163/100)/10:0;
       const selKWp=gv('selKW',0);        // 제품의 소비전력 (사람이 카탈로그에서 넣는다)
       const mix=(tUse>Tc)?(Th-Tc)/(tUse-Tc):1;                 // 혼합계수 (60-5)/(43-5)
       // 회복 시간 — 다음 교대까지 채우는가 (22.3.4 b)
@@ -3607,7 +3627,7 @@ function renderCapCalc(){
       // ── 피크 검산 — 기준: AC-022 22.3.3.5. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
       const stVol=gv('stVol',stRec), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
       const effR=gv('effR',0.75);
-      const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*pkMin/60);      // 피크 필요량 (사용온도 기준)
+      const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*mix*pkMin/60); // 피크 필요량 (사용온도 기준 — Qh 는 60℃ 기준이라 혼합계수를 곱한다)
       const stAvail=stVol*effR*mix;                            // 저장분
       const rcvLph=(selKWp>0&&Th>Tc)?selKWp*860/(Th-Tc):0;     // 제품 kW 에 의한 회복량 lit/h
       const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
@@ -3631,7 +3651,8 @@ function renderCapCalc(){
       const circLph=cDiv>0?Qh/cDiv:0;
       const head=gv('head',0);
       const selQ=gv('selQ',0), selH=gv('selH',0);
-      const okB=stVol>0&&stVol>=stReq;   // 판정은 저탕용량으로 한다 (기준: AC-022 22.3.2.4)
+      const okKW=selKWp>0&&selKWp>=reqKW;
+      const okB=stVol>0&&stVol>=stReq&&okKW;   // 판정: 저탕용량과 가열능력 둘 다 (표 4.5 주 1)·2))
       const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
       const selTank=gv('selTank',0);
       const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stVol>=stReq);
@@ -3658,21 +3679,19 @@ function renderCapCalc(){
             :'<b>보일러는 열만 만들고 저장은 탱크가 한다.</b> → <b>1차 펌프 필수.</b> 대형·연소식(경유) 구간이다.'))
         +(hasRet?'':'<br><b>환탕 없음</b> — 보일러를 사용처 가까이 둔 계통. 관내 용적 3 lit 이하면 정상이다.')
         +'</div>'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 급탕량 집계 (보일러 그룹)</div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 급탕량 집계 (보일러 그룹) <span style="font-weight:400;color:#94a3b8">— 표 4.5 기구별 급탕량, 급탕온도 60℃ 기준 · 열 머리의 값은 '+useRow[1]+' 용도 값</span></div>'
         +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">실</th>'
-        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">세면기</th>'
-        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">샤워기</th>'
-        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">세탁기</th>'
-        +'<th style="padding:4px 8px;border:1px solid #cbd5e1">주방싱크</th>'
+        +gFX.map(fx=>'<th style="padding:4px 8px;border:1px solid #cbd5e1">'+fx[1]+'<br><span style="font-weight:400;color:#64748b">'+fxTxt(fx,useK)+' lit/h</span></th>').join('')
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1">소계 (lit/h)</th></tr></thead><tbody>'
         +rowsHtml
         +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
-        +'<td colspan="4" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
+        +'<td colspan="'+gFX.length+'" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
         +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
-        +HD('③','시간당 급탕량과 저탕량','기준: AC-022 22.3.2.1 — 집계 × 용도별 동시사용률 × 저탕용량 계수')
+        +HD('③','시간당 급탕량과 저탕량','기준: 표 4.5 — 집계 × 동시사용률 = Qh, Qh × 저탕용량 계수 = V')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
-        +'<span>건물 용도 '+SEL('hwUse',HW_USE.map(x=>[x[0],x[1]+' ('+x[2]+'% · 계수 '+x[3]+')']),useK)+'</span>'
+        +'<span>건물 용도 <select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="var h=(STATE.project.hwB=STATE.project.hwB||{});h.hwUse=this.value;h.simRate=\'\';h.stCoef=\'\';renderCapCalc()">'
+          +HW_USE.map(x=>'<option value="'+x[0]+'"'+(x[0]===useK?' selected':'')+'>'+x[1]+' ('+(x[2]/100).toFixed(2)+' · 계수 '+x[3].toFixed(2)+')</option>').join('')+'</select></span>'
         +'<span>동시사용률 '+I('simRate',gSim,1,50)+' %</span>'
         +'<span>저탕용량 계수 '+I('stCoef',stC,0.05,50)+'</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px;margin-top:6px">'
@@ -3683,16 +3702,19 @@ function renderCapCalc(){
         +'시간당 급탕량 Q<sub>h</sub> = '+f1(gLph)+' × '+gSim+'% = <b>'+f1(Qh)+' lit/h</b><br>'
         +'저탕량 V = '+f1(Qh)+' × 계수 '+stC+' = <b style="color:#b45309">'+f0(stReq)+' lit</b>'
         +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b></div>'
-        +HD('④','기기 선정','가열능력은 계산하지 않는다 — 저장식은 제품 사양이다 (22.3.4)')
+        +HD('④','기기 선정','저탕용량과 가열능력 — 표 4.5 주 1)·2)')
+        +'<div style="margin-bottom:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px">'
+        +'가열능력 = Q<sub>h</sub> '+f1(Qh)+' lit/h × ('+Th+'−'+Tc+')℃ × 1.163 ÷ 1,000 = <b style="color:#b45309">'+reqKW+' kW</b>'
+        +'<span style="color:#64748b"> — 저탕용량 계수를 표 값보다 줄이면 그만큼 가열능력을 키운다 (주 2)</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>'+(sepTank?'선정 저탕조':'선정 저탕용량')+' '+I('stVol',stVol,10,60)+' lit'
         +'<span style="margin-left:6px;font-weight:700;color:'+(stVol>=stReq?'#16a34a':'#dc2626')+'">'+(stVol>0?(stVol>=stReq?'✓ OK':'✗ 부족'):'— 미입력')+'</span></span>'
-        +'<span>제품 소비전력 '+I('selKW',selKWp,0.1,55)+' kW <span style="color:#94a3b8">(카탈로그)</span></span></div>'
+        +'<span>제품 가열능력 '+I('selKW',selKWp,0.1,55)+' kW <span style="color:#94a3b8">(카탈로그)</span>'+OKM(okKW,selKWp>0)+'</span></div>'
         +'<div style="margin-top:8px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
         +(selKWp>0
           ?('회복 시간 = '+f0(stRec)+' lit × ('+Th+'−'+Tc+')℃ ÷ ('+selKWp+' kW × 860) = <b>'+rcvHr.toFixed(1)+' 시간</b>'
             +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다 (22.3.4 b)</span>')
-          :'<span style="color:#64748b">제품 소비전력을 넣으면 회복 시간을 계산한다. 저장식은 300 lit 에 3.0 kW 정도이며 6~7시간이 걸린다</span>')
+          :'<span style="color:#64748b">제품 가열능력을 넣으면 판정과 회복 시간(참고)을 계산한다</span>')
         +'</div>'
         +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다 (22.4.5)')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
@@ -3701,7 +3723,7 @@ function renderCapCalc(){
         +'<span>유효율 '+I('effR',effR,0.05,45)+'</span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'혼합계수 = ('+Th+'−'+Tc+') ÷ ('+tUse+'−'+Tc+') = <b>'+mix.toFixed(2)+'</b><br>'
-        +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
+        +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit(1회 40 lit, 사용온도) × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × 혼합계수 × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
         +'가용량 = 저장 '+f0(stVol)+'×'+effR+'×'+mix.toFixed(2)+' ('+f0(stAvail)+') + 회복 '+f0(rcvLph)+' lit/h×'+pkMin+'분×'+mix.toFixed(2)+' ('+f0(rcAvail)+')'
         +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
@@ -3738,9 +3760,9 @@ function renderCapCalc(){
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">선정</th>'
         +'<th style="padding:4px 8px;border:1px solid #cbd5e1">판정</th></tr></thead><tbody>'
         +'<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>급탕 보일러</b>'+(sysT==='C'?' (순간식)':' (저탕식)')+'</td>'
-        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">저탕 '+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+')</td>'
+        +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">저탕 '+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+') · 가열 '+reqKW+' kW 이상</td>'
         +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+(stVol>0?f0(stVol)+' lit'+(selKWp>0?' · '+selKWp+' kW':''):'—')+'</td>'
-        +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+(stVol>0?(okB?'OK':'부족'):'—')+'</td></tr>'
+        +'<td style="text-align:center;padding:3px 8px;border:1px solid #cbd5e1;font-weight:700;color:'+(okB?'#16a34a':'#dc2626')+'">'+((stVol>0&&selKWp>0)?(okB?'OK':'부족'):'—')+'</td></tr>'
         +(sepTank
           ?('<tr><td class="L" style="padding:3px 8px;border:1px solid #cbd5e1"><b>저탕조</b></td>'
             +'<td class="L" style="padding:3px 8px;border:1px solid #cbd5e1">'+f0(stReq)+' lit 이상 (권장 '+f0(stRec)+')</td>'
@@ -3774,27 +3796,29 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId); const rid=r.id;
       const autoTag='M-WH-'+String(idx+1).padStart(3,'0');   // 장비일람표와 같은 번호
       const defH=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
-      let totLph=0,totCnt=0;
-      const fxRows=FX.map(([k,nm,dl,du])=>{
-        const cnt=defH(k+'Cnt',0),lpf=defH(k+'Lpf',dl),uph=defH(k+'Uph',du),lph=cnt*lpf*uph;
-        totLph+=lph; totCnt+=cnt;
-        const nc=k==='et'?`<input type="text" value="${esc(r.capHW.etName||'기타')}" style="width:60px;font-size:11px;border:1px solid #e2e8f0;border-radius:2px;padding:1px 4px;font-family:inherit" onchange="sCHW('${rid}','etName',this.value)">`:nm;
-        return `<tr>
-          <td class="L" style="font-size:11px;padding:3px 8px">${nc}</td>
-          <td style="padding:2px 4px"><input type="number" value="${cnt||''}" min="0" style="width:42px" onchange="sCHW('${rid}','${k}Cnt',parseFloat(this.value)||0);renderCapCalc()"></td>
-          <td style="padding:2px 4px"><input type="number" value="${lpf}" step="0.1" style="width:55px" onchange="sCHW('${rid}','${k}Lpf',parseFloat(this.value)||0);renderCapCalc()"></td>
-          <td style="padding:2px 4px"><input type="number" value="${uph}" step="0.1" style="width:50px" onchange="sCHW('${rid}','${k}Uph',parseFloat(this.value)||0);renderCapCalc()"></td>
-          <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">${f1(lph)}</td>
-          <td style="padding:2px 4px"><input type="text" value="${esc(r.capHW[k+'Note']||'')}" style="width:70px" onchange="sCHW('${rid}','${k}Note',this.value)"></td>
-        </tr>`;
-      }).join('');
       // 건물 용도 — 실마다 고를 수 있고, 안 고르면 중앙식 보일러에서 고른 용도(없으면 공장)를 따른다.
       const useKR=(r.capHW||{}).hwUse||((STATE.project.hwB||{}).hwUse)||'factory';
       const useRowR=hwUseRow(useKR);
+      // 기구별 급탕량 — 표 4.5 (60℃ 기준). 이 용도에 값이 있는 기구와 이미 수량이 들어간 기구를 보인다.
+      let totLph=0,totCnt=0;
+      const fxRows=FX45.filter(fx=>fxVal(fx,useKR)>0||defH(fx[0]+'Cnt',0)>0).concat([['et','기타',null]]).map(fx=>{
+        const k=fx[0],isEt=k==='et',tv=isEt?0:fxVal(fx,useKR);
+        const cnt=defH(k+'Cnt',0),lph=defH(k+'Lph',tv),sub=cnt*lph;
+        totLph+=sub; totCnt+=cnt;
+        const nc=isEt?`<input type="text" value="${esc(r.capHW.etName||'기타')}" style="width:80px;font-size:11px;border:1px solid #e2e8f0;border-radius:2px;padding:1px 4px;font-family:inherit" onchange="sCHW('${rid}','etName',this.value)">`:fx[1];
+        return `<tr>
+          <td class="L" style="font-size:11px;padding:3px 8px">${nc}</td>
+          <td style="padding:2px 4px"><input type="number" value="${cnt||''}" min="0" style="width:42px" onchange="sCHW('${rid}','${k}Cnt',parseFloat(this.value)||0);renderCapCalc()"></td>
+          <td style="padding:2px 4px"><input type="number" value="${lph||''}" step="0.1" min="0" style="width:58px" onchange="sCHW('${rid}','${k}Lph',this.value);renderCapCalc()"></td>
+          <td style="text-align:center;padding:3px 8px;font-size:10px;color:#64748b">${isEt?'제조사 자료':fxTxt(fx,useKR)}</td>
+          <td style="text-align:right;padding:3px 8px;background:#fef9c3;font-weight:600;font-size:11px">${f1(sub)}</td>
+          <td style="padding:2px 4px"><input type="text" value="${esc(r.capHW[k+'Note']||'')}" style="width:70px" onchange="sCHW('${rid}','${k}Note',this.value)"></td>
+        </tr>`;
+      }).join('');
       const autoSimRate=useRowR[2];
       const simRate=defH('simRate',autoSimRate),storeFactor=defH('storeFactor',useRowR[3]);
       const Qh=totLph*simRate/100,V=Qh*storeFactor;
-      // 가열능력 — 학회 설계기준 표 4.2-1 주 1): 급탕량 누계 × 동시사용률(=Qh) × (급탕온도−급수온도).
+      // 가열능력 — 학회 설계기준 표 4.5 주 1): 급탕량 누계 × 동시사용률(=Qh) × (급탕온도−급수온도).
       //   저탕량 V 를 가열시간으로 나누던 식은 폐지 (2026-11-02). 탱크가 피크를 받는 몫은 저탕용량계수에 이미 들어 있어
       //   가열능력을 다시 시간으로 나누면 같은 효과를 두 번 깎는다 (기본값 3h 에서 기준값의 1/3).
       const tHot=defH('tHot',60),tCold=defH('tCold',15),dTw=Math.max(tHot-tCold,0);
@@ -3815,14 +3839,20 @@ function renderCapCalc(){
           <span style="font-weight:700;font-size:12px">${f?esc(f.name)+' ':''}<input type="text" value="${esc(r.name)}" title="실명" class="no-print" style="width:130px;font-size:12px;font-weight:700;padding:1px 5px;border:1px solid #64748b;border-radius:3px;background:#27466e;color:#fff;font-family:inherit" onchange="sRoomName('${rid}',this.value)"><span class="print-only">${esc(r.name)}</span> 전기온수기 선정(저장식)</span>
         </div>
         <div style="padding:14px">
-          <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">급탕량 집계</div>
+          <div style="font-size:10.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">건물 용도
+            <select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="sCHW('${rid}','hwUse',this.value);sCHW('${rid}','simRate','');sCHW('${rid}','storeFactor','');${FX45.map(x=>`sCHW('${rid}','${x[0]}Lph','');`).join('')}renderCapCalc()">
+              ${HW_USE.map(x=>`<option value="${x[0]}" ${x[0]===useRowR[0]?'selected':''}>${x[1]}</option>`).join('')}
+            </select>
+            <span style="font-size:9px;color:#475569">학회 설계기준 표 4.5 (2003 ASHRAE) — 동시사용률과 저탕용량 계수는 건물 용도로 정한다. 용도를 바꾸면 기구별 급탕량·동시사용률·저탕용량 계수가 그 용도의 표 값으로 돌아간다.</span>
+          </div>
+          <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">급탕량 집계 <span style="font-weight:400;color:#94a3b8">— 표 4.5 기구별 급탕량 (급탕온도 60℃ 기준, lit/기구 1개·h)</span></div>
           <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse">
             <thead><tr style="background:#e2e8f0">
               <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">기구명</th>
               <th style="padding:4px 8px;border:1px solid #cbd5e1">수량</th>
-              <th style="padding:4px 8px;border:1px solid #cbd5e1">1회당 급탕량<br>(lit/회)</th>
-              <th style="padding:4px 8px;border:1px solid #cbd5e1">1시간당<br>사용횟수(회/h)</th>
-              <th style="padding:4px 8px;border:1px solid #cbd5e1">매시평균<br>급수량(lit/h)</th>
+              <th style="padding:4px 8px;border:1px solid #cbd5e1">기구당 급탕량<br>(lit/h)</th>
+              <th style="padding:4px 8px;border:1px solid #cbd5e1">표 4.5 값<br>(${esc(useRowR[1])})</th>
+              <th style="padding:4px 8px;border:1px solid #cbd5e1">급탕량 계<br>(lit/h)</th>
               <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">비고</th>
             </tr></thead>
             <tbody>${fxRows}
@@ -3833,12 +3863,6 @@ function renderCapCalc(){
             </tbody>
           </table></div>
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">동시사용률·저탕용량 계수 (기준표)</div>
-          <div style="font-size:10.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">건물 용도
-            <select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="sCHW('${rid}','hwUse',this.value);sCHW('${rid}','simRate','');sCHW('${rid}','storeFactor','');renderCapCalc()">
-              ${HW_USE.map(x=>`<option value="${x[0]}" ${x[0]===useRowR[0]?'selected':''}>${x[1]}</option>`).join('')}
-            </select>
-            <span style="font-size:9px;color:#475569">학회 설계기준 표 4.5 (2003 ASHRAE) — 동시사용률과 저탕용량 계수는 건물 용도로 정한다. 용도를 바꾸면 아래 두 값이 표 값으로 돌아간다.</span>
-          </div>
           <div class="tw" style="margin-bottom:14px"><table style="white-space:nowrap;font-size:10px;border-collapse:collapse">
             <thead><tr style="background:#e2e8f0">
               <th style="padding:3px 8px;border:1px solid #cbd5e1">건물 용도</th>
@@ -3852,7 +3876,7 @@ function renderCapCalc(){
               ${HW_USE.map(x=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${x[0]===useRowR[0]?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${x[3].toFixed(2)}</td>`).join('')}
             </tr></tbody>
           </table></div>
-          <div style="font-size:9px;color:#64748b;margin:-8px 0 12px">※ 표 4.5 주 2): 열원을 충분히 얻는 경우 저탕용량 계수를 줄여도 좋으나, 그 분량의 가열능력을 크게 할 필요가 있다.</div>
+          <div style="font-size:9px;color:#64748b;margin:-8px 0 12px">※ 식기세척기 범위값은 상한을 기본으로 넣었다 — 기기를 알면 제조업체 자료로 고친다 (주 *1).<br>※ 표 4.5 주 2): 열원을 충분히 얻는 경우 저탕용량 계수를 줄여도 좋으나, 그 분량의 가열능력을 크게 할 필요가 있다.</div>
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
           <div style="font-size:11px;padding:10px 14px;background:#f8fafc;border-radius:4px;margin-bottom:14px;display:flex;flex-direction:column;gap:9px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3871,7 +3895,7 @@ function renderCapCalc(){
               <input type="number" value="${tHot}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tHot',parseFloat(this.value)||60);renderCapCalc()"> &minus;
               <input type="number" value="${tCold}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tCold',parseFloat(this.value)||15);renderCapCalc()"> )℃ &times; 1.163 &div; 1,000
               <span style="font-weight:700;color:#1e3a5f">=&nbsp;&nbsp;${autoKw} kW</span>
-              <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.2-1 주 1)</span>
+              <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.5 주 1)</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #e2e8f0">
               <span style="color:#475569">표준 저탕탱크:</span>
