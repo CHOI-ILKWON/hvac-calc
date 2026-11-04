@@ -111,5 +111,14 @@ ok(!/heatHrs/.test(src),'가열시간으로 나누는 식 폐지');
  ok(kw(45,45)===2.4,'세면기 5개 예제: 45 L/h × 45℃ × 1.163 = 2.36 → 2.4 kW');
  ok(kw(0,45)===0&&kw(45,0)===0,'급탕량·온도차 0 이면 0 kW');}
 
+// ── 2026-11-04 급탕 동시사용률 — 학회 설계기준 표 4.5 (2003 ASHRAE) ──────
+console.log('2026-11-04 급탕 동시사용률 표 4.5');
+{const hw={};new Function('g',grab(/const HW_USE=\[[\s\S]*?\]\];/,'HW_USE')+'\ng.T=HW_USE;')(hw);
+ const T45={house:[30,0.70],apt:[30,1.25],office:[30,2.00],hotel:[25,0.80],hosp:[25,0.60],factory:[40,1.00],school:[40,1.00],ymca:[40,1.00],gym:[40,1.00]};
+ ok(hw.T.length===9,'표 4.5 건물 용도 9종');
+ Object.entries(T45).forEach(([k,[p,h]])=>{const r=hw.T.find(x=>x[0]===k);ok(r&&r[2]===p&&r[3]===h,`표 4.5 ${k}: ${r&&r[2]}%·${r&&r[3]} ≠ ${p}%·${h}`);});}
+ok(!/const SIM=\[\[3,100\]/.test(src),'실별 전기온수기 기구 수 곡선 폐지');
+ok(/storeFactor=defH\('storeFactor',useRowR\[3\]\)/.test(src),'실별 저탕용량 계수 = 용도별 표 값');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
