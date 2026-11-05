@@ -132,5 +132,21 @@ ok(!/가열능력은 계산하지 않는다/.test(src),'보일러: 가열능력 
 ok(/const reqKW=\(Qh>0&&Th>Tc\)\?Math\.ceil\(Qh\*\(Th-Tc\)\*1\.163\/100\)\/10:0;/.test(src),'보일러 가열능력 = Qh × (Th−Tc) × 1.163 (표 4.5 주 1)');
 ok(/Qh\*mix\*pkMin\/60/.test(src),'피크 검산: 60℃ 기준 Qh 에 혼합계수');
 
+// ── 2026-11-05 기준서 개정 반영 (AC-022 · AC-028 · AC-018) ──────
+console.log('2026-11-05 기준서 개정 반영');
+ok(/const HW_TC=\(\)=>\{const v=\(STATE\.project\|\|\{\}\)\.hwTc;return\(v!==undefined&&v!==''\)\?\(parseFloat\(v\)\|\|0\):5;\};/.test(src),'AC-022 Rule 6: 급수온도 프로젝트 공통 기본 5 ℃');
+ok(!/tCold',15/.test(src)&&/tCold=HW_TC\(\)/.test(src)&&/Tc=HW_TC\(\)/.test(src),'실별·보일러 모두 공통 급수온도 (실별 15 ℃ 폐지)');
+ok(/const HW_EFF=0\.75;/.test(src),'AC-022 Rule 1: 유효율 0.75');
+ok(/const reqStoreCap=V\/HW_EFF;/.test(src),'실별 표준탱크: 공칭 × 0.75 ≥ V');
+ok(/STD_TANK\.find\(v=>v\*HW_EFF>=stReq\)/.test(src),'보일러 권장 규격: 공칭 × 0.75 ≥ V');
+ok(/const okB=stVol>0&&stEffV>=stReq&&okKW;/.test(src),'보일러 판정: 유효 저탕량');
+ok(/gShBase\+=cnt\*gv\('shFlow',11\.4\)\*15;/.test(src)&&!/shLpf/.test(src),'AC-022 Rule 3: 샤워 1회 = 헤드 유량 × 15 분 (40 L 폐지)');
+ok(/const circLph=\(retLen>0&&retDT>0\)\?retLen\*retWpm\/\(1\.163\*retDT\):0;/.test(src)&&!/circDiv/.test(src),'AC-022 Rule 5: 순환수량 = 길이 × 30 W/m ÷ (1.163 × 5 K) (Qh ÷ 8 폐지)');
+ok(!/관내 용적 3 lit/.test(src),'환탕 생략 3 L 기준 폐지 (HW-001 30 m · 15 m)');
+{const circ=(L,w,dt)=>L*w/(1.163*dt); ok(Math.round(circ(60,30,5))===310,'순환배관 60 m → 310 L/h');}
+ok(/diffPa=d\('diffPa',17\)/.test(src)&&/diffPa=defV\('diffPa',26\)/.test(src)&&!/diffPa',30/.test(src),'AC-028 Rule 2-1: 기구 손실 = 유효풍속 동압 × 3 (ERV 17 · 인라인 26, 종전 30 폐지)');
+ok(!/500 kW 약 27 ㎡/.test(src),'AC-018: 발전기실 루버 27 ㎡ 표기 폐지 (KDS 4.4)');
+ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
