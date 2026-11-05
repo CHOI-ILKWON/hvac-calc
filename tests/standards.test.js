@@ -172,5 +172,21 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
  ok(!/phS\?\?57|phL\?\?62/.test(src),'고정 57/62 W 폐지');
 }
 
+// ── AC-009 기기부하 (2026-11-05) ──────
+{const h={};
+ new Function('h',[grab(/const RT = \{[\s\S]*?\n\};/,'RT'),grab(/function eqDefW\([^\n]*/,'eqDefW'),grab(/function eqDefKW\([^\n]*/,'eqDefKW'),
+  grab(/function eqReqOf\([^\n]*/,'eqReqOf'),grab(/function eqOf\([^\n]*/,'eqOf'),grab(/function eqIsDefault\([^\n]*/,'eqIsDefault'),grab(/function eqMissing\([^\n]*/,'eqMissing'),
+  'Object.assign(h,{eqOf,eqIsDefault,eqMissing});'].join('\n'))(h);
+ console.log('AC-009 기기부하');
+ ok(h.eqOf({type:'elec'},150)===27000&&h.eqOf({type:'elec'},200)===27000,'전기실 27 kW/실 — 면적 무관');
+ ok(h.eqOf({type:'elec',eqKW:40},150)===40000,'직접입력(1·2순위)이 기본값을 이김');
+ ok(h.eqOf({type:'control'},80)===22000,'중앙제어실 22 kW/실');
+ ok(h.eqOf({type:'office'},100)===400&&h.eqOf({type:'office'},200)===800,'사무실 4 W/㎡ — 면적 비례');
+ ok(h.eqOf({type:'genset'},120)===0&&!h.eqMissing({type:'genset'}),'발전기실 — 잡지 않음, 미입력 경고 없음');
+ ok(h.eqOf({type:'locker'},30)===0&&!h.eqMissing({type:'locker'}),'탈의실 eqReq:false — 경고 없음');
+ ok(h.eqMissing({type:'kitchen'}),'탕비실 — 기본값 없음 → 미입력 표시');
+ ok(h.eqIsDefault({type:'elec'})&&h.eqIsDefault({type:'office'})&&!h.eqIsDefault({type:'office',eqKW:1}),'기본값 사용 여부 표시');
+}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
