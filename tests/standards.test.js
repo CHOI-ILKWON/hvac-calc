@@ -148,5 +148,29 @@ ok(/diffPa=d\('diffPa',17\)/.test(src)&&/diffPa=defV\('diffPa',26\)/.test(src)&&
 ok(!/500 kW 약 27 ㎡/.test(src),'AC-018: 발전기실 루버 27 ㎡ 표기 폐지 (KDS 4.4)');
 ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거');
 
+// ── AC-007 인체발열 · 재실인원 (2026-11-05) ──────
+{const h={};
+ new Function('h',[grab(/const RT = \{[\s\S]*?\n\};/,'RT'),grab(/function occDens\(r\)\{[\s\S]*?\n\}/,'occDens'),
+  grab(/function occOf\([^\n]*/,'occOf'),grab(/const PH_T=[^\n]*/,'PH_T'),grab(/const PH_ACT=\{[\s\S]*?\n\};/,'PH_ACT'),
+  grab(/function actOf\([^\n]*/,'actOf'),grab(/function phOf\(r\)\{[\s\S]*?\n\}/,'phOf'),
+  'Object.assign(h,{RT,occOf,phOf,PH_ACT});'].join('\n'))(h);
+ console.log('AC-007 인체발열 (학회 표 2.32) · 재실인원 정수');
+ const ph=(type,cdb)=>{const p=h.phOf({type,cdb});return [p.s,p.l];};
+ const eq=(a,b)=>a[0]===b[0]&&a[1]===b[1];
+ ok(eq(ph('office',26),[63,69]),'사무실 26℃ = 63/69 (사무소·경보행)');
+ ok(eq(ph('control',24),[72,59]),'중앙제어실 24℃ = 72/59');
+ ok(eq(ph('kitchen',26),[62,56]),'탕비실 26℃ = 62/56 (경작업)');
+ ok(eq(ph('toilet',null),[62,56]),'화장실 냉방 없음 → 26℃ 로 봄 62/56');
+ ok(eq(ph('office',25),[68,64]),'25℃ 직선보간 (63+72)/2 · (69+59)/2');
+ ok(eq(ph('office',30),[52,79])&&eq(ph('office',18),[84,48]),'표 밖 실온은 끝값');
+ ['office','control','kitchen','toilet','locker','mech'].forEach(t=>{const p=h.phOf({type:t,cdb:26});
+   ok(Math.abs(p.s+p.l-h.PH_ACT[h.RT[t].act].tot)<=1,t+' 현열+잠열 ≈ 전발생열 (원문 표 반올림 ±1)');});
+ ok(h.occOf({ia:50},30)===1,'화장실 30 ㎡ ÷ 50 = 0.6 → 1 인 (올림)');
+ ok(h.occOf({ia:10},100)===10,'사무실 100 ㎡ ÷ 10 = 10 인 (부동소수 올림 오류 없음)');
+ ok(h.occOf({ia:10},123)===13,'123 ㎡ ÷ 10 = 12.3 → 13 인');
+ ok(h.occOf({ia:0},100)===0&&h.occOf({ia:10},0)===0,'무인 · 면적 0 → 0 인');
+ ok(!/phS\?\?57|phL\?\?62/.test(src),'고정 57/62 W 폐지');
+}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
