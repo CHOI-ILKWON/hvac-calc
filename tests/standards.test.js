@@ -188,5 +188,13 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
  ok(h.eqIsDefault({type:'elec'})&&h.eqIsDefault({type:'office'})&&!h.eqIsDefault({type:'office',eqKW:1}),'기본값 사용 여부 표시');
 }
 
+// ── AC-017 인당 외기량 입력 (2026-11-05) ──────
+{const h={}; new Function('h',[grab(/function oaPP\([^\n]*/,'oaPP'),'h.oaPP=oaPP;'].join('\n'))(h);
+ console.log('AC-017 인당 외기량');
+ ok(h.oaPP({})===25&&h.oaPP({oaPP:''})===25&&h.oaPP({oaPP:0})===25,'기본 25 ㎥/h·인');
+ ok(h.oaPP({oaPP:30})===30,'실별 입력값 우선 (발주처 기준 등)');
+ ok(!/oaPpl\*25|\)\*25\)/.test(src),'25 하드코딩 제거 — oaPP() 한 곳');
+}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
