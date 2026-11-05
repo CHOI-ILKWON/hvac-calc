@@ -553,8 +553,8 @@ const RT = {
            // cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
   genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:15, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-017 4.4 — va:15 는 「정지 중·평시」의 값이다 (학회 설계기준 표 4.5 기계실 10~15 의 상한 준용)
            // 운전 중의 열은 팬이 아니라 엔진 라디에이터 냉각풍이 가져간다 — 500 kW 급 약 88,500 ㎥/h 가 급기루버→실→라디에이터→배기덕트 로 실을 관통한다 (AC-017 3.3.1)
-           // 그래서 설계의 핵심은 회/h 가 아니라 급기 루버 면적이다: 300 kW 약 16 ㎡ · 500 kW 약 27 ㎡ · 1,000 kW 약 55 ㎡ (실면적) — AC-018 4.3.1
-           //   학회 설계기준 표 4.6 의 외기루버 기준으로 산정 — 유효 개구면 풍속 3.0 m/s, 유효 개구율 0.3. 루버는 날개가 겹쳐 겉면적의 30% 만 공기가 지난다
+           // 그래서 설계의 핵심은 회/h 가 아니라 급기 루버 면적이다: KDS 31 25 30 4.4 로 300 kW 약 7~11 ㎡ · 500 kW 약 12~18 ㎡ · 1,000 kW 약 25~37 ㎡ (전면면적, 개구율 45 % 초과 ~ 30 %) — AC-018 4.3.1 (2026-11-05)
+           //   3,300 L/s 이상은 전면풍속 2.0 m/s 이하, 개구율 45 % 이하면 키운다. 최종 면적은 발전기 제조사의 냉각풍량·허용 정압 (종전 학회 표 4.6 3.0 m/s · α 0.3 은 폐지)
            // 배기팬은 급기 루버 반대편 상부에 둔다(기류분포용). ve 는 지상이면 벽부형팬, 지하·덕트면 인라인덕트팬 (AC-029)
            // cdb:null — 냉방하지 않는다. 실온은 외기 + 약 2.4 K 로 유지된다
            // 가스계 소화설비가 방출되면 급기 루버 MD 가 닫혀 엔진이 정지한다 — 소화방식을 전기·소방팀과 협의 (AC-016 4.5.1)
@@ -2316,14 +2316,16 @@ function getHeatLoad(room){
   return calcLE(room).totalH;
 }
 
-// ── 기외정압(ESP) 산정 — 전열교환기용. 인라인덕트팬 탭과 같은 방법 (기준: AC-028, 2026-10-23 검토 #34) ──
+// ── 기외정압(ESP) 산정 — 전열교환기용. 인라인덕트팬 탭과 같은 방법 (기준: AC-028 Rule 1·2, 2026-11-05 개정) ──
+//   DIFF.&GRILLE 기본 17 Pa = 유효풍속 동압 × 3 (AC-028 Rule 2-1) — 사무실 RC35 흡입 3.0 m/s (급기 12 · 배기 17 중 큰 쪽).
+//   duct-calc 「용량계산서 ESP 에 넣을 값」이나 제품 압손이 있으면 그 값을 넣는다
 //   1차(기본설계)는 덕트 길이 × 2.0 Pa/m 개략값, 2차(실시설계)는 덕트 설계 후 구간 저항으로 다시 넣는다.
 //   전열교환기의 내장 필터는 제조사 기외정압에 이미 들어 있으므로 FILTER 는 별도 필터가 있을 때만 넣는다 (AC-083 Rule 4)
 //   급기·배기 두 경로 중 저항이 큰 쪽으로 넣는다
 function espHTML(r){
   const v=r.capV, rid=r.id;
   const d=(k,x)=>{const z=v[k];return(z!==undefined&&z!=='')?(parseFloat(z)||0):x;};
-  const ductLen=d('ductLen',0),ductPa=d('ductPa',2),fitPct=d('fitPct',50),diffEa=d('diffEa',1),diffPa=d('diffPa',30),
+  const ductLen=d('ductLen',0),ductPa=d('ductPa',2),fitPct=d('fitPct',50),diffEa=d('diffEa',1),diffPa=d('diffPa',17),
         fdPa=d('fdPa',0),vdEa=d('vdEa',1),vdPa=d('vdPa',10),louEa=d('louEa',1),louPa=d('louPa',50),filtPa=d('filtPa',0);
   const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100),diffT=diffEa*diffPa,vdT=vdEa*vdPa,louT=louEa*louPa;
   const sub=ductT+fittT+diffT+fdPa+vdT+louT+filtPa, sf=sub*0.1, tot=sub+sf, sel=Math.ceil(tot/50)*50||0;
@@ -2336,7 +2338,7 @@ function espHTML(r){
     <table style="width:100%;font-size:10px;border-collapse:collapse"><tbody>
     ${row('DUCT',`${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m`,ductT)}
     ${row('FITTINGS',`DUCT &times; ${inp('fitPct',fitPct,42,'%')} %`,fittT)}
-    ${row('DIFF. &amp; GRILLE',`${inp('diffEa',diffEa,32,'EA')} EA${ep} &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA`,diffT)}
+    ${row('DIFF. &amp; GRILLE',`${inp('diffEa',diffEa,32,'EA')} EA${ep} &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC35 급기 12 / 배기 17</span>`,diffT)}
     ${row('FIRE DAMPER',`${inp('fdPa',fdPa,55,'Pa')} Pa`,fdPa)}
     ${row('VOL. DAMPER',`${inp('vdEa',vdEa,32,'EA')} EA${ep} &times; ${inp('vdPa',vdPa,42,'Pa')} Pa/EA`,vdT)}
     ${row('LOUVER / HOOD',`${inp('louEa',louEa,32,'EA')} EA${ep} &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA`,louT)}
@@ -3137,16 +3139,16 @@ function renderCapCalc(){
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       const tag=r.capV.tag||autoTag;
       const defV=(k,d)=>{const v=r.capV[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
-      // 기준: AC-028 28.3.1.1 — ESP 산정. 지배하는 것은 덕트가 아니라 기구이다 (28.3.2.2)
-      // ductPa 2.0 = 계획 단계의 개략값 (AC-026 26.3.1.5, 2026-08-24 결정).
+      // 기준: AC-028 Rule 1·2 — 가장 불리한 한 경로의 손실 합 → 안전율 10% → 50 Pa 올림. 병렬 기구는 1 개분만 (AC-028 3.3: 필터가 없으면 덕트, 있으면 필터가 지배)
+      // ductPa 2.0 = 계획 단계의 개략값 (AC-026 Rule 8).
       //   이 탭은 덕트 크기를 아직 모르는 단계에서 팬을 잡기 위한 것이다.
-      //   계통 평균 마찰이 0.67~3.16 Pa/m 이며 2.0 은 그 가운데다 (26.4.3).
-      //   실시 단계에서 duct-calc 으로 덕트를 그린 뒤에는 구간별로 다시 낸다 (26.4.5).
-      //   되짚어 확인하는 절차가 없으므로 낮은 쪽을 피하였다 (26.4.4)
+      //   계통 평균 마찰이 0.67~3.16 Pa/m 이며 2.0 은 그 가운데다 (AC-026 2.1).
+      //   실시 단계에서 duct-calc 으로 덕트를 그린 뒤에는 그 「ESP 에 넣을 값」으로 바꾼다 (AC-028 Rule 3).
+      //   낮게 잡으면 팬이 모자라므로 낮은 쪽을 피하였다 (AC-026 4.4)
       const ductLen=defV('ductLen',0),ductPa=defV('ductPa',2);
-      const fitPct=defV('fitPct',50);   // 기준: AC-028 28.3.2.4 — 여유가 아니라 국부손실이다. 빼면 정압이 모자란다
+      const fitPct=defV('fitPct',50);   // 기준: AC-028 Rule 2 — 기본설계 어림. 여유가 아니라 국부손실이다. 실시설계는 KDS 31 25 30 4.2(1) 부속 저항계수가 원칙
       // 디퓨저·댐퍼·루버는 실에 있는 개수가 아니라 「가장 먼 경로 위에 차례로 놓인 개수」다. 공기는 갈라져 나가므로 병렬 기구는 1개분만 저항이 된다 (2026-10-23 검토 #36)
-      const diffEa=defV('diffEa',1),diffPa=defV('diffPa',30);   // 기준: AC-028 28.3.2.5 — 면풍속 2.5·개구율 0.65 의 동압 8.9 Pa × 손실계수 3
+      const diffEa=defV('diffEa',1),diffPa=defV('diffPa',26);   // 기준: AC-028 Rule 2-1 — 유효풍속 동압 × 3. 기본 26 Pa = 기계실 RC45 흡입 3.8 m/s (3 × 0.6 × 3.8²). 제품값 우선 (2026-11-05, 종전 30 Pa 폐지)
       const fdPa=defV('fdPa',0);
       const vdEa=defV('vdEa',1),vdPa=defV('vdPa',10);
       const louEa=defV('louEa',1),louPa=defV('louPa',50);
@@ -3157,8 +3159,8 @@ function renderCapCalc(){
       const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100);
       const diffT=diffEa*diffPa,fdT=fdPa,vdT=vdEa*vdPa,louT=louEa*louPa,filtT=filtPa;
       const espSub=ductT+fittT+diffT+fdT+vdT+louT+filtT;
-      const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 28.3.1.2 — 안전율 10%. AC-012 와 같은 값
-      const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 28.3.2.6 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
+      const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 Rule 1 — 안전율 10%. AC-012 와 같은 값
+      const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 Rule 1 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
       const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
       const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
@@ -3200,7 +3202,7 @@ function renderCapCalc(){
                   <td style="padding:3px 6px">DUCT &times; ${inp('fitPct',fitPct,42,'%')} %</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(fittT)} Pa</td></tr>
                 <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">DIFF. &amp; GRILLE</td>
-                  <td style="padding:3px 6px">${inp('diffEa',diffEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA</td>
+                  <td style="padding:3px 6px">${inp('diffEa',diffEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC45 흡입 26 (AC-028 Rule 2-1)</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(diffT)} Pa</td></tr>
                 <tr><td style="padding:3px 6px;color:#475569">FIRE DAMPER</td>
                   <td style="padding:3px 6px">${inp('fdPa',fdPa,55,'Pa')} Pa</td>
@@ -3560,6 +3562,10 @@ function renderCapCalc(){
                   ['hotel','호텔',25,0.80],['hosp','병원',25,0.60],['factory','공장',40,1.00],
                   ['school','학교',40,1.00],['ymca','YMCA',40,1.00],['gym','체육관',40,1.00]];
     const hwUseRow=k=>HW_USE.find(x=>x[0]===k)||HW_USE.find(x=>x[0]==='factory');
+    // 기준: AC-022 Rule 6 — 급수온도는 프로젝트 공통값 하나(기본 5 ℃). 실별 전기온수기와 중앙식이 같이 쓴다 (2026-11-05, 실별 15 ℃ 폐지)
+    const HW_TC=()=>{const v=(STATE.project||{}).hwTc;return(v!==undefined&&v!=='')?(parseFloat(v)||0):5;};
+    // 기준: AC-022 Rule 1 — 표 4.5 【주】 2) 의 V 는 「유효 저탕용량」. 공칭 × 유효율 0.75 ≥ V 로 판정 (2026-11-05)
+    const HW_EFF=0.75;
     // 기준: 표 4.5 기구별 급탕량 [L/기구 1개·h] — 급탕온도 60℃ 기준. 값의 순서 = HW_USE 순서. '−' 는 0.
     //   식기세척기 범위값은 [하한, 상한] — 기본값은 상한(안전측). 기기를 알면 제조업체 자료로 산출 (주 *1).
     //   (예전 「1회 급탕량 × 시간당 횟수, 사용온도 43℃」 방식은 2026-11-04 폐지)
@@ -3592,7 +3598,7 @@ function renderCapCalc(){
       const useRow=hwUseRow(useK);
       // 보일러 그룹에 보이는 기구 = 이 용도에 표 값이 있거나 이미 수량이 들어간 기구
       const gFX=FX45.filter(fx=>fxVal(fx,useK)>0||bRooms.some(r=>parseFloat((r.capHW||{})[fx[0]+'Cnt'])>0));
-      let gLph=0,gCnt=0,gShBase=0;   // gShBase = 샤워기수 x 1회사용량(사용온도 기준) — 피크 검산 전용 (AC-022 4-④)
+      let gLph=0,gCnt=0,gShBase=0;   // gShBase = 샤워기수 x 1회사용량(사용온도 기준) — 피크 검산 전용 (AC-022 Rule 3)
       const rowsHtml=bRooms.map(r=>{
         const bf=getBF(r.bldgId,r.floorId); const rid=r.id;
         const dh=(k,d)=>{const v=(r.capHW||{})[k];return(v!==undefined&&v!=='')?(parseFloat(v)||0):d;};
@@ -3601,7 +3607,7 @@ function renderCapCalc(){
           const k=fx[0];
           const cnt=dh(k+'Cnt',0),lph=dh(k+'Lph',fxVal(fx,useK));   // 표 4.5 기구별 급탕량 (60℃)
           rLph+=cnt*lph; rCnt+=cnt;
-          if(k==='sh') gShBase+=cnt*dh('shLpf',40);
+          if(k==='sh') gShBase+=cnt*gv('shFlow',11.4)*15;   // 기준: AC-022 Rule 3 — 1회 = 헤드 유량 × 15 분 (ASHRAE 2023 A Ch.51 Table 16). 종전 40 L 폐지
           return '<td style="padding:2px 4px"><input type="number" value="'+(cnt||'')+'" min="0" style="width:44px" onchange="sCHW(\''+rid+'\',\''+k+'Cnt\',parseFloat(this.value)||0);renderCapCalc()"></td>';
         }).join('');
         gLph+=rLph; gCnt+=rCnt;
@@ -3611,11 +3617,11 @@ function renderCapCalc(){
       //   기구별 급탕량 집계 x 동시사용률 = Qh -> x 저탕용량 계수 = V,  가열능력 = Qh x (급탕온도 - 급수온도)
       const gSim=gv('simRate',useRow[2]);
       const stC =gv('stCoef',useRow[3]);
-      const Th=gv('tHot',60), Tc=gv('tCold',5), tUse=gv('tUse',43);
+      const Th=gv('tHot',60), Tc=HW_TC(), tUse=gv('tUse',43);
       const Qh=gLph*gSim/100;            // 시간당 급탕량
       const stReq=Qh*stC;                // 저탕량 V
       const STD_TANK=[100,150,200,300,400,500,700,1000,1500,2000,3000];
-      const stRec=STD_TANK.find(v=>v>=stReq)||Math.ceil(stReq/500)*500;
+      const stRec=STD_TANK.find(v=>v*HW_EFF>=stReq)||Math.ceil(stReq/HW_EFF/500)*500;   // 공칭 × 0.75 ≥ V (AC-022 Rule 1)
       // 기준: 표 4.5 주 1) — 가열능력 = 기구 급탕량 누계 x 동시사용률(=Qh) x (60℃ - 급수온도). 0.1 kW 올림
       //   주 2) 저탕용량 계수를 줄이면 그만큼 가열능력을 키워야 한다 — 표의 계수와 이 가열능력이 한 세트다.
       //   (예전 「가열능력은 계산하지 않고 제품 사양을 따른다」는 판단은 2026-11-04 폐지)
@@ -3624,7 +3630,7 @@ function renderCapCalc(){
       const mix=(tUse>Tc)?(Th-Tc)/(tUse-Tc):1;                 // 혼합계수 (60-5)/(43-5)
       // 회복 시간 — 다음 교대까지 채우는가 (22.3.4 b)
       const rcvHr=(selKWp>0&&Th>Tc)?(stRec*(Th-Tc)/(selKWp*860)):0;
-      // ── 피크 검산 — 기준: AC-022 22.3.3.5. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
+      // ── 피크 검산 — 기준: AC-022 Rule 3. 본 계산이 아니라 교대 몰림을 한 번 더 보는 것
       const stVol=gv('stVol',stRec), pkMin=gv('pkMin',30), pkTurn=gv('pkTurn',1.0);
       const effR=gv('effR',0.75);
       const pkNeed=(gShBase>0?gShBase*pkTurn:Qh*mix*pkMin/60); // 피크 필요량 (사용온도 기준 — Qh 는 60℃ 기준이라 혼합계수를 곱한다)
@@ -3633,7 +3639,7 @@ function renderCapCalc(){
       const rcAvail=rcvLph*pkMin/60*mix;                       // 회복분
       const stTot=stAvail+rcAvail;
       const okS=stVol>0&&stTot>=pkNeed;
-      // ── 계통 형식 — 기준: AC-022 22.3.3.1 (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
+      // ── 계통 형식 — 기준: AC-022 Rule 4 (A 저탕일체형 / B 저탕식+저탕조 / C 순간식+저탕조)
       const sysT=gs('sysT','A');
       const sepTank=(sysT!=='A');          // 별도 저탕조가 있는가
       const needP1 =(sysT!=='A');          // 1차(열원순환) 펌프가 필요한가
@@ -3647,15 +3653,19 @@ function renderCapCalc(){
       const ok1=sel1Q>0&&sel1H>0&&sel1Q>=p1Lph/60&&sel1H>=head1;
       // 2차(급탕순환) 펌프 — 환탕 채용 여부
       const hasRet=gs('hasRet','Y')==='Y';
-      const cDiv=gv('circDiv',8);
-      const circLph=cDiv>0?Qh/cDiv:0;
+      // 기준: AC-022 Rule 5 · HW-001 — 순환수량 = 순환 루프 열손실 ÷ (ρCp × 5 K). 자료가 없으면 30 W/m × 순환배관 길이.
+      //   종전 「Qh ÷ 8」(사용량 비례)은 폐지 (2026-11-05). 사용량과 순환량은 관계가 없다
+      const retLen=gv('retLen',0), retWpm=gv('retWpm',30), retDT=gv('retDT',5);
+      const circLph=(retLen>0&&retDT>0)?retLen*retWpm/(1.163*retDT):0;
       const head=gv('head',0);
       const selQ=gv('selQ',0), selH=gv('selH',0);
       const okKW=selKWp>0&&selKWp>=reqKW;
-      const okB=stVol>0&&stVol>=stReq&&okKW;   // 판정: 저탕용량과 가열능력 둘 다 (표 4.5 주 1)·2))
+      const stEffIn=gv('stEffIn',0);   // 제조사가 밝힌 유효 저탕량 (있으면 우선)
+      const stEffV=stEffIn>0?stEffIn:stVol*HW_EFF;
+      const okB=stVol>0&&stEffV>=stReq&&okKW;   // 판정: 유효 저탕량(공칭 × 0.75)과 가열능력 둘 다 (표 4.5 【주】 1)·2), AC-022 Rule 1)
       const okP=selQ>0&&selH>0&&selQ>=circLph/60&&selH>=head;
       const selTank=gv('selTank',0);
-      const okT=sepTank?(selTank>0&&selTank>=stReq):(stVol>0&&stVol>=stReq);
+      const okT=sepTank?(selTank>0&&selTank*HW_EFF>=stReq):(stVol>0&&stEffV>=stReq);
       const I=(k,v,st,w)=>'<input type="number" value="'+(v||'')+'" step="'+st+'" style="width:'+(w||62)+'px" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">';
       const SEL=(k,opts,cur)=>'<select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="(STATE.project.hwB=STATE.project.hwB||{})[\''+k+'\']=this.value;renderCapCalc()">'
         +opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
@@ -3667,7 +3677,7 @@ function renderCapCalc(){
         +'<span style="font-weight:700;font-size:12px">중앙식 급탕 — 보일러 · 저탕조 · 순환펌프 선정</span>'
         +'<span style="font-size:9px;opacity:.85">기준: AC-022 · HW-001 &nbsp;|&nbsp; 대상 '+bRooms.length+'개 실</span></div>'
         +'<div style="padding:10px 14px">'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 계통 형식 <span style="font-weight:400;color:#94a3b8">— 열을 만드는 곳과 담는 곳이 한 몸이냐 (기준: AC-022 4-①)</span></div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 계통 형식 <span style="font-weight:400;color:#94a3b8">— 열을 만드는 곳과 담는 곳이 한 몸이냐 (기준: AC-022 Rule 4)</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>'+SEL('sysT',[['A','A · 저탕식 보일러 (저탕 일체형)'],['B','B · 저탕식 보일러 + 별도 저탕조'],['C','C · 순간식 보일러 + 저탕조']],sysT)+'</span>'
         +'<span>환탕(2차 순환) '+SEL('hasRet',[['Y','채용'],['N','없음']],hasRet?'Y':'N')+'</span></div>'
@@ -3677,7 +3687,7 @@ function renderCapCalc(){
           :(sysT==='B'
             ?'<b>보일러 저탕 + 별도 저탕조.</b> 회복이 모자라 증설하는 형태 → <b>1차 펌프 필요.</b>'
             :'<b>보일러는 열만 만들고 저장은 탱크가 한다.</b> → <b>1차 펌프 필수.</b> 대형·연소식(경유) 구간이다.'))
-        +(hasRet?'':'<br><b>환탕 없음</b> — 보일러를 사용처 가까이 둔 계통. 관내 용적 3 lit 이하면 정상이다.')
+        +(hasRet?'':'<br><b>환탕 없음</b> — 열원에서 말단까지 배관거리 30 m 미만이고 기구까지 15 m 이하일 때만 (HW-001, AC-022 Rule 5).')
         +'</div>'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 급탕량 집계 (보일러 그룹) <span style="font-weight:400;color:#94a3b8">— 표 4.5 기구별 급탕량, 급탕온도 60℃ 기준 · 열 머리의 값은 '+useRow[1]+' 용도 값</span></div>'
         +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
@@ -3696,44 +3706,46 @@ function renderCapCalc(){
         +'<span>저탕용량 계수 '+I('stCoef',stC,0.05,50)+'</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px;margin-top:6px">'
         +'<span>급탕온도 '+I('tHot',Th,1,45)+' ℃</span>'
-        +'<span>급수온도 '+I('tCold',Tc,1,45)+' ℃</span>'
+        +'<span>급수온도 <input type="number" value="'+Tc+'" step="1" style="width:45px" onchange="STATE.project.hwTc=this.value;renderCapCalc()"> ℃ <span style="color:#94a3b8">(프로젝트 공통 · 실별 전기온수기와 같이 바뀜)</span></span>'
         +'<span>사용온도 '+I('tUse',tUse,1,45)+' ℃</span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'시간당 급탕량 Q<sub>h</sub> = '+f1(gLph)+' × '+gSim+'% = <b>'+f1(Qh)+' lit/h</b><br>'
         +'저탕량 V = '+f1(Qh)+' × 계수 '+stC+' = <b style="color:#b45309">'+f0(stReq)+' lit</b>'
-        +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b></div>'
+        +' &nbsp;→&nbsp; 권장 규격 <b style="color:#1d4ed8">'+f0(stRec)+' lit</b> <span style="color:#64748b">(V 는 유효 저탕용량 — 공칭 × '+HW_EFF+' ≥ V)</span></div>'
         +HD('④','기기 선정','저탕용량과 가열능력 — 표 4.5 주 1)·2)')
         +'<div style="margin-bottom:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px">'
         +'가열능력 = Q<sub>h</sub> '+f1(Qh)+' lit/h × ('+Th+'−'+Tc+')℃ × 1.163 ÷ 1,000 = <b style="color:#b45309">'+reqKW+' kW</b>'
         +'<span style="color:#64748b"> — 저탕용량 계수를 표 값보다 줄이면 그만큼 가열능력을 키운다 (주 2)</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>'+(sepTank?'선정 저탕조':'선정 저탕용량')+' '+I('stVol',stVol,10,60)+' lit'
-        +'<span style="margin-left:6px;font-weight:700;color:'+(stVol>=stReq?'#16a34a':'#dc2626')+'">'+(stVol>0?(stVol>=stReq?'✓ OK':'✗ 부족'):'— 미입력')+'</span></span>'
-        +'<span>제품 가열능력 '+I('selKW',selKWp,0.1,55)+' kW <span style="color:#94a3b8">(카탈로그)</span>'+OKM(okKW,selKWp>0)+'</span></div>'
+        +'<span style="margin-left:6px;font-weight:700;color:'+(stEffV>=stReq?'#16a34a':'#dc2626')+'">'+(stVol>0?(stEffV>=stReq?'✓ OK':'✗ 부족'):'— 미입력')+' <span style="font-weight:400;color:#64748b">유효 '+f0(stEffV)+' lit</span></span></span>'
+        +'<span>제조사 유효 저탕량 '+I('stEffIn',stEffIn,10,60)+' lit <span style="color:#94a3b8">(있으면 · 없으면 공칭 × '+HW_EFF+')</span></span>'
+        +'<span>제품 가열능력 '+I('selKW',selKWp,0.1,55)+' kW <span style="color:#94a3b8">(카탈로그의 가열·출력 능력 — 정격소비전력과 다른 항목일 수 있음)</span>'+OKM(okKW,selKWp>0)+'</span></div>'
         +'<div style="margin-top:8px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
         +(selKWp>0
           ?('회복 시간 = '+f0(stRec)+' lit × ('+Th+'−'+Tc+')℃ ÷ ('+selKWp+' kW × 860) = <b>'+rcvHr.toFixed(1)+' 시간</b>'
-            +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다 (22.3.4 b)</span>')
+            +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다 (AC-022 Rule 3)</span>')
           :'<span style="color:#64748b">제품 가열능력을 넣으면 판정과 회복 시간(참고)을 계산한다</span>')
         +'</div>'
-        +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다 (22.4.5)')
+        +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다 (AC-022 Rule 3)')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>피크 시간 '+I('pkMin',pkMin,5,45)+' 분</span>'
         +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(교대인원 × 이용률 ÷ 샤워기수)</span></span>'
-        +'<span>유효율 '+I('effR',effR,0.05,45)+'</span></div>'
+        +'<span>유효율 '+I('effR',effR,0.05,45)+'</span>'
+        +'<span>샤워 헤드 유량 '+I('shFlow',gv('shFlow',11.4),0.1,45)+' L/min × 15 분 <span style="color:#94a3b8">(ASHRAE 2023 Ch.51 Table 16)</span></span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'혼합계수 = ('+Th+'−'+Tc+') ÷ ('+tUse+'−'+Tc+') = <b>'+mix.toFixed(2)+'</b><br>'
-        +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit(1회 40 lit, 사용온도) × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × 혼합계수 × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
+        +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit(1회 = '+gv('shFlow',11.4)+' L/min × 15 분, 사용온도) × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × 혼합계수 × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
         +'가용량 = 저장 '+f0(stVol)+'×'+effR+'×'+mix.toFixed(2)+' ('+f0(stAvail)+') + 회복 '+f0(rcvLph)+' lit/h×'+pkMin+'분×'+mix.toFixed(2)+' ('+f0(rcAvail)+')'
         +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
-        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 검산이 본 계산을 이긴다. '+f0(stReqChk)+' lit 이상으로 올린다 (22.4.5 e)')):'— 저탕용량 미입력')+'</div>'
+        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 검산이 본 계산을 이긴다. '+f0(stReqChk)+' lit 이상으로 올린다 (AC-022 Rule 3)')):'— 저탕용량 미입력')+'</div>'
         +(sepTank
           ?('<div style="margin-top:6px;font-size:10.5px">선정 저탕조 <b>'+I('selTank',selTank,10,70)+'</b> lit'
             +OKM(okT,selTank>0)+'</div>')
           :'<div style="margin-top:6px;font-size:10px;color:#64748b">※ A형은 <b>보일러 사양의 저탕용량이 곧 이 값</b>이다. 장비일람표에 별도 저탕조를 올리지 않는다.</div>')
         +(needP1
-          ?(HD('⑥','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 4-③)')
+          ?(HD('⑥','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 Rule 4)')
             +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
             +'<span>보일러 입·출구 온도차 ΔT '+I('dT1',dT1,1,45)+' ℃</span>'
             +'<span>→ 순환유량 <b style="color:#b45309">'+f0(p1Lph)+' lit/h ('+f1(p1Lph/60)+' lit/min)</b></span>'
@@ -3744,11 +3756,12 @@ function renderCapCalc(){
             +'<div style="margin-top:6px;font-size:10.5px">선정 1차펌프 <b>'+I('sel1Q',sel1Q,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('sel1H',sel1H,0.1,55)+'</b> m'
             +OKM(ok1,sel1Q>0&&sel1H>0)+'</div>')
           :'')
-        +HD(needP1?'⑦':'⑥','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 배관이 길 때만 (기준: AC-022 4-③)')
+        +HD(needP1?'⑦':'⑥','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 열원에서 말단까지 30 m 이상일 때 (기준: AC-022 Rule 5 · HW-001)')
         +(hasRet?'':'<div style="padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:10.5px;color:#475569">환탕 <b>없음</b>으로 선택했다 — 2차 펌프를 두지 않는다. 보일러를 사용처 가까이 두는 계통이다.</div>')
-        +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 통상 설계유량의 1/5~1/10 (기준: HW-001)</div>'
+        +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 열손실 ÷ (1.163 × ΔT). 자료가 없으면 30 W/m × 순환배관 길이 (HW-001)</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
-        +'<span>순환비율 Q<sub>h</sub> ÷ '+I('circDiv',cDiv,1,45)+'</span>'
+        +'<span>순환배관 길이 '+I('retLen',retLen,1,50)+' m × '+I('retWpm',retWpm,1,40)+' W/m ÷ (1.163 × ΔT '+I('retDT',retDT,1,35)+' K)</span>'
+        +(retLen>0?'':'<span style="color:#dc2626;font-weight:700">순환배관 길이를 넣으세요 (위생앱 환탕 루프)</span>')
         +'<span>→ 순환유량 <b style="color:#b45309">'+f1(circLph)+' lit/h ('+f1(circLph/60)+' lit/min)</b></span>'
         +'<span>양정 '+I('head',head,0.1,55)+' m <span style="color:#94a3b8">(환탕 회로 마찰 — 위생앱 배관에서)</span></span></div>'   // 기준: AC-030 30.3.3.3 — 환탕은 닫힌 회로이므로 건물 높이를 넣지 않는다. 넣으면 펌프가 대여섯 배가 된다
         +'<div style="margin-top:6px;font-size:10.5px">선정 펌프 <b>'+I('selQ',selQ,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('selH',selH,0.1,55)+'</b> m'
@@ -3788,7 +3801,7 @@ function renderCapCalc(){
         +'<div style="margin-top:8px;font-size:9.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:6px 10px">'
         +'※ <b>급탕 공급관·환탕관 관경은 위생앱(sanitary-pipe-calc)에서 산정</b>한다 — 기준: HW-001. '
         +'여기서는 <b>기기 용량만</b> 정한다. <b>2차 펌프 양정</b>은 그 배관 산정 결과를 옮겨 넣는다.<br>'
-        +'※ 부속·밸브류는 <b>기준 AC-022 5절</b>의 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
+        +'※ 부속·밸브류는 <b>기준 IN-001</b> 의 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
         +'</div></div>';
     }
     const boilerHtml=html; html='';
@@ -3821,10 +3834,10 @@ function renderCapCalc(){
       // 가열능력 — 학회 설계기준 표 4.5 주 1): 급탕량 누계 × 동시사용률(=Qh) × (급탕온도−급수온도).
       //   저탕량 V 를 가열시간으로 나누던 식은 폐지 (2026-11-02). 탱크가 피크를 받는 몫은 저탕용량계수에 이미 들어 있어
       //   가열능력을 다시 시간으로 나누면 같은 효과를 두 번 깎는다 (기본값 3h 에서 기준값의 1/3).
-      const tHot=defH('tHot',60),tCold=defH('tCold',15),dTw=Math.max(tHot-tCold,0);
+      const tHot=defH('tHot',60),tCold=HW_TC(),dTw=Math.max(tHot-tCold,0);   // 급수온도 = 프로젝트 공통 (AC-022 Rule 6)
       const autoKw=Qh>0&&dTw>0?Math.ceil(Qh*dTw*1.163/100)/10:0; // kW, 0.1kW 올림
       const STORE_CAPS=[15,30,50,80,100,150,200,300,500];
-      const reqStoreCap=V; // 저탕량 V와 동일 근거로 표준탱크 자동선정
+      const reqStoreCap=V/HW_EFF; // V 는 유효 저탕용량 — 공칭 × 0.75 ≥ V 인 표준탱크 자동선정 (AC-022 Rule 1)
       const autoStoreCap=STORE_CAPS.find(c=>c>=reqStoreCap)||STORE_CAPS[STORE_CAPS.length-1];
       const specRow=(fld,label,val,unit,type,ph)=>
         `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:11px;gap:6px">
@@ -3893,7 +3906,7 @@ function renderCapCalc(){
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span>가열능력 = ${f1(Qh)} lit/h &times; (</span>
               <input type="number" value="${tHot}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tHot',parseFloat(this.value)||60);renderCapCalc()"> &minus;
-              <input type="number" value="${tCold}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tCold',parseFloat(this.value)||15);renderCapCalc()"> )℃ &times; 1.163 &div; 1,000
+              <input type="number" value="${tCold}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="STATE.project.hwTc=this.value;renderCapCalc()" title="프로젝트 공통 급수온도 — 모든 실과 중앙식이 같이 바뀜"> )℃ &times; 1.163 &div; 1,000
               <span style="font-weight:700;color:#1e3a5f">=&nbsp;&nbsp;${autoKw} kW</span>
               <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.5 주 1)</span>
             </div>
@@ -3913,15 +3926,16 @@ function renderCapCalc(){
             ${specRow('model','모델명',r.capHW.model||'','','text','카탈로그 또는 직접 입력')}
             ${r.capHW.type||r.capHW.maxTemp!=null||r.capHW.maxPres||r.capHW.pipeDia!=null?`<div style="font-size:10px;color:#475569;padding:4px 0 4px 20px;border-bottom:1px solid #f1f5f9">카탈로그: ${[r.capHW.type?esc(r.capHW.type):'',r.capHW.vol!=null?fW(r.capHW.vol)+' L':'',r.capHW.maxTemp!=null?'최고 '+r.capHW.maxTemp+'℃':'',r.capHW.maxPres?'최고압 '+esc(r.capHW.maxPres):'',r.capHW.pipeDia!=null?'냉·온수 '+r.capHW.pipeDia+'A':''].filter(Boolean).join(' · ')}</div>`:''}
             ${specRow('storeCap','저탕용량',r.capHW.storeCap||autoStoreCap,'lit','number','')}
-            ${(parseFloat(r.capHW.storeCap)||autoStoreCap)<V?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 저탕량 ${f1(V)} lit 보다 작습니다</div>`:''}
+            ${(parseFloat(r.capHW.storeCap)||autoStoreCap)*HW_EFF*(parseInt(r.capHW.cnt)||Math.ceil(V/((parseFloat(r.capHW.storeCap)||autoStoreCap)*HW_EFF))||1)<V?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 유효 저탕량(공칭 × ${HW_EFF} × 수량)이 V ${f1(V)} lit 보다 작습니다</div>`:''}
             ${specRow('dims','규격',r.capHW.dims||'','mm','text','W×D×H mm')}
             ${specRow('kw','소비전력',r.capHW.kw||autoKw,'kW','number',String(autoKw)+' (자동)')}
+            ${(parseFloat(r.capHW.kw)>0&&parseFloat(r.capHW.kw)*(parseInt(r.capHW.cnt)||1)<autoKw)?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 필요 가열능력 ${autoKw} kW 보다 작습니다 (급수온도 ${tCold} ℃ 기준으로 다시 계산됨)</div>`:''}
             ${specRow('volt','전원',r.capHW.volt||'1P × 220V × 60Hz','','text','1P × 220V × 60Hz')}
             <div style="display:flex;align-items:center;padding:4px 0;font-size:11px;gap:6px">
               <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:90px;color:#334155">수량</span><span style="color:#94a3b8">:</span>
-              <input type="number" value="${r.capHW.cnt||Math.ceil(V/(r.capHW.storeCap||autoStoreCap))||1}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','cnt',parseInt(this.value)||1)">
+              <input type="number" value="${r.capHW.cnt||Math.ceil(V/((r.capHW.storeCap||autoStoreCap)*HW_EFF))||1}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','cnt',parseInt(this.value)||1)">
               <span style="font-size:10px;color:#94a3b8">EA</span>
-              <span style="font-size:9px;color:#2563eb">(자동: ${Math.ceil(V/(r.capHW.storeCap||autoStoreCap))||1} EA)</span>
+              <span style="font-size:9px;color:#2563eb">(자동: ${Math.ceil(V/((r.capHW.storeCap||autoStoreCap)*HW_EFF))||1} EA)</span>
             </div>
           </div>
         </div>
