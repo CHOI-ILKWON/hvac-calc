@@ -413,11 +413,11 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물의 에너지절약설계기준 (고시 제2025-738호)</td><td class="L">기상조건 (외기온·습도)</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창 U값 기준값 (지역구분 자동)</td></tr>
         <tr><td class="L">건축물의 설비기준 등에 관한 규칙</td><td class="L">제11조 [별표 1의6] 다중이용시설 필요환기량</td><td class="L" style="color:#b45309">참고 — <b>다중이용시설 대상</b>. 업무시설·공장은 대상 아님</td></tr>
-        <tr><td class="L">ASHRAE 62.1 대비</td><td class="L">사무실 산식 2.5 L/s·인 + 0.3 L/s·㎡ → 10㎡/인에서 약 20㎥/h·인</td><td class="L">인당 외기량 25㎥/h — 법정 대상 아님. 산식 대비 안전측</td></tr>
+        <tr><td class="L">ASHRAE 62.1 대비</td><td class="L">사무실 산식 2.5 L/s·인 + 0.3 L/s·㎡ → 10㎡/인에서 약 20㎥/h·인</td><td class="L">인당 외기량 25㎥/h — 학회 설계기준 4.2 (3) · 4.3 (1) 「Q = 25 × N」. 법정 대상 아님. 산식 대비 안전측 (AC-007)</td></tr>
         <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 4.5 「부속실의 환기방식」</td><td class="L">실 용도별 환기횟수 (회/h) — 전기실·발전기실은 준용</td></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표8] 냉·난방설비의 용량계산을 위한 실내 온·습도 기준</td><td class="L">실내 설계 온습도 (제7조 제1항)</td></tr>
-        <tr><td class="L" style="color:#b45309">당사 설계기준</td><td class="L" style="color:#b45309">ASHRAE 계열보다 밀집한 안전측 값</td><td class="L">재실밀도 (사무실 10 · 부속실 50 ㎡/인) — 실제 좌석수·근무인원을 알면 그 인원 우선</td></tr>
-        <tr><td class="L">ASHRAE 동등</td><td class="L">Handbook—Fundamentals 「Heat and Moisture Given Off by Human Beings」 앉은 경작업 합계 117W</td><td class="L">인체발열 57/62 W/인 — 합계 119W 로 ASHRAE 와 동등, 실온 26℃ 에서 잠열 비중이 늘어난 배분</td></tr>
+        <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 16.2 「인원밀도 ≒ 0.1~0.2 인/㎡」 · 제1편 2장 1.8 (4) 5) 「재실인원 : 정수로 한다」</td><td class="L">재실밀도 사무실 10 ㎡/인(범위의 완화측 끝) · 부속실 50 ㎡/인(사내 판단) — 실제 좌석수·근무인원을 알면 그 인원 우선. 재실인원은 올림 정수 (AC-007)</td></tr>
+        <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」</td><td class="L">인체발열 = 작업 상태 × 실온 — 사무실·중앙제어실 사무소·경보행 131 W(26℃ 63/69 · 24℃ 72/59), 그 밖 경작업 117 W(26℃ 62/56). 표에 없는 실온은 직선보간 (AC-007)</td></tr>
         <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 2.22 ETD · 표 2.36 방위계수</td><td class="L">외벽 CLTD 교차검토 · 난방 방위계수 (AC-005)</td></tr>
         <tr><td class="L">축열 반영 일사부하</td><td class="L">방위·시각별 표 (서울 37°N 7월) — 맑은 날 수직면 일사량의 약 63%(동·서)</td><td class="L">유리 일사취득 = 면적 × SC(=SHGC÷0.87) × 표값 (AC-005 4.1.5)</td></tr>
         <tr><td class="L">물리 환산</td><td class="L">설계조도 ÷ 유효 광효율 50 lm/W (LED 보급형)</td><td class="L">조명발열 W/m² — 사무실 6 W/㎡ 는 ASHRAE 90.1 사무실 한도(약 6.9)와 같은 수준. 기구 실제 소비전력을 알면 그 값 우선</td></tr>
@@ -543,28 +543,28 @@ const DIR_HF_ROOF = 1.20;
 //   300 lx → 6 · 200 lx → 4 · 150 lx → 3 · 100 lx → 2 W/㎡
 // 2026-08-28 이전에는 ÷20 이었고 그것은 자기식 안정기를 쓰던 구형 형광등 수준(유효 20 lm/W)이었다. 주석만 「LED 기준」이라 적혀 있었다
 const RT = {
-  mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:3 ,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', phS:57, phL:62}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; phS/phL — od:0이라 미사용
+  mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:3 ,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', act:'light'}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; act — 무인(ia:0)이라 미사용
   // 기준: AC-021 — 24h 운전실. 전기실의 발열은 PAC 이 전담하고 배기팬은 환기용이다 (온도연동 아님 — AC-017 4.3.1)
-  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
+  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:12, eqD:100, ce:'PAC',  he:'없음',      ve:'벽부형팬', act:'light'}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
            // va:12 는 「평시 환기」의 값이다. 발열 제거는 PAC 이 전담한다 — 여름 외기 31.2℃ 가 허용 30℃ 보다 높아 환기로는 성립하지 않는다 (AC-017 3.2.1)
            // 그래서 온도로 제어하지 않는다. KDS 31 25 20 의 온도연동 조항은 「환기로 발열을 제거하는」 경우를 전제한 것이라 우리와 전제가 다르다 (AC-017 4.3.1)
            // 실압은 균형~약한 부압. 급기팬이 없어 가압을 만들 수단이 없으므로 가압을 두지 않는다 (AC-018 3.5.1)
            // 가스계 소화설비가 있으면 급기 루버에도 MD 를 달고 방출신호에 닫는다 (AC-016 Rule 6)
            // cdb:30 — 판넬류 허용온도 기준; 계측실도 상시 무인 계기·패널실로 보아 여기 포함
-  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:15, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', phS:57, phL:62}, // 기준: AC-017 4.4 — va:15 는 「정지 중·평시」의 값이다 (학회 설계기준 표 4.5 기계실 10~15 의 상한 준용)
+  genset:  {lb:'비상발전기실류',            cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:15, eqReq:false, ce:'없음', he:'없음',      ve:'벽부형팬', act:'light'}, // 기준: AC-017 4.4 — va:15 는 「정지 중·평시」의 값이다 (학회 설계기준 표 4.5 기계실 10~15 의 상한 준용)
            // 운전 중의 열은 팬이 아니라 엔진 라디에이터 냉각풍이 가져간다 — 500 kW 급 약 88,500 ㎥/h 가 급기루버→실→라디에이터→배기덕트 로 실을 관통한다 (AC-017 3.3.1)
            // 그래서 설계의 핵심은 회/h 가 아니라 급기 루버 면적이다: KDS 31 25 30 4.4 로 300 kW 약 7~11 ㎡ · 500 kW 약 12~18 ㎡ · 1,000 kW 약 25~37 ㎡ (전면면적, 개구율 45 % 초과 ~ 30 %) — AC-018 4.3.1 (2026-11-05)
            //   3,300 L/s 이상은 전면풍속 2.0 m/s 이하, 개구율 45 % 이하면 키운다. 최종 면적은 발전기 제조사의 냉각풍량·허용 정압 (종전 학회 표 4.6 3.0 m/s · α 0.3 은 폐지)
            // 배기팬은 급기 루버 반대편 상부에 둔다(기류분포용). ve 는 지상이면 벽부형팬, 지하·덕트면 인라인덕트팬 (AC-029)
            // cdb:null — 냉방하지 않는다. 실온은 외기 + 약 2.4 K 로 유지된다
            // 가스계 소화설비가 방출되면 급기 루버 MD 가 닫혀 엔진이 정지한다 — 소화방식을 전기·소방팀과 협의 (AC-016 4.5.1)
-  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:4 , va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'전기온수기', phS:58, phL:58}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
-  shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:4 , va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'보일러(중앙식)', phS:58, phL:58}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관)
-  locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:4 , va:5,  eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', phS:58, phL:58}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:5 — 기준: AC-017 · 설계기준 표4.5 「탈의실 5」. 샤워실은 별도 용도(shower)로 분리했다; phS/phL — 경작업~안정 수준 (ASHRAE Table 1)
-  office:  {lb:'사무실류',                  cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:true,  lw:6 , va:0,  eqD:9,  ce:'EHP',  he:'EHP',        ve:'전열교환기', phS:57, phL:62}, // lw:6 — 기준: AC-008 (조명발열, 300 lx ÷ 50); ce/he:'EHP' — 기준: AC-015 (개별식 표준); ia:10m²/인, va:0 — 재실인원×25m³/h·인. 기준: AC-017 — 우리 시설(공장·발전소 업무실)은 다중이용시설이 아니므로 법정 환기량 기준이 없다. 25는 실무 관행값(별표1의6의 지하역사·그밖의시설 값과 우연히 같은 수준); phS/phL — 경작업, 좌식 (ASHRAE Table 1); hrh:null — 기준: AC-004 — 겨울 가습 미실시(중앙제어실만 가습). 별표8도 난방 상대습도를 정하지 않는다
-  control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, ia:10, oa:true,  lw:6 , va:0,  eqD:50, ce:'CTH',  he:'PAC',       ve:'전열교환기', phS:57, phL:62}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); phS/phL — office류와 동일; he:'PAC' — 기준: AC-015 · AC-021 — 냉방·습도는 CTH, 난방은 PAC이 담당(CTH 정지 시 백업 겸용). 24h 상주+계장패널 실이라 단일 기기 의존을 피한다; hrh:50 — 기준: AC-004 — 습도 제어 대상실
-  kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:6 , va:8,  ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:false, phS:58, phL:58}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:8 — 기준: AC-017 · 설계기준 표4.5 「배선실(配膳室) 8」; phS/phL:58 — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
-  storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:2 ,  va:5,  eqReq:false,  ce:'없음', he:'없음',       ve:'벽부형팬', phS:57, phL:62}, // va:5 — 기준: AC-017 · 설계기준 표4.5 「서고·창고 5」. 종전 3은 기준보다 낮았다; phS/phL — od:0이라 미사용
+  toilet:  {lb:'화장실류',                  cdb:null,crh:null,hdb:20,  hrh:null,ia:50, oa:false, lw:4 , va:15, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'전기온수기', act:'light'}, // va:15 — 기준: AC-017 · 건축기계설비 설계기준 표4.5 「화장실 10~15(사용빈도가 크면 15)」의 상한. 법정 근거는 아니다; hdb:20 — AIK 일반 사무·업무시설 화장실 기준; act:light — 학회 표 2.32 경작업 (AC-007)
+  shower:  {lb:'샤워실류',                  cdb:null,crh:null,hdb:24,  hrh:null,ia:50, oa:false, lw:4 , va:10, eqReq:false, ce:'없음', he:'라디에이터', ve:'천정형팬', exhH:false, san:'보일러(중앙식)', act:'light'}, // 기준: AC-014·AC-017 — va:10 설계기준 표4.5 「샤워실 10」; hdb:24 — 젖은 몸이라 탈의실(22)보다 높게. 배기 10회/h 로 실온이 떨어져 난방이 필요하다; san — 샤워 급탕은 보일러(위생앱 소관)
+  locker:  {lb:'탈의실류',                  cdb:26,  crh:60, hdb:22,  hrh:null,ia:50, oa:false, lw:4 , va:5,  eqReq:false, ce:'EHP',  he:'EHP',        ve:'천정형팬', act:'light'}, // cdb:26/crh:60 — 탈의 행위·습기 고려; hdb:22 — 탈의 행위 고려 상향; EHP 냉난방 겸용; va:5 — 기준: AC-017 · 설계기준 표4.5 「탈의실 5」. 샤워실은 별도 용도(shower)로 분리했다; act:light — 학회 표 2.32 경작업 (AC-007)
+  office:  {lb:'사무실류',                  cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:true,  lw:6 , va:0,  eqD:9,  ce:'EHP',  he:'EHP',        ve:'전열교환기', act:'office'}, // lw:6 — 기준: AC-008 (조명발열, 300 lx ÷ 50); ce/he:'EHP' — 기준: AC-015 (개별식 표준); ia:10m²/인, va:0 — 재실인원×25m³/h·인. 기준: AC-017 — 우리 시설(공장·발전소 업무실)은 다중이용시설이 아니므로 법정 환기량 기준이 없다. 25는 실무 관행값(별표1의6의 지하역사·그밖의시설 값과 우연히 같은 수준); act:office — 학회 표 2.32 「사무소·경보행」(표가 사무실을 예로 듦, AC-007); hrh:null — 기준: AC-004 — 겨울 가습 미실시(중앙제어실만 가습). 별표8도 난방 상대습도를 정하지 않는다
+  control: {lb:'중앙제어실류',              cdb:24,  crh:50, hdb:24,  hrh:50, ia:10, oa:true,  lw:6 , va:0,  eqD:50, ce:'CTH',  he:'PAC',       ve:'전열교환기', act:'office'}, // ia:10m²/인, va:0 — 전열교환기 최소 외기, 법적 의무 없음; 상시 유인 감시 전제 (경작업, 좌식); act:office — office류와 동일; he:'PAC' — 기준: AC-015 · AC-021 — 냉방·습도는 CTH, 난방은 PAC이 담당(CTH 정지 시 백업 겸용). 24h 상주+계장패널 실이라 단일 기기 의존을 피한다; hrh:50 — 기준: AC-004 — 습도 제어 대상실
+  kitchen: {lb:'탕비실/간이주방류',                    cdb:26,  crh:50, hdb:21,  hrh:null,ia:10, oa:false, lw:6 , va:8,  ce:'EHP',  he:'EHP',        ve:'천정형팬', exhH:false, act:'light'}, // 기준: AC-014 — 탕비실/간이주방(구내식당 조리실 아님). va:8 — 기준: AC-017 · 설계기준 표4.5 「배선실(配膳室) 8」; act:light — 경작업(조리 활동 아님); 기기발열 기본값 없음 — 냉장고·전자레인지는 셀 수 있으므로 입력; hrh:null — 겨울 가습 미실시. 조리 수증기가 상시 발생해 가습 대상이 아니다
+  storage: {lb:'창고류',                    cdb:null,crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:2 ,  va:5,  eqReq:false,  ce:'없음', he:'없음',       ve:'벽부형팬', act:'light'}, // va:5 — 기준: AC-017 · 설계기준 표4.5 「서고·창고 5」. 종전 3은 기준보다 낮았다; act — 무인(ia:0)이라 미사용
 };
 
 const COOL_EQUIPS = ['PAC','EHP','CTH','없음'];
@@ -1372,8 +1372,27 @@ function occDens(r){            // 재실밀도 ㎡/인 (0이면 무인)
   if(r.od>0) return 1/r.od;     // 구버전 저장데이터 호환
   return 0;
 }
-function occOf(r,area){ const d=occDens(r); return d>0?area/d:0; }   // 재실인원
+// 재실인원은 정수 — 학회 「건축기계설비 설계기준」 제1편 2장 1.8 (4) 5) 「재실인원 : 정수로 한다」. 올림(안전측, 유인실 최소 1인) — 2026-11-05 사용자 확정 (AC-007 Rule 6)
+function occOf(r,area){ const d=occDens(r); return d>0&&area>0?Math.ceil(area/d-1e-9):0; }   // 재실인원 (인, 정수)
 function oaOf(r,area){ return (r.oa!==false)?occOf(r,area):0; }      // 신선외기 대상 인원
+// 인체발열 — 학회 「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」 [W/인], 작업 상태 × 실온 (AC-007 Rule 4)
+//   전발생열은 실온과 무관하고 현열/잠열 배분만 실온에 따라 바뀐다. 표에 없는 실온은 직선보간, 21~28 ℃ 밖은 끝값
+//   실 유형이 작업 상태를 정한다 — 사무실 · 중앙제어실류 = 사무소·경보행(131 W, 표가 사무실을 예로 듦), 그 밖 = 경작업(117 W)
+const PH_T=[28,27,26,24,21];
+const PH_ACT={
+  sit:   {lb:'정좌',          tot:102, sl:[[51,51],[57,45],[62,41],[67,35],[76,27]]},
+  light: {lb:'경작업',        tot:117, sl:[[52,65],[57,60],[62,56],[71,47],[80,37]]},
+  office:{lb:'사무소·경보행', tot:131, sl:[[52,79],[58,73],[63,69],[72,59],[84,48]]},
+};
+function actOf(r){ const t=RT[r.type]; return (r.act&&PH_ACT[r.act])?r.act:((t&&t.act)||'light'); }
+function phOf(r){               // {s,l,t,act} — 실온 = 냉방 실온(cdb), 냉방 없는 실은 26 ℃ 로 봄
+  const a=PH_ACT[actOf(r)], t0=(r.cdb!==null&&r.cdb!==undefined&&r.cdb!=='')?+r.cdb:26;
+  const t=Math.min(28,Math.max(21,t0));
+  for(let i=0;i<PH_T.length-1;i++){ const hi=PH_T[i], lo=PH_T[i+1];
+    if(t<=hi&&t>=lo){ const f=(hi-t)/(hi-lo), A=a.sl[i], B=a.sl[i+1];
+      return {s:Math.round(A[0]+(B[0]-A[0])*f), l:Math.round(A[1]+(B[1]-A[1])*f), t, act:actOf(r)}; } }
+  return {s:a.sl[2][0], l:a.sl[2][1], t, act:actOf(r)};
+}
 // 기준: AC-009 (기기부하) — 3단 위계
 //  1순위 실제 장비 사양(eqKW 직접입력) > 2순위 실 용도별 면적당 기본값(eqD)
 //  > 3순위 없음 → 미입력으로 드러낸다(⚠). 기본값을 지어내 채우지 않는다.
@@ -1405,7 +1424,7 @@ function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 
     roofOn:false, roofA:0, roofU:U.roof,
     floorOn:false, floorMode:'soil', floorU:uFloor('soil'),   // 기준: AC-006 — 종전 3.13 은 출처 불명
     infACH:0.5, ventACH:0, ia:10, oa:true,
-    lw:6, eqKW:0, phS:57, phL:62,
+    lw:6, eqKW:0, act:'office',
     exhHeat:false,
     ce:'EHP', he:'EHP', ve:'전열교환기', san:'없음',
     capC:{model:'',ouModel:'',inType:'',cnt:1,cc:0,hc:0,pw:'',volt:'',ref:'',gas:'',liq:'',note:'',ccMin:null,ccStd:null,ccMax:null,hcMin:null,hcStd:null,hcMax:null,pwCMin:null,pwCStd:null,pwCMax:null,pwHMin:null,pwHStd:null,pwHMax:null,
@@ -1455,7 +1474,7 @@ function addHWRoom(){
   r.type='toilet'; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
   r.ia=rt.ia; r.oa=rt.oa; r.lw=rt.lw; r.ventACH=rt.va;
   r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve; r.san='전기온수기';
-  r.phS=rt.phS; r.phL=rt.phL; r.exhHeat=!!rt.exhH;
+  r.act=rt.act; delete r.phS; delete r.phL; r.exhHeat=!!rt.exhH;
   STATE.rooms.push(r);
   if(typeof renderRoomList==='function')renderRoomList();
   renderCapCalc();
@@ -1533,7 +1552,7 @@ function setRoomType(tp){
   r.type=tp; r.cdb=rt.cdb; r.crh=rt.crh; r.hdb=rt.hdb; r.hrh=rt.hrh;
   r.ia=rt.ia; r.oa=rt.oa; r.lw=rt.lw; r.ventACH=rt.va;
   r.ce=rt.ce; r.he=rt.he; r.ve=rt.ve; r.san=rt.san||'없음';
-  r.phS=rt.phS; r.phL=rt.phL;
+  r.act=rt.act; delete r.phS; delete r.phL;
   r.exhHeat=!!rt.exhH; // 화장실·주방류: 난방 시 배기 보충외기 부하 기본 반영
   renderRoomDetail();renderRoomList();
 }
@@ -1741,7 +1760,7 @@ function renderRoomDetail(){
   <div class="fg fg6">
     <div class="fv"><label>재실 밀도 (m²/인)</label><input type="number" value="${occDens(r)||''}" step="1" placeholder="무인" onchange="sRd('ia',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="${f1(occ)}"></div>
-    <div class="fv"><label style="color:#888">인체발열 현열/잠열 (W/인, 실유형별)</label><input readonly value="${r.phS??57} / ${r.phL??62} W/인" style="background:var(--glr);color:var(--tsm)"></div>
+    <div class="fv"><label style="color:#888">인체발열 현열/잠열 (W/인, 학회 표 2.32)</label><input readonly value="${phOf(r).s} / ${phOf(r).l} W/인 · ${PH_ACT[actOf(r)].lb} ${phOf(r).t}℃" style="background:var(--glr);color:var(--tsm)"></div>
     <div class="fv"><label>조명 (W/m²)</label><input type="number" value="${r.lw}" step="1" onchange="sRd('lw',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>조명발열 (W) 자동 (LED 기준)</label><input class="au" readonly value="${f0(lightW)}"></div>
     <div class="fv"><label>기기발열 (kW)${eqMissing(r)?' <span style="color:#dc2626;font-weight:700">← 미입력</span>':(eqIsDefault(r)?` <span style="color:#92400e">← 기본 ${eqDefW(r)}W/㎡ 적용중</span>`:'')}</label><input type="number" value="${r.eqKW}" step="0.1" onchange="sR('eqKW',parseFloat(this.value)||0)"${eqMissing(r)?' style="border:1px solid #dc2626;background:#fef2f2"':''}></div>
@@ -1788,7 +1807,7 @@ function calcLE(room){
   // Outside Air(신선외기)는 사무실류(oa:true)에만 적용 — 25㎥/h·인. 기준: AC-017 — 법정 대상 아님.
   //   ASHRAE 62.1 사무실 산식(2.5 L/s·인 + 0.3 L/s·㎡)에 10㎡/인을 넣으면 약 20㎥/h·인 → 25 는 그보다 안전측
   const oaPpl=oaOf(room,area);                   // 신선외기 대상 재실인원 (인) — 기준: AC-007
-  const oaCMH_raw=room.ia>0?oaPpl*25:0;          // 신선외기량 (㎥/h), 25㎥/h·인 (ASHRAE 62.1 산식 대비 안전측)
+  const oaCMH_raw=room.ia>0?oaPpl*25:0;          // 신선외기량 (㎥/h), 25㎥/h·인 — 학회 설계기준 4.2 (3) · 4.3 (1) Q = 25 × N (AC-007 Rule 5, 법정 아님)
   // ERV 유효전열교환효율: 카탈로그 선정 장비 값(effC/effH %) 우선, 미선정 시 냉방50%/난방70% (보수적 기본값)
   const isERV=room.ve==='전열교환기';
   const ervRecC=isERV?((parseFloat(room.capV?.effC)>0?parseFloat(room.capV.effC):50)/100):0;
@@ -1831,7 +1850,7 @@ function calcLE(room){
     const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc*fFacC(room):0; // 땅 접촉 0, 비공조실 위 ΔT/2, 외기노출 ΔT
     const infS=infCMH*dTc*0.336;
     const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS+oaS;
-    const st2=occ*(room.phS??57)+eqW+lightW;
+    const st2=occ*phOf(room).s+eqW+lightW;
     const rsh=st1+st2;
     return {sg,wc,rc,gc,iw,flC,infS,oaS,st1,st2,rsh};
   });
@@ -1839,7 +1858,7 @@ function calcLE(room){
   // Latent (time-independent)
   const infL=room.cdb!==null?infCMH*dOm*833:0;
   const oaL=room.cdb!==null?oaCMHl*dOm*833:0;
-  const pplL=room.cdb!==null?occ*(room.phL??62):0;
+  const pplL=room.cdb!==null?occ*phOf(room).l:0;
   const rlh=infL+oaL+pplL;
 
   // Per-time totals
@@ -2032,7 +2051,7 @@ function renderLoadCalc(){
       ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
       :'';
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
-    const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×${room.phS??57}W/인`,le.occ*(room.phS??57));
+    const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).s}W/인(표 2.32 ${PH_ACT[actOf(room)].lb} ${phOf(room).t}℃)`,le.occ*phOf(room).s);
     const eqRowC=cRowFixed('POWER',eqMissing(room)?'⚠ 기기발열 미입력':(eqIsDefault(room)?`기본값 ${eqDefW(room)}W/㎡×${f0(le.area)}㎡`:`${room.eqKW}kW×1,000`),le.eqW);
     const ltRowC=cRowFixed('LIGHT',`${room.lw}W/㎡×${f1(le.area)}㎡ (LED)`,le.lightW);
     const miscRowC=cRowFixed('MISC.','—',0);
@@ -2042,7 +2061,7 @@ function renderLoadCalc(){
     const tshRow=grnC('TOTAL SENSIBLE HEAT',le.tsh);
     const infLRow=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.infL);
     const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
-    const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×${room.phL??62}W/인`,le.pplL);
+    const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).l}W/인`,le.pplL);
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
     const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.rlh*0.1));
     const tlhRow=grnCf('TOTAL LATENT HEAT',le.tlh);
