@@ -2879,7 +2879,7 @@ function renderCapCalc(){
       const ccTxt=!hasRooms?'— 실 없음':(ouCcN===0?'— 미입력':(ccOK?'✓ 냉방 OK':'✗ 냉방 부족'))
         +(divPct>0.5?' <span style="color:#7c3aed;font-size:9px">(실별최대합 '+fW(Math.round(totInCsum))+' → 동시최대 '+fW(Math.round(totInC))+', −'+divPct.toFixed(1)+'%)</span>':'');
       const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준 — 저온난방 미입력 주의)'));
-      // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 (통상 100~130% 허용)
+      // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 — 80~130 % 판정 (130 은 제조사 한계, 기준: AC-013)
       let totRatedInC=0; zRooms.forEach(r=>{totRatedInC+=(parseFloat(r.capC.ehpInCc)||0)*(r.capC.cnt||1);});
       const combR=(ouCcN>0&&totRatedInC>0)?totRatedInC/ouCcN*100:null;
       const combOK=combR!==null&&combR>=80&&combR<=130;
