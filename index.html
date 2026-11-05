@@ -425,8 +425,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
         <tr><td class="L">국토교통부 고시</td><td class="L">건축물의 에너지절약설계기준 [별지 1] 전기설비부문 1번 「거실의 조명밀도」</td><td class="L">결과 대조 — 사무실 6 W/㎡ = 0.8점 구간(6~8 미만), 1점은 5 미만. 배점이며 의무 아님 (AC-008)</td></tr>
         <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 3.4 표 2.23 · 표 2.25 (틈새길이법)</td><td class="L">침기 회수 검산 — 1면 0.5 회/h ≒ 동계·바람막이 없는 금속샤시 0.53. 3.4 (1) 「바람 부는 쪽만」 → 면 수에 비례시키지 않음 (AC-010)</td></tr>
         <tr><td class="L" style="color:#b45309">당사 설계기준</td><td class="L" style="color:#b45309">환기회수법 — 외기 면 수 0 · 1 · 2 · 3 · 4 → 0 · 0.5 · 0.6 · 0.8 · 1.0 회/h</td><td class="L">회수표 자체의 문헌 출처는 미확보 — 「○○ 기준값」이라 하지 않음. 창호가 확정되면 틈새길이법으로 재계산 (AC-010)</td></tr>
-        <tr><td class="L">당사 설계기준</td><td class="L">설계 불확실성을 고려한 여유율 10% (법정·학회 백분율 조항 없음)</td><td class="L">안전율 (냉방·난방 각 10%) — 부하계산서에서 한 번만 적용, 장비 선정 단계에서 다시 더하지 않음</td></tr>
-        <tr><td class="L">입력 항목</td><td class="L">1순위 전기팀·발주처 자료 → 2순위 면적당 기본값 (사무실 9 W/㎡ 는 ASHRAE 사무실 데스크톱·모니터 2대 조건 수준)</td><td class="L">기기발열 (kW). 장비 최종 선정 전 전기팀 방열량 입력. 기본값 적용 시 계산서에 표기됨</td></tr>
+        <tr><td class="L">당사 설계기준</td><td class="L">설계 불확실성을 고려한 여유율 10% — 법정 백분율 조항 없음. 학회 「건축기계설비 설계기준」 3.10 덕트 계통 열취득(짧은 덕트 5 · 일반 10 · 고속 15 %)의 개별식 자리는 5 %</td><td class="L">안전율 (냉방·난방 각 10%) — 부하계산서에서 한 번만 적용, 장비 선정 단계에서 다시 더하지 않음. 선정 여유율 합격선 0 % (AC-012)</td></tr>
+        <tr><td class="L">입력 항목</td><td class="L">① 전기팀·벤더 사양 → ② 발주처 제시 → ③ 기본값 (전기실 27 kW/실 · 중앙제어실 22 kW/실 · 사무실 4 W/㎡ 노트북 기준), 그 밖은 미입력 표시</td><td class="L">기기발열 (kW). 장비 최종 선정 전 전기팀 방열량 입력. 기본값 적용 시 계산서에 표기됨 (AC-009)</td></tr>
       </table>
     </div>
   </div>
@@ -1381,6 +1381,8 @@ function occDens(r){            // 재실밀도 ㎡/인 (0이면 무인)
 // 재실인원은 정수 — 학회 「건축기계설비 설계기준」 제1편 2장 1.8 (4) 5) 「재실인원 : 정수로 한다」. 올림(안전측, 유인실 최소 1인) — 2026-11-05 사용자 확정 (AC-007 Rule 6)
 function occOf(r,area){ const d=occDens(r); return d>0&&area>0?Math.ceil(area/d-1e-9):0; }   // 재실인원 (인, 정수)
 function oaOf(r,area){ return (r.oa!==false)?occOf(r,area):0; }      // 신선외기 대상 인원
+// 인당 외기량 [㎥/h·인] — 기본 25 (학회 4.2 (3) · 4.3 (1)). 발주처 기준 등으로 실마다 바꿀 수 있다 (AC-017, 2026-09-08 결정 · 11-05 반영)
+function oaPP(r){ const v=parseFloat(r&&r.oaPP); return v>0?v:25; }
 // 인체발열 — 학회 「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」 [W/인], 작업 상태 × 실온 (AC-007 Rule 4)
 //   전발생열은 실온과 무관하고 현열/잠열 배분만 실온에 따라 바뀐다. 표에 없는 실온은 직선보간, 21~28 ℃ 밖은 끝값
 //   실 유형이 작업 상태를 정한다 — 사무실 · 중앙제어실류 = 사무소·경보행(131 W, 표가 사무실을 예로 듦), 그 밖 = 경작업(117 W)
@@ -1773,6 +1775,7 @@ function renderRoomDetail(){
 <div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AC-007 인체 · AC-008 조명 · AC-009 기기</span></div><div class="cb">
   <div class="fg fg6">
     <div class="fv"><label>재실 밀도 (m²/인)</label><input type="number" value="${occDens(r)||''}" step="1" placeholder="무인" onchange="sRd('ia',parseFloat(this.value)||0)"></div>
+    ${r.oa!==false&&occDens(r)>0?`<div class="fv"><label>인당 외기량 (㎥/h·인)${parseFloat(r.oaPP)>0&&parseFloat(r.oaPP)!==25?' <span style="color:#92400e">← 기본 25 아님</span>':''}</label><input type="number" value="${oaPP(r)}" step="1" min="1" onchange="sRd('oaPP',parseFloat(this.value)||25)"></div>`:''}
     <div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="${f1(occ)}"></div>
     <div class="fv"><label style="color:#888">인체발열 현열/잠열 (W/인, 학회 표 2.32)</label><input readonly value="${phOf(r).s} / ${phOf(r).l} W/인 · ${PH_ACT[actOf(r)].lb} ${phOf(r).t}℃" style="background:var(--glr);color:var(--tsm)"></div>
     <div class="fv"><label>조명 (W/m²)</label><input type="number" value="${r.lw}" step="1" onchange="sRd('lw',parseFloat(this.value)||0)"></div>
@@ -1821,7 +1824,7 @@ function calcLE(room){
   // Outside Air(신선외기)는 사무실류(oa:true)에만 적용 — 25㎥/h·인. 기준: AC-017 — 법정 대상 아님.
   //   ASHRAE 62.1 사무실 산식(2.5 L/s·인 + 0.3 L/s·㎡)에 10㎡/인을 넣으면 약 20㎥/h·인 → 25 는 그보다 안전측
   const oaPpl=oaOf(room,area);                   // 신선외기 대상 재실인원 (인) — 기준: AC-007
-  const oaCMH_raw=room.ia>0?oaPpl*25:0;          // 신선외기량 (㎥/h), 25㎥/h·인 — 학회 설계기준 4.2 (3) · 4.3 (1) Q = 25 × N (AC-007 Rule 5, 법정 아님)
+  const oaCMH_raw=room.ia>0?oaPpl*oaPP(room):0;          // 신선외기량 (㎥/h), 25㎥/h·인 — 학회 설계기준 4.2 (3) · 4.3 (1) Q = 25 × N (AC-007 Rule 5, 법정 아님)
   // ERV 유효전열교환효율: 카탈로그 선정 장비 값(effC/effH %) 우선, 미선정 시 냉방50%/난방70% (보수적 기본값)
   const isERV=room.ve==='전열교환기';
   const ervRecC=isERV?((parseFloat(room.capV?.effC)>0?parseFloat(room.capV.effC):50)/100):0;
@@ -2062,7 +2065,7 @@ function renderLoadCalc(){
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const oaRowC=le.oaCMH_raw>0
-      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
+      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
       :'';
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).s}W/인(표 2.32 ${PH_ACT[actOf(room)].lb} ${phOf(room).t}℃)`,le.occ*phOf(room).s);
@@ -2107,7 +2110,7 @@ function renderLoadCalc(){
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const oaRowH=le.oaCMH_raw>0
-      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×25㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
+      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
       :'';
     const exhRowH=le.exhOn
       ?hRow('EXHAUST MAKE-UP',`배기 ${f0(le.ventCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hExh)
@@ -2419,7 +2422,7 @@ function renderCapCalc(){
     });
     STATE.rooms.filter(r=>r.ve==='전열교환기').forEach((r,i)=>{
       rows.push({grp:'전열교환기 (ERV)',tag:r.capV.tag||'M-AH-ERV-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
-        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(Math.max(gV(r)*r.ventACH,oaOf(r,gA(r))*25)))+' CMH(계산)')].filter(Boolean).join(' / '),
+        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(Math.max(gV(r)*r.ventACH,oaOf(r,gA(r))*oaPP(r))))+' CMH(계산)')].filter(Boolean).join(' / '),
         pw:r.capV.mp||'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
     });
     STATE.rooms.filter(r=>r.ve==='인라인덕트팬').forEach((r,i)=>{
@@ -2879,7 +2882,7 @@ function renderCapCalc(){
       const ccTxt=!hasRooms?'— 실 없음':(ouCcN===0?'— 미입력':(ccOK?'✓ 냉방 OK':'✗ 냉방 부족'))
         +(divPct>0.5?' <span style="color:#7c3aed;font-size:9px">(실별최대합 '+fW(Math.round(totInCsum))+' → 동시최대 '+fW(Math.round(totInC))+', −'+divPct.toFixed(1)+'%)</span>':'');
       const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준 — 저온난방 미입력 주의)'));
-      // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 (통상 100~130% 허용)
+      // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 — 80~130 % 판정 (130 은 제조사 한계, 기준: AC-013)
       let totRatedInC=0; zRooms.forEach(r=>{totRatedInC+=(parseFloat(r.capC.ehpInCc)||0)*(r.capC.cnt||1);});
       const combR=(ouCcN>0&&totRatedInC>0)?totRatedInC/ouCcN*100:null;
       const combOK=combR!==null&&combR>=80&&combR<=130;
@@ -3052,7 +3055,7 @@ function renderCapCalc(){
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
-      const calcCMH=Math.max(vol*r.ventACH,oaOf(r,area)*25); // max(체적×환기횟수, 인원×25㎥/h) — 부하계산 외기량과 동일 근거
+      const calcCMH=Math.max(vol*r.ventACH,oaOf(r,area)*oaPP(r)); // max(체적×환기횟수, 인원×인당 외기량) — 부하계산 외기량과 동일 근거
       totCalc+=calcCMH; totSel+=(r.capV.saf||0);
       const rid=r.id;
       const autoTag='M-AH-ERV-'+String(idx+1).padStart(3,'0');
@@ -3085,7 +3088,7 @@ function renderCapCalc(){
       <td style="text-align:right;font-weight:700;background:#dcfce7">${fW(totSel)}</td>
       <td colspan="11" style="background:#dcfce7"></td>
     </tr>`;
-    html+=`</tbody></table><div style="font-size:9px;color:#64748b;margin-top:4px">※ 계산풍량 = max(체적×환기횟수, 재실인원×25㎥/h·인) — 부하계산서 외기량(25㎥/h·인)과 동일 근거</div>
+    html+=`</tbody></table><div style="font-size:9px;color:#64748b;margin-top:4px">※ 계산풍량 = max(체적×환기횟수, 재실인원×인당 외기량, 기본 25㎥/h·인) — 부하계산서 외기량과 동일 근거</div>
     <div style="font-size:10px;margin-top:6px;padding:5px 8px;background:#fffbeb;border:1px solid #fde68a;border-radius:4px">
       <b style="color:#b45309">EPI 규모구분</b>
       <select onchange="STATE.epiScale=this.value;renderCapCalc()" style="margin-left:6px;font-size:10px">
