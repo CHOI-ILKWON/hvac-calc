@@ -342,7 +342,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="margin-top:8px;font-size:11px">
         <tr><th>항목</th><th>냉방</th><th>난방</th><th>계산식</th></tr>
         <tr><td class="L">유리 일사 취득</td><td class="C">✓</td><td class="C">-</td><td class="L">SC(=SHGC÷0.87) × 축열 반영 일사부하 × 면적</td></tr>
-        <tr><td class="L">외벽/지붕 전도</td><td class="C">✓</td><td class="C">✓</td><td class="L">냉방 U × A × CLTD / 난방 U × A × ΔT × 방위계수</td></tr>
+        <tr><td class="L">외벽/지붕 전도</td><td class="C">✓</td><td class="C">✓</td><td class="L">냉방 U × A × CLTD / 난방 U × A × ΔT × 방위계수 (외기 직접 문 포함 — 같은 방위 외벽 CLTD, 외벽 면적에서 창·문 공제)</td></tr>
         <tr><td class="L">내부발열(조명+인체+장비)</td><td class="C">✓</td><td class="C">-</td><td class="L">W/m² × 면적</td></tr>
         <tr><td class="L">환기·침기</td><td class="C">✓</td><td class="C">✓</td><td class="L">0.336×풍량×ΔT (현열), 833×풍량×Δx (잠열)</td></tr>
         <tr><td class="L">피크 시간 선택</td><td class="C">✓</td><td class="C">-</td><td class="L">검토한 4개 시각(10·12·14·16h) 중 최대 냉방부하</td></tr>
@@ -411,7 +411,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
       <table style="font-size:11px">
         <tr><th>구분</th><th>기준명</th><th>적용 항목</th></tr>
         <tr><td class="L">국토교통부 고시</td><td class="L">[별표7] 건축물의 에너지절약설계기준 (고시 제2025-738호)</td><td class="L">기상조건 (외기온·습도)</td></tr>
-        <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창 U값 기준값 (지역구분 자동)</td></tr>
+        <tr><td class="L">국토교통부 고시</td><td class="L">[별표1] 지역별 건축물 부위의 열관류율표</td><td class="L">외벽·지붕·창·문 U값 기준값 (지역구분 자동)</td></tr>
         <tr><td class="L">건축물의 설비기준 등에 관한 규칙</td><td class="L">제11조 [별표 1의6] 다중이용시설 필요환기량</td><td class="L" style="color:#b45309">참고 — <b>다중이용시설 대상</b>. 업무시설·공장은 대상 아님</td></tr>
         <tr><td class="L">ASHRAE 62.1 대비</td><td class="L">사무실 산식 2.5 L/s·인 + 0.3 L/s·㎡ → 10㎡/인에서 약 20㎥/h·인</td><td class="L">인당 외기량 25㎥/h — 학회 설계기준 4.2 (3) · 4.3 (1) 「Q = 25 × N」. 법정 대상 아님. 산식 대비 안전측 (AC-007)</td></tr>
         <tr><td class="L">국토해양부·대한설비공학회</td><td class="L">「건축기계설비 설계기준」(2010) 표 4.5 「부속실의 환기방식」</td><td class="L">실 용도별 환기횟수 (회/h) — 전기실·발전기실은 준용</td></tr>
@@ -472,12 +472,19 @@ const INSUL_ZONE = { // 별표1 지역구분 — 강릉은 강원도이나 별�
   '광주':'남부','대구':'남부','부산':'남부','진주':'남부','울산':'남부','포항':'남부','목포':'남부',
   '제주':'제주도',
 };
-const UREF = {          //  거실외벽  최상층지붕  창(공동주택 외)
-  '중부1' :{wall:0.170, roof:0.150, win:1.300},
-  '중부2' :{wall:0.240, roof:0.150, win:1.500},
-  '남부'  :{wall:0.320, roof:0.180, win:1.800},
-  '제주도':{wall:0.410, roof:0.250, win:2.200},
+const UREF = {          //  거실외벽  최상층지붕  창(공동주택 외)  문(공동주택 외)
+  '중부1' :{wall:0.170, roof:0.150, win:1.300, door:1.500},
+  '중부2' :{wall:0.240, roof:0.150, win:1.500, door:1.500},
+  '남부'  :{wall:0.320, roof:0.180, win:1.800, door:1.800},
+  '제주도':{wall:0.410, roof:0.250, win:2.200, door:2.200},
 };
+// 외기에 직접 면하는 문(출입문·셔터) — 기준: AC-006 [별표1] 「창 및 문 · 외기에 직접 면하는 경우 · 공동주택 외 — 문」 (2026-11-16 추가)
+//   면적 = 너비×높이×개수. 창과 함께 같은 방위 외벽 면적에서 공제한다. 내부 문은 내벽에 포함(입력 없음)
+//   냉방 = U×A×(같은 방위 외벽 CLTD+보정), 난방 = U×A×ΔT×방위계수 — 당사 기존 부하계산서의 DOOR 계산방식 (2026-11-16 사용자 제시)
+//   문 틈새 바람은 침기(AC-010)에 이미 들어 있어 전도만 계산한다 (이중 계상 금지)
+function winA(r,d){const o=r&&r['win'+d];return o?(o.w||0)*(o.h||0):0;}
+function doorA(r,d){const o=r&&r['door'+d];return o?(o.w||0)*(o.h||0)*(o.n==null?1:o.n):0;}
+function wallNetA(r,d,h){const wd=r['wall'+d];return Math.max(0,(wd.len||0)*h-winA(r,d)-doorA(r,d));}
 // 최하층 거실 바닥 (비바닥난방) — 기준: AC-006 2.2, 6조 6·7항
 //   ground : 지면·토양 접촉 = 별표1 「외기에 간접 면하는 경우」
 //   outdoor: 필로티 등     = 별표1 「외기에 직접 면하는 경우」
@@ -1264,6 +1271,7 @@ function retargetU(oldZ,newZ){
     ['N','E','S','W'].forEach(d=>{
       if(r['wall'+d]&&eq(r['wall'+d].u,o.wall)){r['wall'+d].u=n.wall;cnt++;}
       if(r['win'+d]&&eq(r['win'+d].u,o.win)){r['win'+d].u=n.win;cnt++;}
+      if(r['door'+d]&&eq(r['door'+d].u,o.door)){r['door'+d].u=n.door;cnt++;}
     });
     if(eq(r.roofU,o.roof)){r.roofU=n.roof;cnt++;}
     const fm=r.floorMode==='outdoor'?'outdoor':'ground';
@@ -1429,6 +1437,9 @@ function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 
     wallS:{en:true, len:0,u:U.wall}, wallW:{en:false,len:0,u:U.wall},
     winN:{w:0,h:0,shgc:0.6,u:U.win}, winE:{w:0,h:0,shgc:0.6,u:U.win},
     winS:{w:0,h:0,shgc:0.6,u:U.win}, winW:{w:0,h:0,shgc:0.6,u:U.win},
+    // 외기 직접 문 — 기준: AC-006 [별표1] 공동주택 외 문. n=개수. 예전 저장본은 면적 0 으로 읽혀 결과가 바뀌지 않는다
+    doorN:{w:0,h:0,n:1,u:U.door}, doorE:{w:0,h:0,n:1,u:U.door},
+    doorS:{w:0,h:0,n:1,u:U.door}, doorW:{w:0,h:0,n:1,u:U.door},
     // 기준: AC-005 — 내벽 U 2.71 = 1/(0.11+0.11+0.2/1.6+0.036/1.5) 콘크리트 200·양면 미장 18. 현장마다 달라 큰 쪽(안전측)을 기본값으로 둔다
     iw1:{len:0,u:IW_U}, iw2:{len:0,u:IW_U}, iw3:{len:0,u:IW_U}, iw4:{len:0,u:IW_U}, // 내벽은 별표1 대상 아님
     roofOn:false, roofA:0, roofU:U.roof,
@@ -1559,6 +1570,7 @@ function sRr(k,v){sR(k,v);renderRoomDetail();renderRoomList();}
 function sRd(k,v){sR(k,v);renderRoomDetail();}
 function sW(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['wall'+dir][k]=v;}
 function sWw(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['win'+dir][k]=v;}
+function sDr(dir,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['door'+dir][k]=v;}
 function sIW(n,k,v){const i=getRi();if(i<0)return;STATE.rooms[i]['iw'+n][k]=v;}
 
 function setRoomType(tp){
@@ -1639,6 +1651,15 @@ function renderRoomDetail(){
       <td><input type="number" value="${wo.shgc}" step="0.01" min="0" max="1" onchange="sWw('${dir}','shgc',parseFloat(this.value)||0.6)"></td>
       <td><input type="number" value="${wo.u}" step="0.01" onchange="sWw('${dir}','u',parseFloat(this.value)||uRef().win)"></td>
     </tr>`;
+  const doorRow=(dir,wo)=>`
+    <tr>
+      <td class="C" style="font-weight:700">${dir}</td>
+      <td><input type="number" value="${wo.w}" step="0.1" onchange="sDr('${dir}','w',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td><input type="number" value="${wo.h}" step="0.1" onchange="sDr('${dir}','h',parseFloat(this.value)||0);renderRoomDetail()"></td>
+      <td><input type="number" value="${wo.n}" step="1" min="0" onchange="sDr('${dir}','n',Math.max(0,parseFloat(this.value)||0));renderRoomDetail()"></td>
+      <td class="au C">${f1(wo.w*wo.h*wo.n)}</td>
+      <td><input type="number" value="${wo.u}" step="0.01" onchange="sDr('${dir}','u',parseFloat(this.value)||uRef().door)"></td>
+    </tr>`;
   const iwRow=(n,iw)=>`
     <tr>
       <td class="C">(${n})</td>
@@ -1708,6 +1729,15 @@ function renderRoomDetail(){
     ${['N','E','S','W'].map(d=>winRow(d,r['win'+d])).join('')}
     </tbody>
   </table></div>
+
+  <div class="st" style="font-size:11px;margin-top:12px">외기에 직접 면하는 문 — 출입문·셔터 (기본 U=${uRef().door} W/m²K, [별표1] 공동주택 외 문 — 성적서 값 우선) — 너비×높이×개수=면적 자동</div>
+  <div class="tw"><table>
+    <thead><tr><th>방위</th><th>너비 (m)</th><th>높이 (m)</th><th>개수</th><th>면적 (m²) 자동</th><th>U값 (W/m²K)</th></tr></thead>
+    <tbody>
+    ${['N','E','S','W'].map(d=>doorRow(d,r['door'+d])).join('')}
+    </tbody>
+  </table></div>
+  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 같은 방위 외벽 면적에서 창과 함께 공제됩니다. 냉방은 같은 방위 외벽 CLTD, 난방은 ΔT×방위계수. 내부 문은 입력하지 않습니다(내벽에 포함). 문 틈새 바람은 침기(AC-010)에 들어 있어 전도만 계산합니다.</div>
 
   <div class="st" style="font-size:11px;margin-top:12px">내벽 ΔT = (외기-실내)/2, 기본 U=2.71 W/m²K (콘크리트 200 양면미장) — 길이×층고=면적 자동</div>
   <div class="tw"><table>
@@ -1850,7 +1880,10 @@ function calcLE(room){
     const CLTD_WALL=(_bldg?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
     const cltdAdj=26-room.cdb;
     const wc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);wc[d]=wd.u*netA*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);}});
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const netA=wallNetA(room,d,h);wc[d]=wd.u*netA*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);}}); // 창·문 면적 공제
+    // Door conduction — 같은 방위 외벽 CLTD (AC-006 2026-11-16)
+    const dc={N:0,E:0,S:0,W:0};
+    DIRS.forEach(d=>{const A=doorA(room,d);if(A>0)dc[d]=room['door'+d].u*A*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);});
     // Roof — CLTD (heavy-weight roof, 26°C base) + 실내온도 보정
     const rc=room.roofOn?room.roofU*roofA*Math.max(0,CLTD_ROOF[ti]+cltdAdj):0;
     // Glass conduction — 외피(exterior) 직접 노출로 간주, ΔT 전체 적용 (내벽 ΔT/2와 구분)
@@ -1866,10 +1899,10 @@ function calcLE(room){
     ];
     const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc*fFacC(room):0; // 땅 접촉 0, 비공조실 위 ΔT/2, 외기노출 ΔT
     const infS=infCMH*dTc*0.336;
-    const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS+oaS;
+    const st1=Object.values(sg).reduce((a,b)=>a+b,0)+Object.values(wc).reduce((a,b)=>a+b,0)+Object.values(dc).reduce((a,b)=>a+b,0)+rc+Object.values(gc).reduce((a,b)=>a+b,0)+iw.reduce((a,b)=>a+b,0)+flC+infS+oaS;
     const st2=occ*phOf(room).s+eqW+lightW;
     const rsh=st1+st2;
-    return {sg,wc,rc,gc,iw,flC,infS,oaS,st1,st2,rsh};
+    return {sg,wc,dc,rc,gc,iw,flC,infS,oaS,st1,st2,rsh};
   });
 
   // Latent (time-independent)
@@ -1886,10 +1919,12 @@ function calcLE(room){
   const pkIdx=rth.indexOf(maxRth);
 
   // Heating
-  let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0,hDir=0;   // hDir: 방위할증으로 더해진 양 (기준: AC-011)
+  let hwN=0,hwE=0,hwS=0,hwW=0,hroof=0,hglass=0,hinf=0,hDir=0,hdoor=0;
+  const hdoorD={N:0,E:0,S:0,W:0};   // hDir: 방위할증으로 더해진 양 (기준: AC-011)
   let hiw=[0,0,0,0];
   if(dTh!==null){
-    DIRS.forEach(d=>{const wd=room['wall'+d];const wn=room['win'+d];if(wd.en){const netA=Math.max(0,wd.len*h-wn.w*wn.h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창 면적 공제 — 유리 손실과 이중계상 방지
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const netA=wallNetA(room,d,h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창·문 면적 공제 — 유리·문 손실과 이중계상 방지
+    DIRS.forEach(d=>{const A=doorA(room,d);if(A>0){const u=room['door'+d].u;hdoorD[d]=u*A*dTh*DIR_HF[d];hdoor+=hdoorD[d];hDir+=u*A*dTh*(DIR_HF[d]-1);}}); // 문 — 외벽과 같게 방위계수 (AC-011)
     if(room.roofOn){hroof=room.roofU*roofA*dTh*DIR_HF_ROOF;hDir+=room.roofU*roofA*dTh*(DIR_HF_ROOF-1);}
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];hDir+=wn.u*wn.w*wn.h*dTh*(DIR_HF[d]-1);});
     hinf=infCMH*0.336*dTh;
@@ -1904,7 +1939,7 @@ function calcLE(room){
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
   let hfloor=0;
   if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh*fFacH(room); // 땅 접촉·비공조실 위 ΔT/2, 외기노출 ΔT
-  const hRsh=hwN+hwE+hwS+hwW+hroof+hglass+hinf+hiwSum+hfloor+hExh+oaH;
+  const hRsh=hwN+hwE+hwS+hwW+hdoor+hroof+hglass+hinf+hiwSum+hfloor+hExh+oaH;
   const totalH=Math.max(0,hRsh*1.10);   // 기준: AC-012 — 냉난방 동일 10%. 난방 계산은 일사·내부발열을 반영하지 않아 이미 보수적이다
 
   // 겨울 가습부하 (실내 습도 조건 hrh가 있는 실만): G = 1.2 × (침기+외기)CMH × Δx (kg/h)
@@ -1920,7 +1955,7 @@ function calcLE(room){
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
     infACH,infL,oaL,pplL,rlh,
-    hwN,hwE,hwS,hwW,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,hDir,
+    hwN,hwE,hwS,hwW,hdoor,hdoorD,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,hDir,
     ventCMH,oaCMH_raw,oaCMHc,oaCMHh,oaCMHl,oaPpl,oaS,oaH,ervEffC,ervEffH,ervRecC,ervRecH,
   };
 }
@@ -1938,6 +1973,7 @@ function defaultsOf(r){
   const wins=D.map(d=>r['win'+d]).filter(w=>w.w*w.h>0);
   if(wins.some(w=>eq(w.u,U.win))) out.push('창 U (별표1 기본값)');
   if(wins.some(w=>eq(w.shgc,0.6))) out.push('SHGC 0.6 (성적서 미반영)');
+  if(D.some(d=>doorA(r,d)>0&&eq(r['door'+d].u,U.door))) out.push('문 U (별표1 기본값)');
   if(r.roofOn&&eq(r.roofU,U.roof)) out.push('지붕 U (별표1 기본값)');
   if(r.cdb!==null&&eqIsDefault(r)) out.push('기기발열 기본값 '+eqDefTxt(r));
   if(r.cdb!==null&&eqMissing(r)) out.push('기기발열 미입력');
@@ -2045,9 +2081,16 @@ function renderLoadCalc(){
       const {b:_bldgD}=getBF(room.bldgId,room.floorId);
       const _CW=(_bldgD?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
       const cltdArr=(_CW[d]||_CW.N);
-      const wn=room['win'+d];const grossA=wd.len*room.height;const netA=Math.max(0,grossA-wn.w*wn.h);
-      return cRow(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×CLTD(${cltdArr.join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${wd.u}`,
+      const grossA=wd.len*room.height;const netA=wallNetA(room,d,room.height);const dA=doorA(room,d);
+      return cRow(`OUT.WALL ${d}`,`(${f1(grossA)}-창${f1(winA(room,d))}${dA>0?`-문${f1(dA)}`:''})=${f1(netA)}㎡×CLTD(${cltdArr.join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${wd.u}`,
         TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].wc[d]:0));
+    }).join('');
+    const doorRowsC=DIRS.filter(d=>doorA(room,d)>0).map(d=>{
+      const {b:_bldgD}=getBF(room.bldgId,room.floorId);
+      const _CW=(_bldgD?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
+      const dr=room['door'+d];
+      return cRow(`DOOR ${d}`,`${f1(dr.w)}×${f1(dr.h)}×${dr.n}=${f1(doorA(room,d))}㎡×CLTD(${(_CW[d]||_CW.N).join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${dr.u}`,
+        TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].dc[d]:0));
     }).join('');
     const roofRowC=room.roofOn
       ? cRow('ROOF',`${f1(le.roofA)}㎡×CLTD(${CLTD_ROOF.join('/')})℃${room.cdb!==null&&room.cdb!==26?`+보정${(26-room.cdb).toFixed(0)}℃`:''}×U${room.roofU}`,
@@ -2097,10 +2140,13 @@ function renderLoadCalc(){
     }).join('');
     const wallRowsH=DIRS.map(d=>{
       const wd=room['wall'+d];
-      const wn=room['win'+d];
-      const netA=Math.max(0,wd.len*room.height-wn.w*wn.h);
+      const netA=wallNetA(room,d,room.height);const dA=doorA(room,d);
       const val=d==='N'?le.hwN:d==='E'?le.hwE:d==='S'?le.hwS:le.hwW;
-      return hRow(`OUT.WALL ${d}`,`(${f1(wd.len*room.height)}-창${f1(wn.w*wn.h)})=${f1(netA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${wd.u}×방위${DIR_HF[d]}`,val);
+      return hRow(`OUT.WALL ${d}`,`(${f1(wd.len*room.height)}-창${f1(winA(room,d))}${dA>0?`-문${f1(dA)}`:''})=${f1(netA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${wd.u}×방위${DIR_HF[d]}`,val);
+    }).join('');
+    const doorRowsH=DIRS.filter(d=>doorA(room,d)>0).map(d=>{
+      const dr=room['door'+d];
+      return hRow(`DOOR ${d}`,`${f1(dr.w)}×${f1(dr.h)}×${dr.n}=${f1(doorA(room,d))}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${dr.u}×방위${DIR_HF[d]}`,le.hdoorD[d]);
     }).join('');
     const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}×방위${DIR_HF_ROOF}`:'비활성',le.hroof);
     const iwRowsH=[1,2,3,4].map(n=>{
@@ -2118,7 +2164,7 @@ function renderLoadCalc(){
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     // 기준: AC-011 · AC-012 — 여유가 어디에 얼마나 들어갔는지 드러낸다
     const hDirRow=le.hDir>0
-      ?hRow('└ 방위할증 포함분',`외벽·유리·지붕 (N1.20/E·W1.10/S1.00/지붕1.20, 학회 표 2.36) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
+      ?hRow('└ 방위할증 포함분',`외벽·문·유리·지붕 (N1.20/E·W1.10/S1.00/지붕1.20, 학회 표 2.36) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
       :'';
     const hSfRow=hRow('SAFETY FACTOR','ROOM HEAT LOSS × 10% — 설계 불확실성을 고려한 여유율 (AC-012)',le.totalH-le.hRsh);
     const hTotRow=grnH(`ROOM TOTAL HEATING LOSS  (누적 ×${(le.hRsh>0?le.totalH/(le.hRsh-le.hDir):1.10).toFixed(3)})`,le.totalH);
@@ -2174,7 +2220,7 @@ function renderLoadCalc(){
       ${sHC('① 태양복사열에 의한 부하 (SOLAR GAIN — GLASS)<span class="src-badge">축열 반영 일사부하 (서울 37°N 7월) × SC — 투명유리 기준(SC=SHGC÷0.87)</span>')}
       ${solarRows}
       ${sHC('② 전열에 의한 부하 (SOLAR &amp; TRANS GAIN — WALLS &amp; ROOF)<span class="src-badge">Q = U × A × CLTD (방위·시각별 등가온도차)</span>')}
-      ${wallRowsC}${roofRowC}
+      ${wallRowsC}${doorRowsC}${roofRowC}
       ${sHC('③ 전열에 의한 부하 (TRANS. GAIN EXCEPT WALLS &amp; ROOF)<span class="src-badge">Q = 0.336 × 풍량 × ΔT (현열) / 833 × 풍량 × Δx (잠열)</span>')}
       ${glassCRows}${iwRowsC}${floorRowC}${infRowC}${oaRowC}
       ${st1Row}
@@ -2207,7 +2253,7 @@ function renderLoadCalc(){
       ${sHH('① GLASS HEAT LOSS')}
       ${glassHRows}
       ${sHH('② OUTSIDE WALL HEAT LOSS')}
-      ${wallRowsH}${roofRowH}
+      ${wallRowsH}${doorRowsH}${roofRowH}
       ${sHH('③ TRANS. LOSS EXCEPT WALLS &amp; ROOF')}
       ${iwRowsH}${floorRowH}${infRowH}${oaRowH}${exhRowH}
       ${hDirRow}${hRshRow}${hSfRow}${hTotRow}${humRow}
@@ -4361,7 +4407,7 @@ function restoreState(){
 function migrateRoom(r){
   const d=roomDefaults();
   const m=Object.assign({},d,r||{});
-  ['wallN','wallE','wallS','wallW','winN','winE','winS','winW','iw1','iw2','iw3','iw4','capC','capEo','capH','capV','capHW'].forEach(function(k){
+  ['wallN','wallE','wallS','wallW','winN','winE','winS','winW','doorN','doorE','doorS','doorW','iw1','iw2','iw3','iw4','capC','capEo','capH','capV','capHW'].forEach(function(k){
     m[k]=Object.assign({},d[k],(r&&r[k])||{});
   });
   if(m.type==='generator')m.type='elec';
