@@ -497,6 +497,9 @@ const UFLOOR = {
 };
 // 종전 기본값 3.13 이 남은 저장본은 계산서에 출처 경고를 붙인다 (AC-006: 출처를 설명할 수 없는 값)
 function floorLegacy(r){ return (r&&r.floorOn&&Math.abs((r.floorU||0)-3.13)<1e-9)?' ⚠ U 3.13 — 종전 기본값, 출처 확인 필요 (AC-006 [별표1] '+uFloor(r.floorMode)+')':''; }
+// 내벽 높이 = 천장고 — 기준: AC-005 (2026-11-17 사용자 결정 「천장고까지」). 천장 속은 실 밖으로 본다
+//   천장고를 넣지 않은 실(예전 저장본 포함)은 층고로 계산해 결과가 바뀌지 않게 하고, 계산서에 「천장고 미입력」을 표시한다
+function iwH(r){ const h=+(r&&r.height)||0, c=parseFloat(r&&r.ceilH); return c>0?(h>0?Math.min(c,h):c):h; }
 const IW_U=2.71;   // 내벽 기본 U — 기준: AC-005 (콘크리트 200·양면 미장 계산값)
 // 바닥 조건 — 기준: AC-005·AC-006. soil=땅 접촉, under=비공조실 위, outdoor=필로티. 예전 저장본의 'ground'(접지·비공조 하부)는 under 로 읽어 결과를 바꾸지 않는다
 function fMode(r){ const m=r&&r.floorMode; return m==='outdoor'?'outdoor':(m==='soil'?'soil':'under'); }
@@ -1457,6 +1460,7 @@ function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 
     capV:{model:'',cnt:1,fno:'',drv:'직결',saf:0,eaf:0,af:0,sp:0,mp:'',volt:'',note:''},
     capHW:{model:'',cnt:1,lph:0,kw:0,volt:'',note:''},
     note:'',
+    ceilH:null,   // 천장고 (m) — 내벽 면적용 (AC-005). 비우면 층고
   };
 }
 function newRoom(){
@@ -1664,7 +1668,7 @@ function renderRoomDetail(){
     <tr>
       <td class="C">(${n})</td>
       <td><input type="number" value="${iw.len}" step="0.1" onchange="sIW(${n},'len',parseFloat(this.value)||0);renderRoomDetail()"></td>
-      <td class="au C">${f1(iw.len*r.height)}</td>
+      <td class="au C">${f1(iw.len*iwH(r))}</td>
       <td><input type="number" value="${iw.u}" step="0.01" onchange="sIW(${n},'u',parseFloat(this.value)||2.08)"></td>
       <td class="au C">${_dtcIW}</td>
     </tr>`;
@@ -1685,6 +1689,7 @@ function renderRoomDetail(){
     <div class="fv"><label>세로 (m)</label><input type="number" value="${r.depth}" step="0.1" onchange="sRd('depth',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>바닥면적 (m²) 자동</label><input class="au" readonly value="${f1(area)}"></div>
     <div class="fv"><label>층고 (m)</label><input type="number" value="${r.height}" step="0.1" onchange="sRd('height',parseFloat(this.value)||3.0)"></div>
+    <div class="fv"><label>천장고 (m) — 내벽 면적용</label><input type="number" value="${r.ceilH>0?r.ceilH:''}" placeholder="미입력 → 층고" step="0.1" onchange="sRd('ceilH',parseFloat(this.value)>0?parseFloat(this.value):null)"></div>
     <div class="fv"><label>체적 (m³) 자동</label><input class="au" readonly value="${f1(vol)}"></div>
   </div>
 </div></div>
@@ -1739,7 +1744,7 @@ function renderRoomDetail(){
   </table></div>
   <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 같은 방위 외벽 면적에서 창과 함께 공제됩니다. 냉방은 같은 방위 외벽 CLTD, 난방은 ΔT×방위계수. 내부 문은 입력하지 않습니다(내벽에 포함). 문 틈새 바람은 침기(AC-010)에 들어 있어 전도만 계산합니다.</div>
 
-  <div class="st" style="font-size:11px;margin-top:12px">내벽 ΔT = (외기-실내)/2, 기본 U=2.71 W/m²K (콘크리트 200 양면미장) — 길이×층고=면적 자동</div>
+  <div class="st" style="font-size:11px;margin-top:12px">내벽 ΔT = (외기-실내)/2, 기본 U=2.71 W/m²K (콘크리트 200 양면미장) — 길이×천장고(${f1(iwH(r))} m${r.ceilH>0?'':' · 천장고 미입력 → 층고'})=면적 자동</div>
   <div class="tw"><table>
     <thead><tr><th>번호</th><th>길이 (m)</th><th>면적 (m²) 자동</th><th>U값 (W/m²K)</th><th>ΔT (℃)</th></tr></thead>
     <tbody>
@@ -1890,12 +1895,12 @@ function calcLE(room){
     const gc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const wn=room['win'+d];gc[d]=wn.u*wn.w*wn.h*dTc;});
     // Interior walls (냉방 ΔT = dTc/2)
-    const dTc_iw=dTc/2;
+    const dTc_iw=dTc/2, hIW=iwH(room);   // 내벽 높이 = 천장고 (AC-005)
     const iw=[
-      room.iw1.len>0?room.iw1.u*room.iw1.len*h*dTc_iw:0,
-      room.iw2.len>0?room.iw2.u*room.iw2.len*h*dTc_iw:0,
-      room.iw3.len>0?room.iw3.u*room.iw3.len*h*dTc_iw:0,
-      room.iw4.len>0?room.iw4.u*room.iw4.len*h*dTc_iw:0,
+      room.iw1.len>0?room.iw1.u*room.iw1.len*hIW*dTc_iw:0,
+      room.iw2.len>0?room.iw2.u*room.iw2.len*hIW*dTc_iw:0,
+      room.iw3.len>0?room.iw3.u*room.iw3.len*hIW*dTc_iw:0,
+      room.iw4.len>0?room.iw4.u*room.iw4.len*hIW*dTc_iw:0,
     ];
     const flC=(room.floorOn&&dTc!==null)?room.floorU*area*dTc*fFacC(room):0; // 땅 접촉 0, 비공조실 위 ΔT/2, 외기노출 ΔT
     const infS=infCMH*dTc*0.336;
@@ -1928,12 +1933,12 @@ function calcLE(room){
     if(room.roofOn){hroof=room.roofU*roofA*dTh*DIR_HF_ROOF;hDir+=room.roofU*roofA*dTh*(DIR_HF_ROOF-1);}
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*wn.w*wn.h*dTh*DIR_HF[d];hDir+=wn.u*wn.w*wn.h*dTh*(DIR_HF[d]-1);});
     hinf=infCMH*0.336*dTh;
-    const dTh_iw=dTh/2;
+    const dTh_iw=dTh/2, hIW=iwH(room);
     hiw=[
-      room.iw1.len>0?room.iw1.u*room.iw1.len*h*dTh_iw:0,
-      room.iw2.len>0?room.iw2.u*room.iw2.len*h*dTh_iw:0,
-      room.iw3.len>0?room.iw3.u*room.iw3.len*h*dTh_iw:0,
-      room.iw4.len>0?room.iw4.u*room.iw4.len*h*dTh_iw:0,
+      room.iw1.len>0?room.iw1.u*room.iw1.len*hIW*dTh_iw:0,
+      room.iw2.len>0?room.iw2.u*room.iw2.len*hIW*dTh_iw:0,
+      room.iw3.len>0?room.iw3.u*room.iw3.len*hIW*dTh_iw:0,
+      room.iw4.len>0?room.iw4.u*room.iw4.len*hIW*dTh_iw:0,
     ];
   }
   const hiwSum=hiw.reduce((a,b)=>a+b,0);
@@ -1973,6 +1978,7 @@ function defaultsOf(r){
   const wins=D.map(d=>r['win'+d]).filter(w=>w.w*w.h>0);
   if(wins.some(w=>eq(w.u,U.win))) out.push('창 U (별표1 기본값)');
   if(wins.some(w=>eq(w.shgc,0.6))) out.push('SHGC 0.6 (성적서 미반영)');
+  if([1,2,3,4].some(n=>r['iw'+n]&&r['iw'+n].len>0)&&!(parseFloat(r.ceilH)>0)) out.push('천장고 미입력 — 내벽 층고 적용');
   if(D.some(d=>doorA(r,d)>0&&eq(r['door'+d].u,U.door))) out.push('문 U (별표1 기본값)');
   if(r.roofOn&&eq(r.roofU,U.roof)) out.push('지붕 U (별표1 기본값)');
   if(r.cdb!==null&&eqIsDefault(r)) out.push('기기발열 기본값 '+eqDefTxt(r));
@@ -2102,7 +2108,7 @@ function renderLoadCalc(){
     }).join('');
     const iwRowsC=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
-      return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
+      return cRowFixed(`INT.WALL(${n})`,`${f1(iw.len)}×${f1(iwH(room))}${room.ceilH>0?'':'(층고)'}=${f1(iw.len*iwH(room))}㎡×ΔT${le.dTc!==null?(le.dTc/2).toFixed(1):'—'}℃×U${iw.u}`,le.td&&le.td[0]?le.td[0].iw[n-1]:0);
     }).join('');
     const fFacR=(room.floorMode==='outdoor')?1:0.5;
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
@@ -2151,7 +2157,7 @@ function renderLoadCalc(){
     const roofRowH=hRow('ROOF',room.roofOn?`${f1(le.roofA)}㎡×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×U${room.roofU}×방위${DIR_HF_ROOF}`:'비활성',le.hroof);
     const iwRowsH=[1,2,3,4].map(n=>{
       const iw=room['iw'+n];
-      return hRow(`INT.WALL(${n})`,`${f1(iw.len*room.height)}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
+      return hRow(`INT.WALL(${n})`,`${f1(iw.len)}×${f1(iwH(room))}${room.ceilH>0?'':'(층고)'}=${f1(iw.len*iwH(room))}㎡×ΔT${le.dTh!==null?(le.dTh/2).toFixed(1):'—'}℃×U${iw.u}`,le.hiw[n-1]);
     }).join('');
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);

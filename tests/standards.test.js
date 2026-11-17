@@ -223,5 +223,16 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
  ok(/hdoor\+hroof/.test(src)&&/Object\.values\(dc\)/.test(src),'문 부하가 냉방 ①②③ · 난방 합계에 들어감');
 }
 
+// ── AC-005 내벽 높이 = 천장고 (2026-11-17 사용자 결정) ──
+{const h={}; new Function('h',[grab(/function iwH\([^\n]*/,'iwH'),'h.f=iwH;'].join('\n'))(h);
+ console.log('AC-005 내벽 높이 = 천장고');
+ ok(h.f({height:5.7,ceilH:3})===3,'천장고 입력 시 천장고');
+ ok(h.f({height:5.7})===5.7&&h.f({height:5.7,ceilH:null})===5.7&&h.f({height:5.7,ceilH:''})===5.7,'미입력(예전 저장본) = 층고 → 결과 불변');
+ ok(h.f({height:3,ceilH:4})===3,'천장고가 층고보다 크면 층고로 제한');
+ const calc=grab(/function calcLE\(room\)\{[\s\S]*?\n\}/,'calcLE');
+ ok((calc.match(/len\*hIW\*dT[ch]_iw/g)||[]).length===8&&!/iw\d\.len\*h\*dT/.test(calc),'냉·난방 내벽 8줄 모두 천장고 사용');
+ ok(/천장고 미입력 — 내벽 층고 적용/.test(src),'천장고 미입력 표시');
+}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
