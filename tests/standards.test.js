@@ -196,5 +196,43 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
  ok(!/oaPpl\*25|\)\*25\)/.test(src),'25 하드코딩 제거 — oaPP() 한 곳');
 }
 
+// ── AC-006 외기 직접 문 (2026-11-16) — 별표1 「공동주택 외 — 문」, 당사 부하계산서 DOOR 방식 ──
+{const h={}; new Function('h',[grab(/const UREF = \{[\s\S]*?\n\};/,'UREF'),grab(/function winA\([^\n]*/,'winA'),grab(/function doorA\([^\n]*/,'doorA'),
+  grab(/function wallNetA\([^\n]*/,'wallNetA'),'h.UREF=UREF;h.winA=winA;h.doorA=doorA;h.wallNetA=wallNetA;'].join('\n'))(h);
+ console.log('AC-006 외기 직접 문');
+ [['중부1',1.500],['중부2',1.500],['남부',1.800],['제주도',2.200]].forEach(([z,v])=>ok(near(h.UREF[z].door,v,1e-9),`${z} 문 U ${h.UREF[z].door} ≠ 별표1 ${v}`));
+ ok(h.UREF['중부1'].door!==h.UREF['중부1'].win,'중부1 은 창 1.300 · 문 1.500 으로 갈린다');
+ // 당사 부하계산서 예 (2026-11-16 사용자 제시): OUT.WALL SE 19.4×6.0 − (창 1.5+3.0 + 문 3.0×3.0×1) = 102.9 ㎡
+ const r={wallS:{en:true,len:19.4,u:0.32},winS:{w:4.5,h:1.0},doorS:{w:3.0,h:3.0,n:1,u:2.70}};
+ ok(near(h.doorA(r,'S'),9.0,1e-9),'문 면적 = 너비×높이×개수');
+ ok(near(h.wallNetA(r,'S',6.0),102.9,1e-9),`외벽 순면적 창·문 공제 ${h.wallNetA(r,'S',6.0)} ≠ 102.9`);
+ ok(near(h.doorA({doorS:{w:4,h:4,n:1}},'S'),16,1e-9)&&near(h.doorA({doorS:{w:1,h:2,n:3}},'S'),6,1e-9),'개수 곱');
+ ok(h.doorA({},'S')===0&&h.doorA({doorS:{w:3,h:3}},'S')===9,'예전 저장본(문 없음)=0, 개수 없으면 1');
+ ok(near(h.wallNetA({wallS:{len:10},winS:{w:2,h:1}},'S',3),28,1e-9),'문 없는 예전 실은 종전과 같은 순면적');
+ // 냉방 = 같은 방위 외벽 CLTD (계산서 예: 9.0×10.1×2.70=245 W), 난방 = U×A×ΔT×방위계수 (16×2.70×14.6×1.10=694 W)
+ const cl=grab(/DIRS\.forEach\(d=>\{const A=doorA\(room,d\);if\(A>0\)dc\[d\][^\n]*/,'door cooling');
+ const ht=grab(/DIRS\.forEach\(d=>\{const A=doorA\(room,d\);if\(A>0\)\{const u[^\n]*/,'door heating');
+ const cw=grab(/DIRS\.forEach\(d=>\{const wd=room\['wall'\+d\];if\(wd\.en\)\{const netA=wallNetA\(room,d,h\);wc\[d\][^\n]*/,'wall cooling');
+ ok(/CLTD_WALL\[d\]\|\|CLTD_WALL\.N\)\[ti\]\+cltdAdj/.test(cl)&&/CLTD_WALL\[d\]\|\|CLTD_WALL\.N\)\[ti\]\+cltdAdj/.test(cw),'문 냉방은 외벽과 같은 CLTD 식');
+ const c={}; new Function('c',[grab(/function doorA\([^\n]*/,'doorA'),'const DIRS=["N","E","S","W"],CLTD_WALL={S:[10.1,12,8.5,5.8]},ti=0,cltdAdj=0,dTh=14.6,DIR_HF={N:1.2,E:1.1,S:1.1,W:1.1};',
+  'const room={doorS:{w:3,h:3,n:1,u:2.70}};const dc={N:0,E:0,S:0,W:0};',cl,
+  'const room2={doorS:{w:4,h:4,n:1,u:2.70}};let hdoor=0,hDir=0;const hdoorD={N:0,E:0,S:0,W:0};',ht.replace(/room\b/g,'room2'),'c.dc=dc.S;c.h=hdoorD.S;'].join('\n'))(c);
+ ok(Math.round(c.dc)===245,`문 냉방 ${c.dc} ≠ 계산서 245 W`);
+ ok(Math.round(c.h)===694,`문 난방 ${c.h} ≠ 계산서 694 W`);
+ ok(/'doorN','doorE','doorS','doorW'/.test(grab(/function migrateRoom\(r\)\{[\s\S]*?\n\}/,'migrateRoom')),'migrateRoom 이 문 칸을 기본값으로 채움');
+ ok(/hdoor\+hroof/.test(src)&&/Object\.values\(dc\)/.test(src),'문 부하가 냉방 ①②③ · 난방 합계에 들어감');
+}
+
+// ── AC-005 내벽 높이 = 천장고 (2026-11-17 사용자 결정) ──
+{const h={}; new Function('h',[grab(/function iwH\([^\n]*/,'iwH'),'h.f=iwH;'].join('\n'))(h);
+ console.log('AC-005 내벽 높이 = 천장고');
+ ok(h.f({height:5.7,ceilH:3})===3,'천장고 입력 시 천장고');
+ ok(h.f({height:5.7})===5.7&&h.f({height:5.7,ceilH:null})===5.7&&h.f({height:5.7,ceilH:''})===5.7,'미입력(예전 저장본) = 층고 → 결과 불변');
+ ok(h.f({height:3,ceilH:4})===3,'천장고가 층고보다 크면 층고로 제한');
+ const calc=grab(/function calcLE\(room\)\{[\s\S]*?\n\}/,'calcLE');
+ ok((calc.match(/len\*hIW\*dT[ch]_iw/g)||[]).length===8&&!/iw\d\.len\*h\*dT/.test(calc),'냉·난방 내벽 8줄 모두 천장고 사용');
+ ok(/천장고 미입력 — 내벽 층고 적용/.test(src),'천장고 미입력 표시');
+}
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
