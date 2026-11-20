@@ -1109,10 +1109,52 @@ function _catEHPRoom(rid, row) {
   renderCapCalc();
 }
 
-function _catHEX(rid, row) {
+// ── 환기 장비 자동 선정 (2026-11-20) ──────────────────────────
+//   수량을 바꾸면 대당 필요풍량(계산풍량 ÷ 수량) 이상인 카탈로그 장비 중 가장 작은 것을 고르고
+//   선정풍량·정압·소비전력·전원·임펠러를 함께 넣는다. 같은 풍량이면 소비전력이 작은 쪽.
+//   인라인덕트팬은 최대정압이 선정 ESP 이상인 것만 후보로 한다.
+const VENT_TYPE={'천정형팬':'CEILING FAN (셀링팬)','벽부형팬':'WALL FAN (벽부형팬)','루프팬':'ROOF FAN (루프팬)',
+  '인라인덕트팬':'DUCT IN-LINE FAN (인라인덕트팬)','전열교환기':'HEAT RECOVERY VENTILATOR (전열교환기)'};
+const VENT_CAT={'천정형팬':'FAN_CEILING','벽부형팬':'FAN_WALL','루프팬':'FAN_ROOF','인라인덕트팬':'FAN_INLINE','전열교환기':'HEX'};
+const _ventReq={};   // rid → {calc: 계산풍량 합계, sp: 필요정압} — 각 탭을 그릴 때 채운다
+function _vNum(v){const n=parseFloat(String(v??'').replace(/,/g,''));return isFinite(n)?n:NaN;}
+function catRowsOf(type){
+  const data=loadCatalogDB(); if(!data)return null;
+  const raw=data[type]; const arr=Array.isArray(raw)?raw:(raw?.data||[]); const cols=raw?.cols;
+  if(cols&&arr.length&&Array.isArray(arr[0])){const keys=flattenCols(cols);
+    return arr.map(row=>{const o={};keys.forEach((k,i)=>{o[k]=row[i]??null;});return o;});}
+  return arr;
+}
+function pickVent(type,need,minSp){
+  const rows=catRowsOf(type); if(!rows)return {err:'nocat'};
+  const ck=type==='HEX'?'풍량(m³/h)_강':'최대풍량(m³/h)', sk=type==='HEX'?'기외정압(Pa)_강':'최대정압(Pa)', pk=type==='HEX'?'소비전력(W)_강':'소비전력(W)';
+  const c=rows.filter(x=>_vNum(x[ck])>=need&&(!(minSp>0)||!(_vNum(x[sk])>=0)||_vNum(x[sk])>=minSp))
+    .sort((a,b)=>(_vNum(a[ck])-_vNum(b[ck]))||((_vNum(a[pk])||0)-(_vNum(b[pk])||0)));
+  return c.length?{row:c[0]}:{err:'none'};
+}
+function autoSelVent(rid,tab){
+  const r=STATE.rooms.find(x=>x.id===rid); if(!r)return;
+  const q=_ventReq[rid]; if(!q)return;
+  const cnt=r.capV.cnt||1, need=q.calc/cnt, type=VENT_CAT[tab];
+  const res=pickVent(type,need,tab==='인라인덕트팬'?q.sp:0);
+  if(res.err==='nocat'){r.capV.autoMsg='카탈로그 미연동 — 자동 선정 불가';return;}
+  if(res.err==='none'){
+    // 맞는 장비가 없으면 예전 선정을 지운다 — 수량과 맞지 않는 사양이 일람표에 남지 않게
+    ['model','ftype','fno','pw','maxAf','maxSp','saf','sp','af','mp','afH','afM','afL','pwH','pwM','pwL','effC','effH'].forEach(k=>{delete r.capV[k];});
+    r.capV.autoMsg='대당 '+fW(Math.round(need))+' CMH'+(tab==='인라인덕트팬'&&q.sp?' · '+q.sp+' Pa':'')+' 이상인 장비가 카탈로그에 없음 — 수량을 늘리세요';return;}
+  r.capV.autoMsg='';
+  ({FAN_CEILING:_catFAN_CEIL,FAN_WALL:_catFAN_WALL,FAN_ROOF:_catFAN_ROOF,FAN_INLINE:_catFAN_INLINE,HEX:_catHEX})[type](rid,res.row,true);
+}
+function setVentCnt(rid,tab,v){
+  const r=STATE.rooms.find(x=>x.id===rid); if(!r)return;
+  r.capV.cnt=Math.max(1,parseInt(v)||1);
+  autoSelVent(rid,tab); renderCapCalc();
+}
+
+function _catHEX(rid, row, noRender) {
   var r=STATE.rooms.find(function(x){return x.id===rid;});
   if(!r)return;
-  r.capV.model=row['모델명']||r.capV.model;
+  r.capV.model=row['모델명']||'';
   r.capV.afH  =row['풍량(m³/h)_강']              ??r.capV.afH;
   r.capV.afM  =row['풍량(m³/h)_중']              ??r.capV.afM;
   r.capV.afL  =row['풍량(m³/h)_약']              ??r.capV.afL;
@@ -1122,52 +1164,36 @@ function _catHEX(rid, row) {
   r.capV.effC =row['유효전열교환효율(%)_냉방']    ??r.capV.effC;
   r.capV.effH =row['유효전열교환효율(%)_난방']    ??r.capV.effH;
   r.capV.volt =row['전원(V,Hz)']                 ||r.capV.volt;
-  renderCapCalc();
+  // 선정풍량·풍량·정압·동력은 강(强) 노치 값으로 함께 넣는다 (2026-11-20)
+  var af=_vNum(row['풍량(m³/h)_강']); if(af>0){r.capV.saf=af;r.capV.af=af;}
+  var sp=_vNum(row['기외정압(Pa)_강']); if(sp>=0)r.capV.sp=sp;
+  var pw=_vNum(row['소비전력(W)_강']); if(pw>0)r.capV.mp=String(Math.round(pw)/1000);
+  r.capV.autoMsg='';
+  if(!noRender)renderCapCalc();
 }
 
-function _catFAN_INLINE(rid, row) {
+// 팬 공통 — 모델·타입·임펠러·전원·소비전력·최대풍량, 그리고 선정풍량(=최대풍량)·정압(=최대정압)
+function _catFAN(rid, row, noRender, setSaf) {
   var r=STATE.rooms.find(function(x){return x.id===rid;});
   if(!r)return;
-  r.capV.model =row['모델명']          ||r.capV.model;
+  r.capV.model =row['모델명']||'';
+  r.capV.ftype =row['구분']||row['타입']||'';
   r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
   r.capV.volt  =row['전원']            ||r.capV.volt;
   r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
   r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
-  renderCapCalc();
+  r.capV.maxSp =row['최대정압(Pa)']   ??r.capV.maxSp;
+  if(setSaf){
+    var af=_vNum(row['최대풍량(m³/h)']); if(af>0)r.capV.saf=af;
+    var sp=_vNum(row['최대정압(Pa)']); if(sp>=0)r.capV.sp=sp;
+  }
+  r.capV.autoMsg='';
+  if(!noRender)renderCapCalc();
 }
-
-function _catFAN_CEIL(rid, row) {
-  var r=STATE.rooms.find(function(x){return x.id===rid;});
-  if(!r)return;
-  r.capV.model =row['모델명']          ||r.capV.model;
-  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
-  r.capV.volt  =row['전원']            ||r.capV.volt;
-  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
-  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
-  renderCapCalc();
-}
-
-function _catFAN_WALL(rid, row) {
-  var r=STATE.rooms.find(function(x){return x.id===rid;});
-  if(!r)return;
-  r.capV.model =row['모델명']          ||r.capV.model;
-  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
-  r.capV.volt  =row['전원']            ||r.capV.volt;
-  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
-  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
-  renderCapCalc();
-}
-
-function _catFAN_ROOF(rid, row) {
-  var r=STATE.rooms.find(function(x){return x.id===rid;});
-  if(!r)return;
-  r.capV.model =row['모델명']          ||r.capV.model;
-  r.capV.fno   =row['임펠러(mm)']      ||r.capV.fno;
-  r.capV.volt  =row['전원']            ||r.capV.volt;
-  r.capV.pw    =row['소비전력(W)']     ??r.capV.pw;
-  r.capV.maxAf =row['최대풍량(m³/h)'] ??r.capV.maxAf;
-  renderCapCalc();
-}
+function _catFAN_INLINE(rid, row, noRender){_catFAN(rid,row,noRender,false);}   // 인라인: 선정풍량·ESP 는 계산값을 쓴다
+function _catFAN_CEIL(rid, row, noRender){_catFAN(rid,row,noRender,true);}
+function _catFAN_WALL(rid, row, noRender){_catFAN(rid,row,noRender,true);}
+function _catFAN_ROOF(rid, row, noRender){_catFAN(rid,row,noRender,true);}
 
 function _catUH(rid, row) {
   var r=STATE.rooms.find(function(x){return x.id===rid;});
@@ -2482,7 +2508,7 @@ function renderCapCalc(){
     });
     STATE.rooms.filter(r=>r.ve==='인라인덕트팬').forEach((r,i)=>{
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const autoSaf=Math.ceil(gV(r)*effACH/100)*100;
+      const autoSaf=Math.ceil(gV(r)*effACH/(r.capV.cnt||1)/100)*100;   // 대당
       rows.push({grp:'인라인덕트팬',tag:r.capV.tag||'M-AH-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
         spec:[(r.capV.model||''),fW(autoSaf)+' CMH'+(r.capV.selSp?' × '+r.capV.selSp+' Pa':'')].filter(Boolean).join(' / '),
         pw:r.capV.mp||'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
@@ -3111,8 +3137,9 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const calcCMH=Math.max(vol*r.ventACH,oaOf(r,area)*oaPP(r)); // max(체적×환기횟수, 인원×인당 외기량) — 부하계산 외기량과 동일 근거
-      totCalc+=calcCMH; totSel+=(r.capV.saf||0);
+      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const rid=r.id;
+      _ventReq[rid]={calc:calcCMH,sp:0};
       const autoTag='M-AH-ERV-'+String(idx+1).padStart(3,'0');
       html+=`<tr>
         <td class="C">${esc(f?.name||'—')}</td>
@@ -3124,11 +3151,11 @@ function renderCapCalc(){
         <td class="au">${r.ventACH}</td>
         <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
-        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','전열교환기',this.value)"></td>
         <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
         <td style="background:#f0fdf4"><input type="text" value="${esc(r.capV.mp||'')}" placeholder="kW" style="width:50px" onchange="sCV('${rid}','mp',this.value)"></td>
-        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:(r.capV.model?`<div style="font-size:9px;color:#475569">${esc(r.capV.model)}</div>`:'')}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.afH??'—'}&nbsp;/&nbsp;${r.capV.afM??'—'}&nbsp;/&nbsp;${r.capV.afL??'—'}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.pwH??'—'}&nbsp;/&nbsp;${r.capV.pwM??'—'}&nbsp;/&nbsp;${r.capV.pwL??'—'}</td>
         <td class="C" style="font-size:10px">${r.capV.effC??'—'}&nbsp;/&nbsp;${r.capV.effH??'—'}</td>
@@ -3165,7 +3192,10 @@ function renderCapCalc(){
           <span style="font-size:10px;opacity:.8">${f?esc(f.name)+' ':''}${esc(r.name)} / 전열교환기</span>
         </div>
         <div style="padding:10px 14px">
-          ${dv('TYPE / MODEL',r.capV.model,'')}
+          ${dv('TYPE',VENT_TYPE['전열교환기'],'')}
+          ${dv('MODEL',r.capV.model,'')}
+          ${dv('선정풍량',r.capV.saf?fW(r.capV.saf):null,'m³/h (대당)')}
+          ${dv('기외정압',r.capV.sp,'Pa')}
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">풍량 (강/중/약)</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${r.capV.afH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.afL??'—'}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span></div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">소비전력 (강/중/약)</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${r.capV.pwH??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwM??'—'}</b>&nbsp;/&nbsp;<b>${r.capV.pwL??'—'}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">W</span></div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:140px;color:#334155">유효전열교환효율</span><span style="color:#94a3b8;margin-right:4px">:</span>냉방&nbsp;<b>${r.capV.effC??'—'}</b>%&nbsp;&nbsp;난방&nbsp;<b>${r.capV.effH??'—'}</b>%&nbsp;&nbsp;${epiBadge(r)}</div>
@@ -3188,13 +3218,13 @@ function renderCapCalc(){
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
-      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH,자동)</th><th>수량</th><th style="text-align:left">비고</th>
+      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH/대,자동)</th><th>수량</th><th style="text-align:left">선정 장비</th><th style="text-align:left">비고</th>
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/100)*100;
+      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당 풍량 (2026-11-20 수량으로 나눔)
       totCalc+=calcCMH; totSel+=autoSaf*(r.capV.cnt||1);
       const rid=r.id;
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
@@ -3208,7 +3238,8 @@ function renderCapCalc(){
         <td class="C"><input type="number" value="${effACH}" step="0.5" min="0" style="width:50px;font-size:11px" onchange="sCV('${rid}','ventACH',parseFloat(this.value)||0);renderCapCalc()"></td>
         <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td style="text-align:right;background:#dbeafe;font-weight:700;color:#1d4ed8">${fW(autoSaf)}</td>
-        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량·ESP 에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','인라인덕트팬',this.value)"></td>
+        <td class="L" style="font-size:10px">${r.capV.autoMsg?`<span style="color:#dc2626">${esc(r.capV.autoMsg)}</span>`:(r.capV.model||r.capV.maxAf?esc([r.capV.model,r.capV.fno,r.capV.maxAf?fW(r.capV.maxAf)+' m³/h':'',r.capV.maxSp?r.capV.maxSp+' Pa':''].filter(Boolean).join(' · ')):'—')}</td>
         <td class="L"><input type="text" value="${esc(r.capV.note||'인라인덕트팬')}" style="width:80px" onchange="sCV('${rid}','note',this.value)"></td>
       </tr>`;
     });
@@ -3216,7 +3247,7 @@ function renderCapCalc(){
       <td class="L" colspan="7" style="background:#fef9c3;font-weight:700">TOTAL</td>
       <td style="text-align:right;font-weight:700;background:#fef9c3">${fW(Math.round(totCalc))}</td>
       <td style="text-align:right;font-weight:700;background:#fef9c3">${fW(totSel)}</td>
-      <td colspan="2" style="background:#fef9c3"></td>
+      <td colspan="3" style="background:#fef9c3"></td>
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
     html+=`<div style="margin-top:18px">`;
@@ -3225,7 +3256,7 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/100)*100;
+      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당
       const rid=r.id;
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       const tag=r.capV.tag||autoTag;
@@ -3253,6 +3284,7 @@ function renderCapCalc(){
       const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 Rule 1 — 안전율 10%. AC-012 와 같은 값
       const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 Rule 1 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
+      _ventReq[rid]={calc:calcCMH,sp:parseFloat(selEspVal)||0};
       const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
       const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
       html+=`<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px">
@@ -3327,13 +3359,14 @@ function renderCapCalc(){
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;border-bottom:1px solid #1e3a5f;padding-bottom:3px;flex:1">③ FAN SELECTION</div>
             <button class="btn btP btS no-print" onclick="openCatModal('FAN_INLINE',function(row){_catFAN_INLINE('${rid}',row)},{val:${autoSaf},unit:'CMH',label:'풍량'})">📋 카탈로그</button>
           </div>
-          ${selRow('model','TYPE',r.capV.model,'','DUCT IN-LINE')}
+          <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">TYPE</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${VENT_TYPE['인라인덕트팬']}${r.capV.ftype?' · '+esc(r.capV.ftype):''}</b></div>
+          ${selRow('model','MODEL',r.capV.model,'','')}
           ${selRow('fno','SIZE (임펠러)',r.capV.fno,'mm','')}
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
             <span style="min-width:110px;color:#334155">최대풍량</span>
             <span style="color:#94a3b8;margin-right:4px">:</span>
-            ${r.capV.maxAf!=null?`<b style="color:#1d4ed8">${fW(r.capV.maxAf)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span>`:`<span style="color:#94a3b8;font-size:10px">—</span>`}
+            ${r.capV.maxAf!=null?`<b style="color:#1d4ed8">${fW(r.capV.maxAf)}</b><span style="font-size:9px;color:#94a3b8;margin-left:4px">m³/h</span>${r.capV.maxSp!=null?`<span style="margin-left:8px">최대정압 <b>${r.capV.maxSp}</b> Pa</span>`:''}${(r.capV.maxSp!=null&&parseFloat(r.capV.maxSp)<parseFloat(selEspVal))||(r.capV.maxAf!=null&&parseFloat(r.capV.maxAf)<calcCMH/(r.capV.cnt||1))?'<span style="margin-left:8px;color:#dc2626;font-weight:700">✗ 대당 풍량 또는 ESP 부족</span>':''}`:`<span style="color:#94a3b8;font-size:10px">—</span>`}
           </div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
@@ -3351,7 +3384,7 @@ function renderCapCalc(){
             <span style="font-size:9px;color:#94a3b8;margin-left:4px">kW</span>
           </div>
           ${selRow('volt','POWER SOURCE',r.capV.volt,'','1P × 220V × 60Hz')}
-          <div style="display:flex;align-items:center;padding:4px 0;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">Q'TY</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="number" value="${r.capV.cnt||1}" min="1" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"><span style="font-size:9px;color:#94a3b8;margin-left:4px">SET</span></div>
+          <div style="display:flex;align-items:center;padding:4px 0;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">Q'TY</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="number" value="${r.capV.cnt||1}" min="1" style="width:55px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="setVentCnt('${rid}','인라인덕트팬',this.value)"><span style="font-size:9px;color:#94a3b8;margin-left:4px">SET</span></div>
         </div>
       </div>`;
     });
@@ -3371,15 +3404,16 @@ function renderCapCalc(){
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
-      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH)</th><th>수량</th>
+      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH/대)</th><th>수량</th>
       <th>정압(Pa)</th><th>장비선정</th><th>소비전력(W)</th><th>전원</th>
       <th style="text-align:left">비고</th>
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r),calcCMH=vol*r.ventACH;
-      totCalc+=calcCMH; totSel+=(r.capV.saf||0);
+      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const rid=r.id;
+      _ventReq[rid]={calc:calcCMH,sp:0};
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       html+=`<tr>
         <td class="C">${esc(f?.name||'—')}</td>
@@ -3391,9 +3425,9 @@ function renderCapCalc(){
         <td class="au">${r.ventACH}</td>
         <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
-        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1)"></td>
+        <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','${capTab}',this.value)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
-        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button></td>
+        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:(r.capV.model?`<div style="font-size:9px;color:#475569">${esc(r.capV.model)}</div>`:'')}</td>
         <td class="C" style="font-size:11px;font-weight:600">${r.capV.pw!=null?r.capV.pw:'—'}</td>
         <td><input type="text" value="${esc(r.capV.volt||'')}" placeholder="220V 60Hz" style="width:90px" onchange="sCV('${rid}','volt',this.value)"></td>
         <td class="L"><input type="text" value="${esc(r.capV.note||capTab)}" style="width:80px" onchange="sCV('${rid}','note',this.value)"></td>
@@ -3419,9 +3453,11 @@ function renderCapCalc(){
           <span style="font-size:10px;opacity:.8">${f?esc(f.name)+' ':''}${esc(r.name)} / ${capTab}</span>
         </div>
         <div style="padding:10px 14px">
-          ${dv('TYPE',r.capV.model,'')}
+          ${dv('TYPE',VENT_TYPE[capTab]+(r.capV.ftype?' · '+r.capV.ftype:''),'')}
+          ${dv('MODEL',r.capV.model,'')}
           ${dv('SIZE (임펠러)',r.capV.fno,'mm')}
-          ${dv('최대풍량',r.capV.maxAf!=null?fW(r.capV.maxAf):null,'m³/h')}
+          ${dv('선정풍량',r.capV.saf?fW(r.capV.saf):null,'m³/h (대당)')}
+          ${dv('정압',r.capV.sp,'Pa')}
           ${dv('소비전력',r.capV.pw,'W')}
           ${dv('POWER SOURCE',r.capV.volt,'')}
           ${dv('Q\'TY',(r.capV.cnt||1)+' SET','')}
