@@ -1145,6 +1145,19 @@ function autoSelVent(rid,tab){
   r.capV.autoMsg='';
   ({FAN_CEILING:_catFAN_CEIL,FAN_WALL:_catFAN_WALL,FAN_ROOF:_catFAN_ROOF,FAN_INLINE:_catFAN_INLINE,HEX:_catHEX})[type](rid,res.row,true);
 }
+// 아직 선정이 없는 실은 화면을 그릴 때 자동 선정한다 — 수량이 기본 1 그대로면 onchange 가 일지 않기 때문 (2026-11-20)
+function _ventUnsel(r,tab){return tab==='인라인덕트팬'?!(r.capV.maxAf||r.capV.model):!(parseFloat(r.capV.saf)>0||r.capV.model);}
+function autoSelIfEmpty(rid,tab){
+  const r=STATE.rooms.find(x=>x.id===rid); if(!r||!_ventUnsel(r,tab))return false;
+  autoSelVent(rid,tab); return !_ventUnsel(r,tab);
+}
+// 탭 전체 다시 선정 — 손으로 고른 장비도 현재 수량 기준으로 바꾼다
+function autoSelAll(tab){
+  if(!loadCatalogDB()){alert('카탈로그가 연동되지 않았습니다.\n툴바의 "카탈로그 연동" 버튼으로 먼저 JSON을 불러오세요.');return;}
+  if(!confirm(tab+' 전체를 현재 수량 기준으로 카탈로그에서 다시 선정합니다. 손으로 고른 장비도 바뀝니다. 계속할까요?'))return;
+  STATE.rooms.filter(r=>r.ve===tab&&_ventReq[r.id]).forEach(r=>autoSelVent(r.id,tab));
+  renderCapCalc();
+}
 function setVentCnt(rid,tab,v){
   const r=STATE.rooms.find(x=>x.id===rid); if(!r)return;
   r.capV.cnt=Math.max(1,parseInt(v)||1);
@@ -3124,11 +3137,11 @@ function renderCapCalc(){
     const rooms=STATE.rooms.filter(r=>r.ve==='전열교환기');
     if(!rooms.length){el.innerHTML='<div class="empty">전열교환기로 선택된 실이 없습니다.</div>';return;}
     let totCalc=0,totSel=0;
-    let html=`<div class="card"><div class="ch">환기유니트 용량계산서</div><div class="cb"><div class="tw"><table>
+    let html=`<div class="card"><div class="ch">전열교환기 용량계산서 <button class="btn btS no-print" style="float:right;font-size:10px;padding:2px 8px" onclick="autoSelAll('전열교환기')">↻ 전체 자동 선정</button></div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
-      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH)</th><th>수량</th>
+      <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH/대)</th><th>수량</th>
       <th>풍량(CMH)</th><th>정압(Pa)</th><th style="background:#f0fdf4">동력(kW)*</th>
       <th>장비선정</th><th>풍량 강/중/약<br>(m³/h)</th><th>소비전력 강/중/약<br>(W)</th><th>효율 냉방/난방<br>(%)</th><th>EPI 배점<br>(6번)</th><th>전원</th>
       <th style="text-align:left">비고</th>
@@ -3137,9 +3150,10 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const calcCMH=Math.max(vol*r.ventACH,oaOf(r,area)*oaPP(r)); // max(체적×환기횟수, 인원×인당 외기량) — 부하계산 외기량과 동일 근거
-      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const rid=r.id;
       _ventReq[rid]={calc:calcCMH,sp:0};
+      autoSelIfEmpty(rid,'전열교환기');
+      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const autoTag='M-AH-ERV-'+String(idx+1).padStart(3,'0');
       html+=`<tr>
         <td class="C">${esc(f?.name||'—')}</td>
@@ -3213,8 +3227,9 @@ function renderCapCalc(){
   if(capTab==='인라인덕트팬'){
     const rooms=STATE.rooms.filter(r=>r.ve==='인라인덕트팬');
     if(!rooms.length){el.innerHTML='<div class="empty">인라인덕트팬으로 선택된 실이 없습니다.</div>';return;}
+    let _inlineRedraw=false;
     let totCalc=0,totSel=0;
-    let html=`<div class="card"><div class="ch">인라인덕트팬 용량계산서</div><div class="cb"><div class="tw"><table>
+    let html=`<div class="card"><div class="ch">인라인덕트팬 용량계산서 <button class="btn btS no-print" style="float:right;font-size:10px;padding:2px 8px" onclick="autoSelAll('인라인덕트팬')">↻ 전체 자동 선정</button></div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
@@ -3285,6 +3300,7 @@ function renderCapCalc(){
       const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 Rule 1 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
       _ventReq[rid]={calc:calcCMH,sp:parseFloat(selEspVal)||0};
+      if(autoSelIfEmpty(rid,'인라인덕트팬')) _inlineRedraw=true;   // 위 집계표에도 보이도록 한 번 더 그린다
       const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
       const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
       html+=`<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px">
@@ -3389,7 +3405,9 @@ function renderCapCalc(){
       </div>`;
     });
     html+=`</div>`;
-    el.innerHTML=html; return;
+    el.innerHTML=html;
+    if(_inlineRedraw) renderCapCalc();
+    return;
   }
 
   // ── 팬 탭(천정형/벽부형/루프팬): 집계 테이블 ──
@@ -3400,7 +3418,7 @@ function renderCapCalc(){
     const fanCatKey=capTab==='벽부형팬'?'FAN_WALL':capTab==='루프팬'?'FAN_ROOF':'FAN_CEILING';
     const fanCatFn =capTab==='벽부형팬'?'_catFAN_WALL':capTab==='루프팬'?'_catFAN_ROOF':'_catFAN_CEIL';
 
-    let html=`<div class="card"><div class="ch">${capTab} 용량계산서</div><div class="cb"><div class="tw"><table>
+    let html=`<div class="card"><div class="ch">${capTab} 용량계산서 <button class="btn btS no-print" style="float:right;font-size:10px;padding:2px 8px" onclick="autoSelAll('${capTab}')">↻ 전체 자동 선정</button></div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
@@ -3411,9 +3429,10 @@ function renderCapCalc(){
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r),calcCMH=vol*r.ventACH;
-      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const rid=r.id;
       _ventReq[rid]={calc:calcCMH,sp:0};
+      autoSelIfEmpty(rid,capTab);
+      totCalc+=calcCMH; totSel+=(r.capV.saf||0)*(r.capV.cnt||1);
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       html+=`<tr>
         <td class="C">${esc(f?.name||'—')}</td>
