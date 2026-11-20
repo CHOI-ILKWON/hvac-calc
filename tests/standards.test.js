@@ -262,5 +262,12 @@ console.log('2026-11-20 물탱크 분할');
 ok(/wtTotCap=tanks\.reduce\(\(a,t\)=>a\+t\.cap,0\)/.test(src),'판정 = 총용량 합계');
 ok(/tW=wtTanks\(wt\)\.reduce/.test(src),'부스터펌프 저수조 총용량 = 합계');
 
+// ── 2026-11-20 전기온수기 저탕탱크 수동 선정 ──────
+console.log('2026-11-20 저탕탱크 수동 선정');
+ok(/const manCap=parseFloat\(r\.capHW\.storeCap\)>0, selCap=manCap\?parseFloat\(r\.capHW\.storeCap\):autoStoreCap;/.test(src),'수동 선정값 우선');
+ok(/selOK=V<=0\|\|selCap\*HW_EFF\*selCnt>=V/.test(src),'판정 = 공칭 × 0.75 × 수량 ≥ V');
+ok(/필요 공칭 용량 = V/.test(src),'유효율 0.75 역산 표시');
+ok(/Math\.ceil\(autoKw\/selCnt\*10\)\/10/.test(src),'소비전력 기본값 = 대당');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
