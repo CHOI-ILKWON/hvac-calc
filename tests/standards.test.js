@@ -248,5 +248,8 @@ ok(["setVentCnt('${rid}','전열교환기'","setVentCnt('${rid}','인라인덕�
 ok(/autoSaf=Math\.ceil\(calcCMH\/\(r\.capV\.cnt\|\|1\)\/100\)\*100/.test(src),'인라인 선정풍량 = 대당');
 ok(/dv\('TYPE',VENT_TYPE\[capTab\]/.test(src)&&/'천정형팬':'CEILING FAN \(셀링팬\)'/.test(src),'상세 카드 TYPE = 장비 형식 (셀링팬)');
 
+ok(/autoSelIfEmpty\(rid,'전열교환기'\)/.test(src)&&/autoSelIfEmpty\(rid,capTab\)/.test(src)&&/autoSelIfEmpty\(rid,'인라인덕트팬'\)/.test(src),'미선정 실은 화면을 그릴 때 자동 선정 (수량 기본 1 대응)');
+ok((src.match(/onclick="autoSelAll\(/g)||[]).length===3,'전체 자동 선정 버튼 3개 탭');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
