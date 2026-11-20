@@ -4015,6 +4015,10 @@ function renderCapCalc(){
       const STORE_CAPS=[15,30,50,80,100,150,200,300,500];
       const reqStoreCap=V/HW_EFF; // V 는 유효 저탕용량 — 공칭 × 0.75 ≥ V 인 표준탱크 자동선정 (AC-022 Rule 1)
       const autoStoreCap=STORE_CAPS.find(c=>c>=reqStoreCap)||STORE_CAPS[STORE_CAPS.length-1];
+      // 수동 선정 (2026-11-20) — 칩을 누르면 storeCap 에 들어간다. 수량은 비워두면 V 를 채우는 만큼 자동
+      const manCap=parseFloat(r.capHW.storeCap)>0, selCap=manCap?parseFloat(r.capHW.storeCap):autoStoreCap;
+      const selCnt=parseInt(r.capHW.cnt)||Math.ceil(V/(selCap*HW_EFF))||1;
+      const selOK=V<=0||selCap*HW_EFF*selCnt>=V;
       const specRow=(fld,label,val,unit,type,ph)=>
         `<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:11px;gap:6px">
           <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
@@ -4087,10 +4091,16 @@ function renderCapCalc(){
               <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.5 주 1)</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #e2e8f0">
+              <span style="color:#475569">필요 공칭 용량 = V ${f1(V)} lit &divide; 유효율 ${HW_EFF} = <b>${f1(reqStoreCap)} lit</b></span>
+              <span style="font-size:9px;color:#64748b">— V 는 「유효」 저탕용량(표 4.5 주 2). 탱크는 급수가 섞여 공칭의 약 75% 만 온수로 꺼내 쓴다 (AC-022 Rule 1)</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span style="color:#475569">표준 저탕탱크:</span>
-              ${STORE_CAPS.map(c=>`<span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;cursor:default;${c===autoStoreCap?'background:#1e3a5f;color:#fff':'background:#e2e8f0;color:#64748b'}">${c}</span>`).join('')}
+              ${STORE_CAPS.map(c=>`<span class="no-print-btn" title="${c===autoStoreCap?'자동 선정값':'눌러서 수동 선정'}" onclick="sCHW('${rid}','storeCap',${c===autoStoreCap?"''":c});sCHW('${rid}','cnt','');renderCapCalc()" style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;${c===selCap?'background:#1e3a5f;color:#fff':'background:#e2e8f0;color:#64748b'};${c===autoStoreCap?'outline:1.5px dashed #2563eb;outline-offset:1px':''}">${c}</span>`).join('')}
               <span style="color:#94a3b8;font-size:10px">lit</span>
-              <span style="font-weight:700;color:#1e3a5f;margin-left:4px">SELECTION ⇒ ${autoStoreCap} lit</span>
+              <span style="font-weight:700;color:#1e3a5f;margin-left:4px">SELECTION ⇒ ${selCap} lit${selCnt>1?' × '+selCnt+' EA':''}</span>
+              <span style="font-size:10px;font-weight:700;color:${selOK?'#16a34a':'#dc2626'}">${selOK?'✓':'✗'} 유효 ${f1(selCap*HW_EFF*selCnt)} lit ${selOK?'≥':'<'} V ${f1(V)} lit</span>
+              ${manCap?`<span style="font-size:9px;color:#b45309">수동 선정 · <a href="javascript:void(0)" onclick="sCHW('${rid}','storeCap','');sCHW('${rid}','cnt','');renderCapCalc()">자동(${autoStoreCap})으로</a></span>`:`<span style="font-size:9px;color:#2563eb">자동 선정 — 다른 용량을 누르면 수동 선정 (점선 = 자동값)</span>`}
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -4104,8 +4114,8 @@ function renderCapCalc(){
             ${specRow('storeCap','저탕용량',r.capHW.storeCap||autoStoreCap,'lit','number','')}
             ${(parseFloat(r.capHW.storeCap)||autoStoreCap)*HW_EFF*(parseInt(r.capHW.cnt)||Math.ceil(V/((parseFloat(r.capHW.storeCap)||autoStoreCap)*HW_EFF))||1)<V?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 유효 저탕량(공칭 × ${HW_EFF} × 수량)이 V ${f1(V)} lit 보다 작습니다</div>`:''}
             ${specRow('dims','규격',r.capHW.dims||'','mm','text','W×D×H mm')}
-            ${specRow('kw','소비전력',r.capHW.kw||autoKw,'kW','number',String(autoKw)+' (자동)')}
-            ${(parseFloat(r.capHW.kw)>0&&parseFloat(r.capHW.kw)*(parseInt(r.capHW.cnt)||1)<autoKw)?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 필요 가열능력 ${autoKw} kW 보다 작습니다 (급수온도 ${tCold} ℃ 기준으로 다시 계산됨)</div>`:''}
+            ${specRow('kw','소비전력 (대당)',r.capHW.kw||Math.ceil(autoKw/selCnt*10)/10,'kW','number',String(Math.ceil(autoKw/selCnt*10)/10)+' (자동)')}
+            ${(parseFloat(r.capHW.kw)>0&&parseFloat(r.capHW.kw)*selCnt<autoKw)?`<div style="font-size:10px;font-weight:700;color:#dc2626;padding:2px 0 4px 20px">✗ 필요 가열능력 ${autoKw} kW 보다 작습니다 (급수온도 ${tCold} ℃ 기준으로 다시 계산됨)</div>`:''}
             ${specRow('volt','전원',r.capHW.volt||'1P × 220V × 60Hz','','text','1P × 220V × 60Hz')}
             <div style="display:flex;align-items:center;padding:4px 0;font-size:11px;gap:6px">
               <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:90px;color:#334155">수량</span><span style="color:#94a3b8">:</span>
