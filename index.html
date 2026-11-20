@@ -1436,6 +1436,9 @@ function occOf(r,area){ const d=occDens(r); return d>0&&area>0?Math.ceil(area/d-
 function oaOf(r,area){ return (r.oa!==false)?occOf(r,area):0; }      // 신선외기 대상 인원
 // 인당 외기량 [㎥/h·인] — 기본 25 (학회 4.2 (3) · 4.3 (1)). 발주처 기준 등으로 실마다 바꿀 수 있다 (AC-017, 2026-09-08 결정 · 11-05 반영)
 function oaPP(r){ const v=parseFloat(r&&r.oaPP); return v>0?v:25; }
+// 환기 장비 계산풍량 = max(체적×환기횟수, 신선외기 인원×인당 외기량) — 전열교환기·팬 공통 (2026-11-20)
+//   사무실류처럼 환기횟수 0 · 인원 기준인 실에 팬을 골라도 0 이 되지 않게. oa:false 유형(화장실 등)은 인원 항이 0 이라 변화 없음
+function ventCalcCMH(r,ach){ return Math.max(gV(r)*(ach??r.ventACH), oaOf(r,gA(r))*oaPP(r)); }
 // 인체발열 — 학회 「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」 [W/인], 작업 상태 × 실온 (AC-007 Rule 4)
 //   전발생열은 실온과 무관하고 현열/잠열 배분만 실온에 따라 바뀐다. 표에 없는 실온은 직선보간, 21~28 ℃ 밖은 끝값
 //   실 유형이 작업 상태를 정한다 — 사무실 · 중앙제어실류 = 사무소·경보행(131 W, 표가 사무실을 예로 듦), 그 밖 = 경작업(117 W)
@@ -1666,7 +1669,7 @@ function renderRoomDetail(){
   const i=getRi(); if(i<0){el.innerHTML='<div class="empty">실 없음</div>';return;}
   const r=STATE.rooms[i];
   const area=gA(r), vol=gV(r);
-  const occ=occOf(r,area), lightW=r.lw*area, infCMH=vol*getInfACH(r), ventCMH=vol*r.ventACH; // 조명 LED 기준 — 부하계산과 동일
+  const occ=occOf(r,area), lightW=r.lw*area, infCMH=vol*getInfACH(r), ventCMH=ventCalcCMH(r); // 조명 LED 기준 — 부하계산과 동일
   const {b,f}=getBF(r.bldgId,r.floorId);
   const _p=STATE.project;
   const _outDB=_p.cust||_p.cdb;
@@ -1846,7 +1849,7 @@ function renderRoomDetail(){
     <div class="fv"><label>필요환기량 (m³/h) 자동</label><input class="au" readonly value="${f0(ventCMH)}"></div>
     <div class="fv" style="grid-column:span 2"><label>난방 시 배기 가동 (보충외기 부하)</label><label class="fgr" style="font-size:11px;gap:5px;padding:4px 0"><input type="checkbox" ${r.exhHeat?'checked':''} onchange="sRd('exhHeat',this.checked)"> 배기 보충외기를 난방부하에 가산</label></div>
   </div>
-  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 팬 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
+  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 필요환기량 = max(체적×환기횟수, 재실인원×인당 외기량) — 팬·전열교환기 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
 </div></div>
 
 <div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AC-007 인체 · AC-008 조명 · AC-009 기기</span></div><div class="cb">
@@ -2516,12 +2519,12 @@ function renderCapCalc(){
     });
     STATE.rooms.filter(r=>r.ve==='전열교환기').forEach((r,i)=>{
       rows.push({grp:'전열교환기 (ERV)',tag:r.capV.tag||'M-AH-ERV-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
-        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(Math.max(gV(r)*r.ventACH,oaOf(r,gA(r))*oaPP(r))))+' CMH(계산)')].filter(Boolean).join(' / '),
+        spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(ventCalcCMH(r)))+' CMH(계산)')].filter(Boolean).join(' / '),
         pw:r.capV.mp||'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
     });
     STATE.rooms.filter(r=>r.ve==='인라인덕트팬').forEach((r,i)=>{
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const autoSaf=Math.ceil(gV(r)*effACH/(r.capV.cnt||1)/100)*100;   // 대당
+      const autoSaf=Math.ceil(ventCalcCMH(r,effACH)/(r.capV.cnt||1)/100)*100;   // 대당
       rows.push({grp:'인라인덕트팬',tag:r.capV.tag||'M-AH-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
         spec:[(r.capV.model||''),fW(autoSaf)+' CMH'+(r.capV.selSp?' × '+r.capV.selSp+' Pa':'')].filter(Boolean).join(' / '),
         pw:r.capV.mp||'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
@@ -2529,14 +2532,14 @@ function renderCapCalc(){
     ['천정형팬','벽부형팬','루프팬'].forEach(fk=>{
       STATE.rooms.filter(r=>r.ve===fk).forEach((r,i)=>{
         rows.push({grp:fk,tag:r.capV.tag||'M-AH-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
-          spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(gV(r)*r.ventACH))+' CMH(계산)')+(r.capV.sp?' × '+r.capV.sp+' Pa':'')].filter(Boolean).join(' / '),
+          spec:[(r.capV.model||''),(r.capV.saf?fW(r.capV.saf)+' CMH':fW(Math.round(ventCalcCMH(r)))+' CMH(계산)')+(r.capV.sp?' × '+r.capV.sp+' Pa':'')].filter(Boolean).join(' / '),
           pw:r.capV.pw!=null&&r.capV.pw!==''?String(Math.round((parseFloat(r.capV.pw)||0))/1000):'',volt:r.capV.volt||'',cnt:r.capV.cnt||1});
       });
     });
     STATE.rooms.filter(r=>r.ve==='환기유니트').forEach((r,i)=>{
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
       const cnt=r.capV.cnt||1;
-      const perCMH=Math.ceil(gV(r)*effACH/cnt/100)*100;
+      const perCMH=Math.ceil(ventCalcCMH(r,effACH)/cnt/100)*100;
       rows.push({grp:'환기유니트',tag:r.capV.tag||'M-VU-'+String(i+1).padStart(3,'0'),on:"sCV('"+r.id+"','tag',this.value);renderCapCalc()",loc:locOf(r),
         spec:fW(perCMH)+' CMH/대'+(r.capV.sp?' × '+r.capV.sp+' Pa':''),pw:r.capV.mp||'',volt:'',cnt:cnt});
     });
@@ -3149,7 +3152,7 @@ function renderCapCalc(){
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
-      const calcCMH=Math.max(vol*r.ventACH,oaOf(r,area)*oaPP(r)); // max(체적×환기횟수, 인원×인당 외기량) — 부하계산 외기량과 동일 근거
+      const calcCMH=ventCalcCMH(r); // max(체적×환기횟수, 인원×인당 외기량) — 부하계산 외기량과 동일 근거
       const rid=r.id;
       _ventReq[rid]={calc:calcCMH,sp:0};
       autoSelIfEmpty(rid,'전열교환기');
@@ -3239,7 +3242,7 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당 풍량 (2026-11-20 수량으로 나눔)
+      const calcCMH=ventCalcCMH(r,effACH),autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당 풍량 (2026-11-20 수량으로 나눔)
       totCalc+=calcCMH; totSel+=autoSaf*(r.capV.cnt||1);
       const rid=r.id;
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
@@ -3271,7 +3274,7 @@ function renderCapCalc(){
       const {b,f}=getBF(r.bldgId,r.floorId);
       const area=gA(r),vol=gV(r);
       const effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH;
-      const calcCMH=vol*effACH,autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당
+      const calcCMH=ventCalcCMH(r,effACH),autoSaf=Math.ceil(calcCMH/(r.capV.cnt||1)/100)*100;   // 대당
       const rid=r.id;
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
       const tag=r.capV.tag||autoTag;
@@ -3428,7 +3431,7 @@ function renderCapCalc(){
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
-      const area=gA(r),vol=gV(r),calcCMH=vol*r.ventACH;
+      const area=gA(r),vol=gV(r),calcCMH=ventCalcCMH(r);
       const rid=r.id;
       _ventReq[rid]={calc:calcCMH,sp:0};
       autoSelIfEmpty(rid,capTab);
@@ -3506,7 +3509,7 @@ function renderCapCalc(){
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
       const {b,f}=getBF(r.bldgId,r.floorId);
-      const area=gA(r),vol=gV(r),effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH,calcCMH=vol*effACH;
+      const area=gA(r),vol=gV(r),effACH=r.capV.ventACH!==undefined?r.capV.ventACH:r.ventACH,calcCMH=ventCalcCMH(r,effACH);
       const cnt=r.capV.cnt||1;
       const perCMH=Math.ceil(calcCMH/cnt/100)*100;
       totCalc+=calcCMH; totCntFan+=cnt;
