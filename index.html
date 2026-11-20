@@ -3739,7 +3739,12 @@ function renderCapCalc(){
       ['pwb','개인 세면기',  [7.6,7.6,7.6,7.6,7.6,7.6,7.6,7.6,7.6]],
       ['wb', '일반 세면기',  [0,15,23,30,23,5.5,57,30,30]],
       ['tub','서양식 욕조',  [76,76,0,76,76,0,0,114,114]],
-      ['sh', '샤워',         [114,114,114,284,284,850,850,850,850]],
+      // 샤워: 공장·학교·YMCA·체육관은 표 4.5 의 850 대신 360 (2026-11-20). 850 은 예전 대유량 헤드(약 22 L/min) 기준이다.
+      //   360 = 9.5 L/min × 60분 × 급탕비율 0.64 — 9.5 는 수도법 시행규칙 별표 2 샤워헤드 7.5 L/min(98 kPa)을
+      //   실사용 수압 약 160 kPa 로 환산한 값 (토출량 ∝ √압력: 7.5 × √(160/98) ≈ 9.5).
+      //   급탕비율 = (사용 40 − 급수 5) ÷ (급탕 60 − 급수 5). 한 시간 연속 사용이라 그 자체로 상한이다.
+      //   표 값이 360 보다 작은 용도(주택·사무소 114, 호텔·병원 284)는 사용 빈도를 반영한 값이라 그대로 둔다.
+      ['sh', '샤워',         [114,114,114,284,284,360,360,360,360],[0,0,0,0,0,850,850,850,850]],
       ['ks', '부엌 싱크',    [38,38,76,114,76,76,76,76,0]],
       ['cafe','급식 싱크',   [19,19,38,38,38,0,38,38,0]],
       ['dw', '식기세척기',   [57,57,0,[190,570],[190,570],[75,380],[76,380],[76,380],0]],
@@ -3749,7 +3754,11 @@ function renderCapCalc(){
       ['hydro','물치료용 샤워',[0,0,0,0,1520,0,0,0,0]]];
     const fxRaw=(fx,uk)=>fx[2][HW_USE.findIndex(x=>x[0]===uk)];
     const fxVal=(fx,uk)=>{const v=fxRaw(fx,uk);return Array.isArray(v)?v[1]:(v||0);};
-    const fxTxt=(fx,uk)=>{const v=fxRaw(fx,uk);return Array.isArray(v)?v[0]+'~'+v[1]:(v?String(v):'−');};
+    const fxTxt=(fx,uk)=>{const v=fxRaw(fx,uk);const o=fx[3]?fx[3][HW_USE.findIndex(x=>x[0]===uk)]:0;
+      return (Array.isArray(v)?v[0]+'~'+v[1]:(v?String(v):'−'))+(o?' (표 '+o+')':'');};
+    const SH_NOTE='※ 샤워 — 공장·학교·YMCA·체육관은 표 4.5 의 850 대신 <b>360 lit/h</b>: 샤워헤드 9.5 L/min × 60분 × 급탕비율 0.64. '
+      +'9.5 L/min 은 수도법 시행규칙 [별표 2] 절수 샤워헤드 7.5 L/min(공급수압 98 kPa)을 실사용 약 160 kPa 로 환산한 값 (7.5 × √(160/98)), '
+      +'급탕비율 = (사용 40℃ − 급수 5℃) ÷ (급탕 60℃ − 급수 5℃). 한 시간 연속 사용이므로 상한값이다. 표 값이 이보다 작은 용도는 표 값을 쓴다. 헤드 유량을 알면 그 값으로 고친다.';
     let html='';
 
     // ── 보일러(중앙식) 그룹 선정 — 기준: AC-022 ──
@@ -3864,6 +3873,7 @@ function renderCapCalc(){
         +'<tr style="background:#e0f2fe;font-weight:700"><td class="L" style="padding:4px 8px;border:1px solid #cbd5e1">합계</td>'
         +'<td colspan="'+gFX.length+'" style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">기구 '+gCnt+'개</td>'
         +'<td style="text-align:right;padding:4px 8px;border:1px solid #cbd5e1">'+f1(gLph)+'</td></tr></tbody></table>'
+        +'<div style="font-size:9px;color:#64748b;margin-top:4px">'+SH_NOTE+'</div>'
         +HD('③','시간당 급탕량과 저탕량','기준: 표 4.5 — 집계 × 동시사용률 = Qh, Qh × 저탕용량 계수 = V')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>건물 용도 <select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="var h=(STATE.project.hwB=STATE.project.hwB||{});h.hwUse=this.value;h.simRate=\'\';h.stCoef=\'\';renderCapCalc()">'
@@ -4055,7 +4065,7 @@ function renderCapCalc(){
               ${HW_USE.map(x=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${x[0]===useRowR[0]?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${x[3].toFixed(2)}</td>`).join('')}
             </tr></tbody>
           </table></div>
-          <div style="font-size:9px;color:#64748b;margin:-8px 0 12px">※ 식기세척기 범위값은 상한을 기본으로 넣었다 — 기기를 알면 제조업체 자료로 고친다 (주 *1).<br>※ 표 4.5 주 2): 열원을 충분히 얻는 경우 저탕용량 계수를 줄여도 좋으나, 그 분량의 가열능력을 크게 할 필요가 있다.</div>
+          <div style="font-size:9px;color:#64748b;margin:-8px 0 12px">${SH_NOTE}<br>※ 식기세척기 범위값은 상한을 기본으로 넣었다 — 기기를 알면 제조업체 자료로 고친다 (주 *1).<br>※ 표 4.5 주 2): 열원을 충분히 얻는 경우 저탕용량 계수를 줄여도 좋으나, 그 분량의 가열능력을 크게 할 필요가 있다.</div>
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
           <div style="font-size:11px;padding:10px 14px;background:#f8fafc;border-radius:4px;margin-bottom:14px;display:flex;flex-direction:column;gap:9px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">

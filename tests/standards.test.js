@@ -125,7 +125,8 @@ console.log('2026-11-04 표 4.5 기구별 급탕량');
 {const fx={};new Function('g',grab(/const HW_USE=\[[\s\S]*?\]\];/,'HW_USE')+'\n'+grab(/const FX45=\[[\s\S]*?\]\]\];/,'FX45')+'\ng.U=HW_USE;g.F=FX45;')(fx);
  const col=k=>fx.U.findIndex(x=>x[0]===k), v=(f,k)=>{const r=fx.F.find(x=>x[0]===f);return r&&r[2][col(k)];};
  ok(fx.F.length===11&&fx.F.every(r=>r[2].length===9),'표 4.5 기구 11종 × 용도 9종');
- [['wb','factory',5.5],['wb','school',57],['sh','factory',850],['sh','hotel',284],['sh','office',114],['ks','hotel',114],['mop','apt',76],['ba','ymca',106],['hub','hosp',2270],['hydro','hosp',1520],['tub','gym',114],['cafe','factory',0],['pwb','gym',7.6]]
+ ok(JSON.stringify(fx.F.find(x=>x[0]==='sh')[3])==='[0,0,0,0,0,850,850,850,850]','샤워 원래 표 값(850) 보존 표시');
+ [['wb','factory',5.5],['wb','school',57],['sh','factory',360],['sh','gym',360],['sh','hotel',284],['sh','hotel',284],['sh','office',114],['ks','hotel',114],['mop','apt',76],['ba','ymca',106],['hub','hosp',2270],['hydro','hosp',1520],['tub','gym',114],['cafe','factory',0],['pwb','gym',7.6]]
    .forEach(([f,k,e])=>ok(v(f,k)===e,`표 4.5 ${f}/${k}: ${v(f,k)} ≠ ${e}`));
  ok(JSON.stringify(v('dw','hotel'))==='[190,570]'&&JSON.stringify(v('dw','factory'))==='[75,380]','식기세척기 범위값');}
 ok(!/가열능력은 계산하지 않는다/.test(src),'보일러: 가열능력 미계산 판단 폐지');
