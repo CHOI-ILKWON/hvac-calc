@@ -234,5 +234,19 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
  ok(/천장고 미입력 — 내벽 층고 적용/.test(src),'천장고 미입력 표시');
 }
 
+// ── 2026-11-20 환기 장비 수량 → 카탈로그 자동 선정 ──────
+console.log('2026-11-20 환기 장비 자동 선정');
+ok(/function setVentCnt\(rid,tab,v\)[\s\S]{0,200}autoSelVent\(rid,tab\); renderCapCalc\(\);/.test(src),'수량 변경 → 자동 선정 → 다시 그림');
+ok(["setVentCnt('${rid}','전열교환기'","setVentCnt('${rid}','인라인덕트팬'","setVentCnt('${rid}','${capTab}'"].every(x=>src.includes(x)),'전열교환기·인라인·천정/벽부/루프 수량 입력이 자동 선정을 거침');
+{const fn=grab(/function pickVent\(type,need,minSp\)\{[\s\S]*?\n\}/,'pickVent');
+ const rows=[{'최대풍량(m³/h)':300,'최대정압(Pa)':180,'소비전력(W)':70},{'최대풍량(m³/h)':500,'최대정압(Pa)':180,'소비전력(W)':70},{'최대풍량(m³/h)':600,'최대정압(Pa)':180,'소비전력(W)':70},{'최대풍량(m³/h)':500,'최대정압(Pa)':90,'소비전력(W)':40}];
+ const pick=new Function('catRowsOf','_vNum',fn+'\nreturn pickVent;')(()=>rows,v=>{const n=parseFloat(v);return isFinite(n)?n:NaN;});
+ ok(pick('FAN_CEILING',957/2,0).row['최대풍량(m³/h)']===500,'957 CMH ÷ 2대 → 500 CMH 선정');
+ ok(pick('FAN_CEILING',957/2,0).row['소비전력(W)']===40,'같은 풍량이면 소비전력 작은 쪽');
+ ok(pick('FAN_INLINE',478,150).row['최대정압(Pa)']===180,'인라인: 최대정압 ≥ ESP');
+ ok(pick('FAN_CEILING',957,0).err==='none','맞는 장비 없음');}
+ok(/autoSaf=Math\.ceil\(calcCMH\/\(r\.capV\.cnt\|\|1\)\/100\)\*100/.test(src),'인라인 선정풍량 = 대당');
+ok(/dv\('TYPE',VENT_TYPE\[capTab\]/.test(src)&&/'천정형팬':'CEILING FAN \(셀링팬\)'/.test(src),'상세 카드 TYPE = 장비 형식 (셀링팬)');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
