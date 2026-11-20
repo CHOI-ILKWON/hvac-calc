@@ -251,5 +251,15 @@ ok(/dv\('TYPE',VENT_TYPE\[capTab\]/.test(src)&&/'천정형팬':'CEILING FAN \(�
 ok(/autoSelIfEmpty\(rid,'전열교환기'\)/.test(src)&&/autoSelIfEmpty\(rid,capTab\)/.test(src)&&/autoSelIfEmpty\(rid,'인라인덕트팬'\)/.test(src),'미선정 실은 화면을 그릴 때 자동 선정 (수량 기본 1 대응)');
 ok((src.match(/onclick="autoSelAll\(/g)||[]).length===3,'전체 자동 선정 버튼 3개 탭');
 
+// ── 2026-11-20 물탱크 여러 개 — 총용량 합계로 판정 ──────
+console.log('2026-11-20 물탱크 분할');
+{const fn=grab(/function wtTanks\(wt\)\{[\s\S]*?\n\}/,'wtTanks'); const wtTanks=new Function(fn+'\nreturn wtTanks;')();
+ const L=wtTanks({wtW:2,wtL:2,wtH:2,extra:[{w:2,l:2,h:1}]});
+ ok(L.length===2&&L[0].cap===8000&&L[1].cap===4000,'탱크 2개 용량');
+ ok(L[0].tag==='M-WT-001'&&L[1].tag==='M-WT-002','자동 장비번호');
+ ok(wtTanks({}).length===1,'추가 없으면 1개 (기존 저장 호환)');}
+ok(/wtTotCap=tanks\.reduce\(\(a,t\)=>a\+t\.cap,0\)/.test(src),'판정 = 총용량 합계');
+ok(/tW=wtTanks\(wt\)\.reduce/.test(src),'부스터펌프 저수조 총용량 = 합계');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
