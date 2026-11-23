@@ -272,6 +272,17 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
     <div style="font-size:12px;color:rgba(255,255,255,.8)">처음 사용하시는 분도 순서대로 따라하면 전문 계산서를 작성할 수 있습니다.</div>
   </div>
 
+
+  <!-- 앱 간 값 옮기기 순서 (CH-20261123-06, 앱간_값옮기기_표기기준.md 1절) -->
+  <div class="card" style="border-left:4px solid #2563eb">
+    <div class="ch" style="color:#1d4ed8">앱 간 값 옮기기 — 순서 (굵게 = 이 앱)</div>
+    <div class="cb" style="font-size:11px">
+      <div style="font-weight:700;margin:2px 0 4px">1.1 저수조·급수펌프 (급수 계통)</div><table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="background:#f1f5f9"><th style="padding:3px 6px;border:1px solid #e2e8f0">단계</th><th style="padding:3px 6px;border:1px solid #e2e8f0">하는 곳</th><th style="padding:3px 6px;border:1px solid #e2e8f0">하는 일</th><th style="padding:3px 6px;border:1px solid #e2e8f0">다음 단계로 옮길 값</th></tr><tr><td style="padding:3px 6px;border:1px solid #e2e8f0">①</td><td style="padding:3px 6px;border:1px solid #e2e8f0">위생배관</td><td style="padding:3px 6px;border:1px solid #e2e8f0">기구를 입력해 순간최대유량과 필요 양정을 계산한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">Q 순간최대유량, H 필요 양정</td></tr><tr style="font-weight:700"><td style="padding:3px 6px;border:1px solid #e2e8f0">②</td><td style="padding:3px 6px;border:1px solid #e2e8f0">용량부하 — 부스터펌프 탭</td><td style="padding:3px 6px;border:1px solid #e2e8f0">Q·H를 받아 펌프 대수·동력을 정한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">펌프 구성, Q, H</td></tr><tr style="font-weight:700"><td style="padding:3px 6px;border:1px solid #e2e8f0">②</td><td style="padding:3px 6px;border:1px solid #e2e8f0">용량부하 — 물탱크 탭</td><td style="padding:3px 6px;border:1px solid #e2e8f0">수조 용량을 계산한다(AC-032)</td><td style="padding:3px 6px;border:1px solid #e2e8f0">수조 유효용량, 칸 수</td></tr><tr><td style="padding:3px 6px;border:1px solid #e2e8f0">③</td><td style="padding:3px 6px;border:1px solid #e2e8f0">제조사 카탈로그 (사용자)</td><td style="padding:3px 6px;border:1px solid #e2e8f0">선정한 펌프 곡선에서 두 값을 읽는다: 설계 유량 운전점의 토출압 P_op, 유량 0 정지양정(최대압) P_max</td><td style="padding:3px 6px;border:1px solid #e2e8f0">P_op, P_max</td></tr><tr><td style="padding:3px 6px;border:1px solid #e2e8f0">④</td><td style="padding:3px 6px;border:1px solid #e2e8f0">밸브</td><td style="padding:3px 6px;border:1px solid #e2e8f0">수조·펌프·압력을 넣고 밸브 세트, PRV 존, 계통도를 만든다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">—</td></tr><tr><td style="padding:3px 6px;border:1px solid #e2e8f0">⑤</td><td style="padding:3px 6px;border:1px solid #e2e8f0">위생배관 — 압력검토</td><td style="padding:3px 6px;border:1px solid #e2e8f0">공급압 = P_op, 최대압 = P_max를 넣어 말단 잔압과 550 kPa 판정을 확인한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">(부족하면 ①로 돌아가 경로·조닝을 고친다)</td></tr></table>
+      <div style="font-weight:700;margin:10px 0 4px">1.2 덕트 정압 (환기 계통)</div><table style="width:100%;border-collapse:collapse;font-size:11px"><tr style="background:#f1f5f9"><th style="padding:3px 6px;border:1px solid #e2e8f0">단계</th><th style="padding:3px 6px;border:1px solid #e2e8f0">하는 곳</th><th style="padding:3px 6px;border:1px solid #e2e8f0">하는 일</th><th style="padding:3px 6px;border:1px solid #e2e8f0">다음 단계로 옮길 값</th></tr><tr style="font-weight:700"><td style="padding:3px 6px;border:1px solid #e2e8f0">①</td><td style="padding:3px 6px;border:1px solid #e2e8f0">용량부하</td><td style="padding:3px 6px;border:1px solid #e2e8f0">실별 풍량과 환기 장비 종류를 정한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">장비별 풍량</td></tr><tr><td style="padding:3px 6px;border:1px solid #e2e8f0">②</td><td style="padding:3px 6px;border:1px solid #e2e8f0">덕트설계</td><td style="padding:3px 6px;border:1px solid #e2e8f0">덕트를 설계하고 ESP 항목을 계산한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">ESP 항목 (DUCT · FITTINGS · DIFF.&amp;GRILLE · V.D · F.D · LOUVER · FILTER · FAN SYSTEM EFFECT)</td></tr><tr style="font-weight:700"><td style="padding:3px 6px;border:1px solid #e2e8f0">③</td><td style="padding:3px 6px;border:1px solid #e2e8f0">용량부하 — 전열교환기·인라인덕트팬 ESP 표</td><td style="padding:3px 6px;border:1px solid #e2e8f0">받은 항목을 칸 순서대로 적고 팬을 선정한다</td><td style="padding:3px 6px;border:1px solid #e2e8f0">—</td></tr></table>
+      <div style="color:#64748b;margin-top:6px">앱끼리 자동으로 연결하지 않는다. 각 앱의 「▶ 옮겨 적을 값」 상자를 보고 사용자가 옮겨 적는다. 압력은 kPa 기본, kgf/cm² 병기.</div>
+    </div>
+  </div>
+
   <!-- STEP 1 -->
   <div class="card" style="border-left:4px solid #3b82f6">
     <div class="ch" style="color:var(--bl)">STEP 1 — 프로젝트 설정</div>
@@ -563,8 +574,11 @@ const DIR_HF_ROOF = 1.20;
 // 조명발열 = 조명밀도. 현행 EPI [별지 1] 전기 1번 — 6 W/㎡ 는 0.8점(6~8 미만), 1점은 5 미만 (AC-008, 2026-11-05 원문 확인)
 const RT = {
   mech:    {lb:'기계실류',                  cdb:null,crh:null,hdb:5,   hrh:null,ia:0,  oa:false, lw:3 ,  va:10, eqReq:false, ce:'없음', he:'유니트히터', ve:'인라인덕트팬', act:'light'}, // ve — 기준: AC-029 — 기계실은 덕트를 길게 끌어야 하는 경우가 많다. 지상이며 외벽에 면하면 벽부형팬 (29.2.2); va:10 — 기준: AC-017 · 건축기계설비 설계기준 (6)3) 「기계실 및 공간의 환기횟수는 10~15 회/h」의 하한; act — 무인(ia:0)이라 미사용
-  // 기준: AC-021 — 24h 운전실. 전기실의 발열은 PAC 이 전담하고 배기팬은 환기용이다 (온도연동 아님 — AC-017 4.3.1)
-  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:12, eqDkW:27, ce:'PAC',  he:'없음',      ve:'벽부형팬', act:'light'}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
+  // 기준: AC-021 — 24h 운전실. 전기실의 발열은 PAC 이 전담하고 배기팬은 환기용이다
+  // CH-20261123-01 (U3, 2026-11-23 사용자 확정): 급배기 송풍기 실내 온도감지기 자동운전 「채택」 — 고시 매뉴얼 [별표3] 2.1.2(3)④ 나,
+  //   KDS 31 25 20 4.8.4(1)④ 가 「실내온도에 따라 운전상태를 감시」. 허용 최고온도 40 ℃ — KDS 31 25 20 4.8.4(2)⑤ (tCtl·tMax)
+  //   아래 「온도로 제어하지 않는다」(AC-017 4.3.1) 는 종전 판단이며 기준서정리가 AC-017 을 다시 쓴다
+  elec:    {lb:'전기실/계측실류',           cdb:30,  crh:null,hdb:null,hrh:null,ia:0,  oa:false, lw:3 ,  va:12, eqDkW:27, ce:'PAC',  he:'없음',      ve:'벽부형팬', act:'light', tCtl:true, tMax:40}, // 기준: AC-016·AC-017·AC-018 — 제3종(배기 기계·자연급기 루버). ve:'벽부형팬' — 지상이며 외벽에 면하는 것이 표준, 지하면 인라인덕트팬(AC-029)
            // va:12 는 「평시 환기」의 값이다. 발열 제거는 PAC 이 전담한다 — 여름 외기 31.2℃ 가 허용 30℃ 보다 높아 환기로는 성립하지 않는다 (AC-017 3.2.1)
            // 그래서 온도로 제어하지 않는다. KDS 31 25 20 의 온도연동 조항은 「환기로 발열을 제거하는」 경우를 전제한 것이라 우리와 전제가 다르다 (AC-017 4.3.1)
            // 실압은 균형~약한 부압. 급기팬이 없어 가압을 만들 수단이 없으므로 가압을 두지 않는다 (AC-018 3.5.1)
@@ -1438,7 +1452,33 @@ function oaOf(r,area){ return (r.oa!==false)?occOf(r,area):0; }      // 신선�
 function oaPP(r){ const v=parseFloat(r&&r.oaPP); return v>0?v:25; }
 // 환기 장비 계산풍량 = max(체적×환기횟수, 신선외기 인원×인당 외기량) — 전열교환기·팬 공통 (2026-11-20)
 //   사무실류처럼 환기횟수 0 · 인원 기준인 실에 팬을 골라도 0 이 되지 않게. oa:false 유형(화장실 등)은 인원 항이 0 이라 변화 없음
-function ventCalcCMH(r,ach){ return Math.max(gV(r)*(ach??r.ventACH), oaOf(r,gA(r))*oaPP(r)); }
+// 기준: KDS 31 25 20 4.5 (1) · 4.8.2 (1) 표 4.5-1 최소 배기량 (CH-20261123-01, U5 — 2026-11-23 사용자 확정)
+//   화장실·샤워·탈의실은 KDS 값으로도 계산해 회/h 값과 비교하고 큰 쪽을 쓴다. 둘 다 계산서에 표시
+//   [단위, 기본 배기량, 범위 설명] — 화장실: 공중용 25/35 L/s·(대·소변기 1개) — 주 D 「사용 빈도가 높은 시간대가 있으면 큰 값」 → 교대 근무 시설이라 35
+//   샤워: 샤워부스 10/25 L/s·헤드 — 주 G 「거주 중 연속 배기면 낮은 값, 그 외 높은 값」 → 25
+//   탈의실: 체육·산업·의료시설 탈의실 2.5 L/s·㎡ (기타 탈의실 1.25)
+const KDS_EXH={
+  toilet:{u:'n',def:35,lb:'공중용 화장실',unit:'L/s·변기',fld:'kdsN',nLb:'대·소변기 수'},
+  shower:{u:'n',def:25,lb:'샤워부스',unit:'L/s·헤드',fld:'kdsN',nLb:'샤워헤드 수'},
+  locker:{u:'a',def:2.5,lb:'체육·산업·의료시설 탈의실',unit:'L/s·㎡'},
+};
+function kdsExhOf(r){ const t=KDS_EXH[r&&r.type]; if(!t) return null;
+  const v=parseFloat(r.kdsRate), rate=v>0?v:t.def;
+  const n=t.u==='n'?(parseFloat(r.kdsN)||0):gA(r);
+  return {t, rate, n, cmh:n*rate*3.6, missing:t.u==='n'&&!(parseFloat(r.kdsN)>0)}; }
+function kdsExhCMH(r){ const k=kdsExhOf(r); return k?k.cmh:0; }
+function ventCalcCMH(r,ach){ return Math.max(gV(r)*(ach??r.ventACH), oaOf(r,gA(r))*oaPP(r), kdsExhCMH(r)); }
+// 계산서 표시용 — 「회/h ○○ · KDS ○○ → 큰 쪽」
+// 전기실 — 발열 기준 환기량(참고) = 기기발열 ÷ (0.336 × (허용 최고 40 ℃ − 여름 설계외기)). 선정에는 쓰지 않는다 (U3 검토용)
+function elecHeatCMH(r){ const t=RT[r&&r.type]; if(!t||!t.tMax) return null; const p=STATE.project, dt=t.tMax-(p.cust||p.cdb);
+  return dt>0?eqOf(r,gA(r))/(0.336*dt):null; }
+function elecVentTxt(r){ const t=RT[r&&r.type]; if(!t||!t.tCtl) return '';
+  const q=elecHeatCMH(r);
+  return '운전: 실내 온도감지기 자동운전 <b>채택</b> (고시 [별표3] 2.1.2(3)④ · KDS 31 25 20 4.8.4) · 허용 최고 '+t.tMax+' ℃'
+    +(q!=null?' · 발열 기준 환기량(참고, 선정 미반영) '+Math.round(q).toLocaleString('ko-KR')+' ㎥/h = '+f1(eqOf(r,gA(r))/1000)+' kW ÷ (0.336 × '+f1(t.tMax-(STATE.project.cust||STATE.project.cdb))+' K)':''); }
+function ventCmpTxt(r,ach){ const e=elecVentTxt(r); if(e) return e; const k=kdsExhOf(r); if(!k) return '';
+  const a=gV(r)*(ach??r.ventACH), big=k.cmh>a?'KDS':'회/h';
+  return '회/h '+Math.round(a).toLocaleString('ko-KR')+' · KDS 표 4.5-1 '+(k.missing?'<b style="color:#dc2626">⚠ '+k.t.nLb+' 미입력</b>':Math.round(k.cmh).toLocaleString('ko-KR')+' ('+(k.t.u==='n'?k.n+' × ':f1(k.n)+'㎡ × ')+k.rate+' '+k.t.unit+')')+' → '+big+' 채택'; }
 // 인체발열 — 학회 「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」 [W/인], 작업 상태 × 실온 (AC-007 Rule 4)
 //   전발생열은 실온과 무관하고 현열/잠열 배분만 실온에 따라 바뀐다. 표에 없는 실온은 직선보간, 21~28 ℃ 밖은 끝값
 //   실 유형이 작업 상태를 정한다 — 사무실 · 중앙제어실류 = 사무소·경보행(131 W, 표가 사무실을 예로 듦), 그 밖 = 경작업(117 W)
@@ -1847,9 +1887,13 @@ function renderRoomDetail(){
   <div class="fg fg6">
     <div class="fv"><label>환기 횟수 (회/h)</label><input type="number" value="${r.ventACH}" step="1" onchange="sRd('ventACH',parseFloat(this.value)||0)"></div>
     <div class="fv"><label>필요환기량 (m³/h) 자동</label><input class="au" readonly value="${f0(ventCMH)}"></div>
+    ${KDS_EXH[r.type]?(()=>{const k=kdsExhOf(r);return (k.t.u==='n'?`<div class="fv"><label>${k.t.nLb} (KDS 표 4.5-1)</label><input type="number" min="0" step="1" value="${r.kdsN??''}" placeholder="개" onchange="sRd('kdsN',this.value)"></div>`:'')
+      +`<div class="fv"><label>KDS 배기량 (${k.t.unit})</label><input type="number" min="0" step="0.5" value="${r.kdsRate??''}" placeholder="${k.t.def}" title="KDS 31 25 20 표 4.5-1 ${k.t.lb}. 비우면 ${k.t.def}" onchange="sRd('kdsRate',this.value)"></div>`;})():''}
     <div class="fv" style="grid-column:span 2"><label>난방 시 배기 가동 (보충외기 부하)</label><label class="fgr" style="font-size:11px;gap:5px;padding:4px 0"><input type="checkbox" ${r.exhHeat?'checked':''} onchange="sRd('exhHeat',this.checked)"> 배기 보충외기를 난방부하에 가산</label></div>
   </div>
-  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 필요환기량 = max(체적×환기횟수, 재실인원×인당 외기량) — 팬·전열교환기 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
+  ${KDS_EXH[r.type]?`<div style="font-size:10px;color:var(--nv);margin-top:4px">※ ${ventCmpTxt(r)} — KDS 31 25 20 4.8.2(1) 표 4.5-1 ${KDS_EXH[r.type].lb}</div>`:''}
+  ${RT[r.type]?.tCtl?`<div style="font-size:10px;color:var(--nv);margin-top:4px">※ ${elecVentTxt(r)}</div>`:''}
+  <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 필요환기량 = max(체적×환기횟수, 재실인원×인당 외기량, KDS 표 4.5-1 배기량) — 팬·전열교환기 풍량 선정에 사용. 화장실·주방처럼 겨울에도 배기하는 실은 위 체크 시 배기량×ΔT 부하가 난방에 가산됩니다 (전열교환기 실은 외기부하로 이미 반영되어 제외)</div>
 </div></div>
 
 <div class="card"><div class="ch">§5 내부 발열<span class="src-badge">AC-007 인체 · AC-008 조명 · AC-009 기기</span></div><div class="cb">
@@ -1893,7 +1937,7 @@ function calcLE(room){
   const dTh=room.hdb!==null?room.hdb-outH:null;
   const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
   const outRH_val=RHfromWB(outDB,outWB);
-  const ventCMH=vol*room.ventACH;
+  const ventCMH=Math.max(vol*room.ventACH,kdsExhCMH(room));   // 배기 실은 KDS 표 4.5-1 과 큰 쪽 (U5)
   // 난방 시 배기 가동: 열회수 없는 배기팬 실은 배기량만큼 보충외기가 난방부하로 유입
   // 기준: AC-005 — 기본 미적용(exhH:false). 그 보충공기는 화장실 자체의 외기 창문으로 직접 들어오며
   // 인접실(전열교환기로 자체 균형)을 끌어당기지 않는다. 라디에이터는 외피·침기만 감당하고
@@ -1962,8 +2006,12 @@ function calcLE(room){
   const rlh=infL+oaL+pplL;
 
   // Per-time totals
-  const tsh=td.map(d=>d?d.rsh*1.1:0);
-  const tlh=rlh*1.1;
+  // 기준: AC-012 · CH-20261123-01 (2026-11-23 사용자 결정) — 안전율 1.1 은 실내부하(외피·침기·내부발열)에만.
+  //   외기 부하(oaS·oaL·oaH)는 계산값 그대로 더한다 — 학회 제1편 3.10 장치부하, RTS-SAREK 설명서 3장. 침기는 1.1 유지
+  const SF=1.1;
+  const tsh=td.map(d=>d?(d.rsh-d.oaS)*SF+d.oaS:0);
+  const tlh=(rlh-oaL)*SF+oaL;
+  const sfC=td.map(d=>d?(d.rsh-d.oaS)*(SF-1):0), sfL=(rlh-oaL)*(SF-1);
   const rth=tsh.map(s=>s+tlh);
   const maxRth=Math.max(0,...rth);
   const pkIdx=rth.indexOf(maxRth);
@@ -1990,7 +2038,9 @@ function calcLE(room){
   let hfloor=0;
   if(room.floorOn&&dTh!==null)hfloor=room.floorU*area*dTh*fFacH(room); // 땅 접촉·비공조실 위 ΔT/2, 외기노출 ΔT
   const hRsh=hwN+hwE+hwS+hwW+hdoor+hroof+hglass+hinf+hiwSum+hfloor+hExh+oaH;
-  const totalH=Math.max(0,hRsh*1.10);   // 기준: AC-012 — 냉난방 동일 10%. 난방 계산은 일사·내부발열을 반영하지 않아 이미 보수적이다
+  // 기준: AC-012 — 냉난방 동일 10%. 난방 계산은 일사·내부발열을 반영하지 않아 이미 보수적이다. 외기(oaH)는 안전율 제외 (CH-20261123-01)
+  const sfH=Math.max(0,(hRsh-oaH)*(SF-1));
+  const totalH=Math.max(0,hRsh+sfH);
 
   // 겨울 가습부하 (실내 습도 조건 hrh가 있는 실만): G = 1.2 × (침기+외기)CMH × Δx (kg/h)
   let humKgh=0;
@@ -2004,7 +2054,7 @@ function calcLE(room){
   return {
     area,h,vol,infCMH,occ,lightW,eqW,roofA,dOm,outRH_val,
     dTc,dTh,td,tsh,tlh,rth,maxRth,pkIdx,
-    infACH,infL,oaL,pplL,rlh,
+    infACH,infL,oaL,pplL,rlh,sfC,sfL,sfH,ervDef:isERV&&!(parseFloat(room.capV?.effC)>0&&parseFloat(room.capV?.effH)>0),
     hwN,hwE,hwS,hwW,hdoor,hdoorD,hroof,hglass,hinf,hiw,hfloor,hRsh,totalH,humKgh,hExh,exhOn,hDir,
     ventCMH,oaCMH_raw,oaCMHc,oaCMHh,oaCMHl,oaPpl,oaS,oaH,ervEffC,ervEffH,ervRecC,ervRecH,
   };
@@ -2029,6 +2079,7 @@ function defaultsOf(r){
   if(r.cdb!==null&&eqIsDefault(r)) out.push('기기발열 기본값 '+eqDefTxt(r));
   if(r.cdb!==null&&eqMissing(r)) out.push('기기발열 미입력');
   const t=RT[r.type]; if(r.cdb!==null&&t&&eq(r.lw,t.lw)) out.push('조명 '+r.lw+'W/㎡ (조도÷50)');
+  if(r.ve==='전열교환기'&&oaOf(r,gA(r))>0&&!(parseFloat(r.capV&&r.capV.effC)>0&&parseFloat(r.capV&&r.capV.effH)>0)) out.push('전열교환기 효율 기본값 (냉방 50·난방 70·잠열 40 %)');
   return out;
 }
 function defaultsBlock(){
@@ -2112,7 +2163,7 @@ function renderLoadCalc(){
       }</tr>`;
     const grnCf=(label,val)=>grnC(label,TIME_SLOTS.map(()=>val));
     const sfCrow=(vals)=>
-      `<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율)</td>${
+      `<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율) — 외기: 안전율 미적용(학회 3.10·RTS-SAREK)</td>${
         cn?TIME_SLOTS.map(()=>'<td style="border-bottom:1px solid #eee;text-align:right;color:#aaa">—</td>').join('')
           :TIME_SLOTS.map((_,ti)=>`<td style="text-align:right;font-size:8.5px;padding:1px 4px;border-bottom:1px solid #eee">${fW(vals[ti])}</td>`).join('')
       }</tr>`;
@@ -2120,7 +2171,7 @@ function renderLoadCalc(){
     // ── Heating sub-totals ─────────────────────────────────────
     const grnH=(label,val)=>
       `<tr style="background:#d4edda"><td colspan="2" style="font-weight:700;color:#155724;font-size:8.5px;padding:2px 5px;border-top:1px solid #9dc9a4;border-bottom:1px solid #9dc9a4">${label}</td><td style="background:#d4edda;text-align:right;font-weight:700;font-size:8.5px;padding:2px 5px;border-top:1px solid #9dc9a4;border-bottom:1px solid #9dc9a4">${hn?'—':fW(val)}</td></tr>`;
-    const sfHrow=`<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10%</td><td style="text-align:right;font-size:8.5px;padding:1px 5px;border-bottom:1px solid #eee">${hn?'—':fW(le.hRsh*0.10)}</td></tr>`;
+    const sfHrow=`<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10%</td><td style="text-align:right;font-size:8.5px;padding:1px 5px;border-bottom:1px solid #eee">${hn?'—':fW(le.sfH)}</td></tr>`;
 
     // ── COOLING rows ───────────────────────────────────────────
     const solarRows=DIRS.map(d=>{
@@ -2159,7 +2210,7 @@ function renderLoadCalc(){
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const oaRowC=le.oaCMH_raw>0
-      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
+      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336${le.ervDef?' <b style="color:#dc2626">⚠ 전열교환기 효율 미입력 — 기본값(냉방 50·난방 70·잠열 40 %) 사용</b>':''} <span style="color:#7c3aed">안전율 미적용</span>`,le.td&&le.td[0]?le.td[0].oaS||0:0)
       :'';
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).s}W/인(표 2.32 ${PH_ACT[actOf(room)].lb} ${phOf(room).t}℃)`,le.occ*phOf(room).s);
@@ -2168,13 +2219,13 @@ function renderLoadCalc(){
     const miscRowC=cRowFixed('MISC.','—',0);
     const st2Row=grnC('SUB TOTAL ④',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st2:0));
     const rshRow=grnC('ROOM SENSIBLE HEAT',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rsh:0));
-    const sfSRow=sfCrow(TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].rsh*0.1:0));
+    const sfSRow=sfCrow(le.sfC);
     const tshRow=grnC('TOTAL SENSIBLE HEAT',le.tsh);
     const infLRow=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.infL);
-    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
+    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833 <span style="color:#7c3aed">안전율 미적용</span>`,le.oaL):'';
     const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).l}W/인`,le.pplL);
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
-    const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.rlh*0.1));
+    const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.sfL));
     const tlhRow=grnCf('TOTAL LATENT HEAT',le.tlh);
     const shf=le.pkIdx!=null&&le.rth[le.pkIdx]>0?le.tsh[le.pkIdx]/le.rth[le.pkIdx]:null;
     const shfOk=shf===null||shf>=0.75;
@@ -2207,7 +2258,7 @@ function renderLoadCalc(){
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const oaRowH=le.oaCMH_raw>0
-      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
+      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336${le.ervDef?' <b style="color:#dc2626">⚠ 전열교환기 효율 미입력 — 기본값(냉방 50·난방 70·잠열 40 %) 사용</b>':''} <span style="color:#7c3aed">안전율 미적용</span>`,le.oaH||0)
       :'';
     const exhRowH=le.exhOn
       ?hRow('EXHAUST MAKE-UP',`배기 ${f0(le.ventCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hExh)
@@ -2217,7 +2268,7 @@ function renderLoadCalc(){
     const hDirRow=le.hDir>0
       ?hRow('└ 방위할증 포함분',`외벽·문·유리·지붕 (N1.20/E·W1.10/S1.00/지붕1.20, 학회 표 2.36) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
       :'';
-    const hSfRow=hRow('SAFETY FACTOR','ROOM HEAT LOSS × 10% — 설계 불확실성을 고려한 여유율 (AC-012)',le.totalH-le.hRsh);
+    const hSfRow=hRow('SAFETY FACTOR','(ROOM HEAT LOSS − 외기) × 10% — 외기: 안전율 미적용(학회 3.10·RTS-SAREK) (AC-012)',le.sfH);
     const hTotRow=grnH(`ROOM TOTAL HEATING LOSS  (누적 ×${(le.hRsh>0?le.totalH/(le.hRsh-le.hDir):1.10).toFixed(3)})`,le.totalH);
     const humRow=(!hn&&room.hrh&&le.humKgh>0)
       ?`<tr><td colspan="2" style="text-align:left;padding:2px 5px;font-size:8px;color:#7c3aed;font-weight:600">가습부하 G = 1.2×(침기${f0(le.infCMH)}+외기(잠열회수 후)${f0(le.oaCMHl)}${le.exhOn?`+배기${f0(le.ventCMH)}`:''})㎥/h×Δx</td><td style="text-align:right;padding:2px 5px;font-size:8.5px;color:#7c3aed;font-weight:700">${le.humKgh.toFixed(1)} kg/h</td></tr>`
@@ -2408,11 +2459,15 @@ const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,3
 //     대변기 세정밸브 13 L/회 8.0 · 6 L/회 5.0 / 세정탱크 13 L/회 5.5 · 6 L/회 2.5
 //     소변기 3.8 L/회 4.0 · 3.8 L 이상 5.0 / 세면기 1.0 / 주방싱크(가정용) 1.0 / 식기세척기(가정용) 1.5
 //     샤워 2.0 — AC-033 2.2 전사 기록 (사용자 제공 사진 범위 밖)
-//   대변기·소변기는 1회 세정량으로 행이 나뉜다 → 물탱크 탭의 1회 사용량으로 행을 고른다
+//   대변기·소변기는 1회 세정량으로 행이 나뉜다 → 부스터 탭의 「세정량」 입력으로 행을 고른다.
+//   기본 세정량 = KDS 31 30 15 표 4.4-1 최대 물소비량 대변기 6 L · 소변기 2 L → 6 L 행(5.0) · 3.8 L 행(4.0) (CH-20261123-01, 2-5)
+//   물탱크 탭의 1회 사용량(대변기 15 · 소변기 6 L)은 수조 용량용 사용수량이라 세정량이 아니다 — 행 선택에 쓰지 않는다 (종전에는 써서 13 L 행 8.0 이 골라졌다)
+const BP_FLUSH_KDS={f2:6,f3:2};
 //   null = 원표 미확보 → 사용자가 넣는다 (추정하지 않는다)
 function bpUnit(k,lpf){
-  if(k==='f2') return lpf>6 ?[8.0,'표 3.4(b) 대변기 세정밸브 13 L/회 행']:[5.0,'표 3.4(b) 대변기 세정밸브 6 L/회 행'];
-  if(k==='f3') return lpf>3.8?[5.0,'표 3.4(b) 소변기 3.8 L 이상/회 행']:[4.0,'표 3.4(b) 소변기 3.8 L/회 행'];
+  const over=(BP_FLUSH_KDS[k]&&lpf>BP_FLUSH_KDS[k])?' ⚠ KDS 31 30 15 표 4.4-1 최대 '+BP_FLUSH_KDS[k]+' L 초과':'';
+  if(k==='f2') return lpf>6 ?[8.0,'표 3.4(b) 대변기 세정밸브 13 L/회 행'+over]:[5.0,'표 3.4(b) 대변기 세정밸브 6 L/회 행'+over];
+  if(k==='f3') return lpf>3.8?[5.0,'표 3.4(b) 소변기 3.8 L 이상/회 행'+over]:[4.0,'표 3.4(b) 소변기 3.8 L/회 행'+over];
   return ({f1:[1.0,'표 3.4(b) 세면기'],f4:[2.0,'샤워 — AC-033 전사값'],f6:[1.0,'표 3.4(b) 주방싱크(가정용) 행']})[k]||[null,'표 3.4 원표 미확보'];
 }
 //   혼합수전(급탕 원수 포함) 기구 — 부스터가 냉수 가지만 공급할 때만 주 6) 3/4 보정 (AC-033 2.3)
@@ -2455,6 +2510,14 @@ function getMaxCool(room){
   if(room.cdb===null)return null;
   const le=calcLE(room); return Math.max(0,...le.rth);
 }
+// 순부하(안전율 전) 대비 비율 — 외기는 안전율에서 빠지므로 1.10 이 아니다 (CH-20261123-01)
+function sfRatioC(room){ if(room.cdb===null)return 1.1; const le=calcLE(room),k=le.pkIdx,d=le.td[k]; if(!d)return 1.1; const net=d.rsh+le.rlh; return net>0?le.rth[k]/net:1.1; }
+function sfRatioH(room){ if(room.hdb===null)return 1.1; const le=calcLE(room); return le.hRsh>0?le.totalH/le.hRsh:1.1; }
+// 방열기 예열 가산·보정계수 (KDS 31 25 15 4.4(1), CH-20261123-01 2-13). 미입력 = null → 계산은 0 % · 1.0 으로 하고 경고
+function radPreOf(r){ const v=r.capH&&r.capH.radPre; return (v!==undefined&&v!==null&&v!=='')?(parseFloat(v)||0):null; }
+function radCorOf(r){ const v=r.capH&&r.capH.radCor; const x=(v!==undefined&&v!==null&&v!=='')?parseFloat(v):NaN; return x>0?x:null; }
+function radReq(hl,r){ const p=radPreOf(r), c=radCorOf(r); return hl*(1+(p||0)/100)/(c||1); }
+function radWarnOf(r){ const a=[]; if(radPreOf(r)===null)a.push('예열 가산율'); if(radCorOf(r)===null)a.push('보정계수'); return a.join('·'); }
 function getHeatLoad(room){
   if(room.hdb===null)return null;
   return calcLE(room).totalH;
@@ -2470,9 +2533,9 @@ function espHTML(r){
   const v=r.capV, rid=r.id;
   const d=(k,x)=>{const z=v[k];return(z!==undefined&&z!=='')?(parseFloat(z)||0):x;};
   const ductLen=d('ductLen',0),ductPa=d('ductPa',2),fitPct=d('fitPct',50),diffEa=d('diffEa',1),diffPa=d('diffPa',17),
-        fdPa=d('fdPa',0),vdEa=d('vdEa',1),vdPa=d('vdPa',10),louEa=d('louEa',1),louPa=d('louPa',50),filtPa=d('filtPa',0);
+        fdPa=d('fdPa',0),vdEa=d('vdEa',1),vdPa=d('vdPa',10),louEa=d('louEa',1),louPa=d('louPa',50),filtPa=d('filtPa',0),sysPa=d('sysPa',0);   // sysPa — 팬 시스템 효과, 수동 입력 (KDS 31 25 30 4.2(2), CH-20261123-01 2-11)
   const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100),diffT=diffEa*diffPa,vdT=vdEa*vdPa,louT=louEa*louPa;
-  const sub=ductT+fittT+diffT+fdPa+vdT+louT+filtPa, sf=sub*0.1, tot=sub+sf, sel=Math.ceil(tot/50)*50||0;
+  const sub=ductT+fittT+diffT+fdPa+vdT+louT+filtPa+sysPa, sf=sub*0.1, tot=sub+sf, sel=Math.ceil(tot/50)*50||0;
   const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val??''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
   const row=(lb,mid,val)=>`<tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">${lb}</td><td style="padding:3px 6px">${mid}</td><td style="text-align:right;padding:3px 6px">=&nbsp;${f1(val)} Pa</td></tr>`;
   const ep=` <span style="font-size:8px;color:#94a3b8">최원 경로상</span>`;
@@ -2480,13 +2543,14 @@ function espHTML(r){
   const judge=sp>0?(sp>=sel?'<span style="color:#166534;font-weight:700">✓ 카탈로그 기외정압 '+sp+' Pa ≥ '+sel+' Pa</span>':'<span style="color:#dc2626;font-weight:700">✗ 카탈로그 기외정압 '+sp+' Pa < '+sel+' Pa — 한 단계 큰 모델 또는 덕트 축소</span>'):'<span style="color:#94a3b8">위 표의 「정압(Pa)」 칸에 카탈로그 기외정압을 넣으면 판정합니다</span>';
   return `<div style="padding:0 14px 12px"><div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">EXTERNAL STATIC PRESSURE (급기·배기 중 큰 쪽) — ${stageLb()}</div>
     <table style="width:100%;font-size:10px;border-collapse:collapse"><tbody>
-    ${row('DUCT',`${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m`,ductT)}
-    ${row('FITTINGS',`DUCT &times; ${inp('fitPct',fitPct,42,'%')} %`,fittT)}
-    ${row('DIFF. &amp; GRILLE',`${inp('diffEa',diffEa,32,'EA')} EA${ep} &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC35 급기 12 / 배기 17</span>`,diffT)}
-    ${row('FIRE DAMPER',`${inp('fdPa',fdPa,55,'Pa')} Pa`,fdPa)}
-    ${row('VOL. DAMPER',`${inp('vdEa',vdEa,32,'EA')} EA${ep} &times; ${inp('vdPa',vdPa,42,'Pa')} Pa/EA`,vdT)}
-    ${row('LOUVER / HOOD',`${inp('louEa',louEa,32,'EA')} EA${ep} &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA`,louT)}
-    ${row('FILTER (별도)',`${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">내장 필터 제외</span>`,filtPa)}
+    ${row('DUCT<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ①</span>',`${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m`,ductT)}
+    ${row('FITTINGS<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ②</span>',`DUCT &times; ${inp('fitPct',fitPct,42,'%')} %`,fittT)}
+    ${row('DIFF.&amp;GRILLE<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ③</span>',`${inp('diffEa',diffEa,32,'EA')} EA${ep} &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC35 급기 12 / 배기 17</span>`,diffT)}
+    ${row('V.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ④</span>',`${inp('vdEa',vdEa,32,'EA')} EA${ep} &times; ${inp('vdPa',vdPa,42,'Pa')} Pa/EA`,vdT)}
+    ${row('F.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑤</span>',`${inp('fdPa',fdPa,55,'Pa')} Pa`,fdPa)}
+    ${row('LOUVER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑥</span>',`${inp('louEa',louEa,32,'EA')} EA${ep} &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA`,louT)}
+    ${row('FILTER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑦</span>',`${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">내장 필터 제외</span>`,filtPa)}
+    ${row('FAN SYSTEM EFFECT (팬 시스템 효과)<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑧</span>',`${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실 (KDS 31 25 30 4.2(2)). 앱은 계산하지 않음</span>`,sysPa)}
     <tr style="border-top:1px solid #e2e8f0"><td colspan="2" style="padding:3px 6px;color:#475569">소 계</td><td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sub)} Pa</td></tr>
     <tr><td colspan="2" style="padding:3px 6px;color:#94a3b8;font-size:9px">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율)</td><td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sf)} Pa</td></tr>
     <tr style="background:#fef08a"><td colspan="2" style="padding:5px 6px;font-weight:700;color:#713f12">필요 기외정압 (50 Pa 올림)</td><td style="text-align:right;padding:5px 6px;font-weight:700">${sel} Pa</td></tr>
@@ -2651,8 +2715,8 @@ function renderCapCalc(){
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
       const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
       // 기준: AC-012 — 순부하(안전율 전) 대비 총 여유. 안전율 + 카탈로그 올림이 합쳐진 값
-      const cTot=selC&&perC?((selC/(perC/1.10)-1)*100):null;
-      const hTot=selHEff&&perH?((selHEff/(perH/1.10)-1)*100):null;
+      const cTot=selC&&perC?((selC/(perC/sfRatioC(r))-1)*100):null;
+      const hTot=selHEff&&perH?((selHEff/(perH/sfRatioH(r))-1)*100):null;
       return '<div class="cap-card cap-pac-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2725,6 +2789,7 @@ function renderCapCalc(){
         +'onchange="sCP(\''+rid+'\',\'selHLt\',this.value);renderCapCalc()">'
         +'<span style="color:#713f12;white-space:nowrap;margin-left:2px;font-size:9px">W</span>'
         +'<span style="font-size:8px;color:#92400e">※ 입력 시 난방 여유율을 저온능력 기준으로 판정 (히트펌프는 설계외기에서 정격 대비 능력 저하)</span>'
+        +((perH!==null&&selH>0&&!(selHLt>0))?'<span style="font-size:9px;color:#dc2626;font-weight:700">⚠ 제상·저온 능력 미반영(KDS 31 25 15 4.2(2)) — 정격으로 판정 중</span>':'')
         +'</div>'
         +'</div></div>'
 
@@ -2812,8 +2877,8 @@ function renderCapCalc(){
       const cMgn=selC&&perC?((selC-perC)/perC*100):null;
       const hMgn=selHEff&&perH?((selHEff-perH)/perH*100):null;
       // 기준: AC-012 — 순부하(안전율 전) 대비 총 여유. 안전율 + 카탈로그 올림이 합쳐진 값
-      const cTot=selC&&perC?((selC/(perC/1.10)-1)*100):null;
-      const hTot=selHEff&&perH?((selHEff/(perH/1.10)-1)*100):null;
+      const cTot=selC&&perC?((selC/(perC/sfRatioC(r))-1)*100):null;
+      const hTot=selHEff&&perH?((selHEff/(perH/sfRatioH(r))-1)*100):null;
       return '<div class="cap-card cap-cth-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:14px">'
 
         // ① HEADER
@@ -2995,7 +3060,7 @@ function renderCapCalc(){
       const hcTx=(!hasRooms||ouHeatW===0)?'#94a3b8':(hcOK?'#166534':'#991b1b');
       const ccTxt=!hasRooms?'— 실 없음':(ouCcN===0?'— 미입력':(ccOK?'✓ 냉방 OK':'✗ 냉방 부족'))
         +(divPct>0.5?' <span style="color:#7c3aed;font-size:9px">(실별최대합 '+fW(Math.round(totInCsum))+' → 동시최대 '+fW(Math.round(totInC))+', −'+divPct.toFixed(1)+'%)</span>':'');
-      const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준 — 저온난방 미입력 주의)'));
+      const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준) <b style="color:#dc2626">⚠ 제상·저온 능력 미반영(KDS 31 25 15 4.2(2))</b>'));
       // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 — 80~130 % 판정 (130 은 제조사 한계, 기준: AC-013)
       let totRatedInC=0; zRooms.forEach(r=>{totRatedInC+=(parseFloat(r.capC.ehpInCc)||0)*(r.capC.cnt||1);});
       const combR=(ouCcN>0&&totRatedInC>0)?totRatedInC/ouCcN*100:null;
@@ -3183,7 +3248,7 @@ function renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="au">${r.ventACH}</td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r)}</span>`:''}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','전열교환기',this.value)"></td>
         <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
@@ -3271,7 +3336,7 @@ function renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="C"><input type="number" value="${effACH}" step="0.5" min="0" style="width:50px;font-size:11px" onchange="sCV('${rid}','ventACH',parseFloat(this.value)||0);renderCapCalc()"></td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r,effACH)}</span>`:''}</td>
         <td style="text-align:right;background:#dbeafe;font-weight:700;color:#1d4ed8">${fW(autoSaf)}</td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량·ESP 에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','인라인덕트팬',this.value)"></td>
         <td class="L" style="font-size:10px">${r.capV.autoMsg?`<span style="color:#dc2626">${esc(r.capV.autoMsg)}</span>`:(r.capV.model||r.capV.maxAf?esc([r.capV.model,r.capV.fno,r.capV.maxAf?fW(r.capV.maxAf)+' m³/h':'',r.capV.maxSp?r.capV.maxSp+' Pa':''].filter(Boolean).join(' · ')):'—')}</td>
@@ -3313,9 +3378,10 @@ function renderCapCalc(){
       //   필터가 막히면서 풍량이 20~25% 떨어진다 (AC-083 3.3.1). 중성능 말기 240~380 Pa.
       //   전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 반영되어 있으므로 여기 넣지 않는다 (AC-083 Rule 4).
       const filtPa=defV('filtPa',0);
+      const sysPa=defV('sysPa',0);   // 팬 시스템 효과 — 수동 입력 (KDS 31 25 30 4.2(2), CH-20261123-01 2-11). 계산 기능 없음
       const ductT=ductLen*ductPa,fittT=ductT*(fitPct/100);
       const diffT=diffEa*diffPa,fdT=fdPa,vdT=vdEa*vdPa,louT=louEa*louPa,filtT=filtPa;
-      const espSub=ductT+fittT+diffT+fdT+vdT+louT+filtT;
+      const espSub=ductT+fittT+diffT+fdT+vdT+louT+filtT+sysPa;
       const espSF=espSub*0.1,espTot=espSub+espSF;   // 기준: AC-028 Rule 1 — 안전율 10%. AC-012 와 같은 값
       const selEsp=Math.ceil(espTot/50)*50||0;   // 기준: AC-028 Rule 1 — 카탈로그 눈금 50 Pa. 내림하면 풍량이 준다
       const selEspVal=r.capV.selSp||selEsp;
@@ -3354,27 +3420,30 @@ function renderCapCalc(){
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② EXTERNAL STATIC PRESSURE</div>
             <table style="width:100%;font-size:10px;border-collapse:collapse">
               <tbody>
-                <tr><td style="padding:3px 6px;white-space:nowrap;color:#475569">DUCT</td>
+                <tr><td style="padding:3px 6px;white-space:nowrap;color:#475569">DUCT<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ①</span></td>
                   <td style="padding:3px 6px">${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(ductT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569">FITTINGS</td>
+                <tr><td style="padding:3px 6px;color:#475569">FITTINGS<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ②</span></td>
                   <td style="padding:3px 6px">DUCT &times; ${inp('fitPct',fitPct,42,'%')} %</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(fittT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">DIFF. &amp; GRILLE</td>
+                <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">DIFF.&amp;GRILLE<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ③</span></td>
                   <td style="padding:3px 6px">${inp('diffEa',diffEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC45 흡입 26 (AC-028 Rule 2-1)</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(diffT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569">FIRE DAMPER</td>
-                  <td style="padding:3px 6px">${inp('fdPa',fdPa,55,'Pa')} Pa</td>
-                  <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(fdT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">VOL. DAMPER</td>
+                <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">V.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ④</span></td>
                   <td style="padding:3px 6px">${inp('vdEa',vdEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('vdPa',vdPa,42,'Pa')} Pa/EA</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(vdT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569">LOUVER</td>
+                <tr><td style="padding:3px 6px;color:#475569">F.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑤</span></td>
+                  <td style="padding:3px 6px">${inp('fdPa',fdPa,55,'Pa')} Pa</td>
+                  <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(fdT)} Pa</td></tr>
+                <tr><td style="padding:3px 6px;color:#475569">LOUVER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑥</span></td>
                   <td style="padding:3px 6px">${inp('louEa',louEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(louT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569" title="별도 필터가 있는 계통만. 말기(최종) 압손을 넣는다 — 중성능 240~380 Pa. 전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 있으므로 넣지 않는다 (AC-083)">FILTER</td>
+                <tr><td style="padding:3px 6px;color:#475569" title="별도 필터가 있는 계통만. 말기(최종) 압손을 넣는다 — 중성능 240~380 Pa. 전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 있으므로 넣지 않는다 (AC-083)">FILTER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑦</span></td>
                   <td style="padding:3px 6px">${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">말기 압손</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(filtT)} Pa</td></tr>
+                <tr><td style="padding:3px 6px;color:#475569">FAN SYSTEM EFFECT (팬 시스템 효과)<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑧</span></td>
+                  <td style="padding:3px 6px">${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실 (KDS 31 25 30 4.2(2)). 앱은 계산하지 않음</span></td>
+                  <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sysPa)} Pa</td></tr>
                 <tr style="border-top:1px solid #e2e8f0">
                   <td colspan="2" style="padding:3px 6px;color:#475569">소 계</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(espSub)} Pa</td></tr>
@@ -3462,7 +3531,7 @@ function renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="au">${r.ventACH}</td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r)}</span>`:''}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','${capTab}',this.value)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
@@ -3540,7 +3609,7 @@ function renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="C"><input type="number" value="${effACH}" step="0.5" min="0" style="width:50px;font-size:11px" onchange="sCV('${rid}','ventACH',parseFloat(this.value)||0);renderCapCalc()"></td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r,effACH)}</span>`:''}</td>
         <td class="C"><input type="number" value="${cnt}" min="1" style="width:42px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1);renderCapCalc()"></td>
         <td style="text-align:right;background:#dbeafe;font-weight:700;color:#1d4ed8">${fW(perCMH)}</td>
         <td style="background:#f8fafc"><input type="text" value="${esc(r.capV.fno||'')}" placeholder="Φmm" style="width:60px" onchange="sCV('${rid}','fno',this.value)"></td>
@@ -3639,7 +3708,7 @@ function renderCapCalc(){
     let html=`<div class="card"><div class="ch">라디에이터 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th><th>수량</th>
-      <th>열손실량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
+      <th>열손실량(W)</th><th title="KDS 31 25 15 4.4(1) — 간헐 난방이면 예열부하 가산, 실내온도·열매온도 조건에 따라 보정계수">예열 가산(%)<br>/ 보정계수<br><span style="font-weight:400;font-size:8px">KDS 31 25 15 4.4(1)</span></th><th>필요용량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
       <th>선정용량(W)</th><th>선정주수(쪽)</th>
       <th>모델</th><th>소비전력<br>(kW)</th><th>전압(V)</th><th>규격</th>
       <th style="text-align:left">비고</th>
@@ -3650,8 +3719,12 @@ function renderCapCalc(){
       const rid=r.id;
       const autoTag='M-HX-RAD-'+String(idx+1).padStart(3,'0');
       const cntR=r.capH.cnt||1;
-      const edrRef=hl!==null&&cntR>0?(hl/cntR/523).toFixed(2):'—'; // EDR(㎡) = W ÷ 523 (온수 450kcal/㎡h 기준)
-      const suggestCap=hl!==null&&cntR>0?Math.ceil(hl/cntR/500)*500:0;
+      // 기준: KDS 31 25 15 4.4(1) (CH-20261123-01 2-13) — 간헐 난방이면 예열부하 가산, 열매·실내온도 조건이 표준과 다르면 보정계수(제조사 자료).
+      //   필요용량 = 열손실 × (1 + 예열 가산율) ÷ 보정계수. 연속 난방이면 예열 0 %, 표준 조건·전기식이면 보정 1.0 을 넣는다. 비워두면 경고
+      const radPre=radPreOf(r), radCor=radCorOf(r), radWarn=radWarnOf(r);
+      const hlReq=hl!==null?radReq(hl,r):null;
+      const edrRef=hlReq!==null&&cntR>0?(hlReq/cntR/523).toFixed(2):'—'; // EDR(㎡) = W ÷ 523 (온수 450kcal/㎡h 기준)
+      const suggestCap=hlReq!==null&&cntR>0?Math.ceil(hlReq/cntR/500)*500:0;
       totSel+=(r.capH.selCap!=null?r.capH.selCap:suggestCap)*cntR;
       const pwKw=r.capH.selCap!=null?(r.capH.selCap/1000).toFixed(2):(r.capH.pw!=null?(r.capH.pw/1000).toFixed(2):'—');
       html+=`<tr>
@@ -3660,6 +3733,8 @@ function renderCapCalc(){
         <td class="L">${esc(r.name)}</td>
         <td class="C"><input type="number" value="${cntR}" min="1" style="width:40px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1);renderCapCalc()"></td>
         <td style="text-align:right;background:#fee2e2;font-weight:600">${hl!==null?fW(hl):'난방없음'}</td>
+        <td style="padding:2px 4px;font-size:10px;white-space:nowrap"><input type="number" value="${r.capH.radPre??''}" placeholder="%" step="5" min="0" style="width:42px" onchange="sCH('${rid}','radPre',this.value===''?null:this.value);renderCapCalc()"> / <input type="number" value="${r.capH.radCor??''}" placeholder="1.0" step="0.05" min="0.1" style="width:42px" onchange="sCH('${rid}','radCor',this.value===''?null:this.value);renderCapCalc()">${radWarn?`<br><span style="font-size:8px;color:#dc2626;font-weight:700">⚠ ${radWarn} 미입력 (KDS 31 25 15 4.4(1))</span>`:''}</td>
+        <td style="text-align:right;font-weight:600">${hlReq!==null?fW(hlReq):'—'}</td>
         <td style="padding:3px 6px;background:#f8fafc;color:#475569;font-size:10px;white-space:nowrap"><select style="width:52px" onchange="sCH('${rid}','radType',this.value);renderCapCalc()"><option value="elec" ${r.capH.radType!=='water'?'selected':''}>전기</option><option value="water" ${r.capH.radType==='water'?'selected':''}>온수</option></select> ${r.capH.radType==='water'?edrRef+' ㎡':''}</td>
         <td style="padding:2px 4px;background:#fef9c3">
           <input type="number" value="${r.capH.selCap!=null?r.capH.selCap:''}" placeholder="${suggestCap||''}" step="500"
@@ -3678,6 +3753,7 @@ function renderCapCalc(){
     html+=`<tr style="background:#fef9c3">
       <td class="L" colspan="4" style="font-weight:700;background:#fef9c3">합 계</td>
       <td style="text-align:right;font-weight:700;background:#fee2e2">${fW(totH)}</td>
+      <td colspan="2" style="background:#fef9c3"></td>
       <td style="background:#fef9c3"></td>
       <td style="text-align:right;font-weight:700;background:#fef9c3">${fW(totSel)}</td>
       <td colspan="6" style="background:#fef9c3"></td>
@@ -4300,7 +4376,7 @@ function renderCapCalc(){
     let wsfu=0; const wsMissing=[];
     const wsRows=FX.map(([k,nm,dl])=>{
       const cnt=defWT(k+'c',0);
-      const [u0,src]=bpUnit(k,defWT(k+'l',dl));
+      const [u0,src]=bpUnit(k,BP_FLUSH_KDS[k]?defP('flush_'+k,BP_FLUSH_KDS[k]):defWT(k+'l',dl));
       const uIn=bp['ws_'+k]; let u=u0;
       const user=(uIn!==undefined&&uIn!=='');
       if(user) u=parseFloat(uIn)||0;
@@ -4318,14 +4394,18 @@ function renderCapCalc(){
     const colValve=(bp.col?bp.col==='valve':defWT('f2c',0)>0);   // 세정밸브 대변기가 있으면 세정밸브형 열 (AC-033 2.4 주)
     const fr=bpFlow(wsfu,colValve);
     const Qgen=fr?fr.q:0, Qcont=defP('qCont',0);
-    const Qlpm=Qgen+Qcont;
+    // CH-20261123-06 (앱간_값옮기기_표기기준 1.1 ②·4절) — 설계 유량 Q · 양정 H 는 위생배관(①)에서 받아 적는다. 자동 연결은 하지 않는다
+    //   이 탭의 WSFU·수두 계산은 「참고」 — 위생배관 값을 넣지 않았을 때만 쓴다
+    const sanQ=defP('sanQ',0), sanH=defP('sanH',0);
+    const QlpmRef=Qgen+Qcont;
+    const Qlpm=sanQ>0?sanQ:QlpmRef;
     const h1pipe=defP('h1pipe',0),h1ppa=defP('h1ppa',30);
     // 2026-10-19 — 관경 앱 「부하계산서 입력값」 의 마찰손실(m)을 그대로 넣는 칸. 그 값에는 등가장(부속) 손실이 이미 들어 있어 H2 를 0 으로 한다
     const h1d=defP('h1direct',0);
     const H1=h1d>0?h1d:h1pipe*h1ppa/1000,H2=h1d>0?0:H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
     const Hsub=H1+H2+H3+H4+H5,HSF=Hsub*0.1,Htot=Hsub+HSF;
     const selHStored=bp.selH;
-    const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):Htot;
+    const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):(sanH>0?sanH:Htot);
     const eta=defP('eta',0.55);
     const KW=(Qlpm*selHVal)/(6120*eta);
     const STD_KW=[0.4,0.75,1.5,2.2,3.7,5.5,7.5,11,15];
@@ -4360,9 +4440,10 @@ function renderCapCalc(){
             </tr>
           </tbody>
         </table></div>
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 표 3.4 (b) 개별기구 · 상업용 건물 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
+        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 참고 (위생배관 값 우선) · 표 3.4 (b) 개별기구 · 상업용 건물 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
         <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:10.5px;margin-bottom:6px" class="no-print">
           <span>급수 범위 <select style="font-size:10.5px" onchange="sPBP('mixMode',this.value);renderCapCalc()"><option value="all"${mixMode==='all'?' selected':''}>이 펌프가 온수기 급수까지 공급 (일반) — 점수 그대로</option><option value="cold"${mixMode==='cold'?' selected':''}>냉수만 공급 — 급탕은 별도 펌프 (혼합수전 기구 3/4)</option></select></span>
+          <span>세정량 대변기 <input type="number" step="0.5" value="${defP('flush_f2',6)}" style="width:44px" onchange="sPBP('flush_f2',this.value);renderCapCalc()"> L · 소변기 <input type="number" step="0.5" value="${defP('flush_f3',2)}" style="width:44px" onchange="sPBP('flush_f3',this.value);renderCapCalc()"> L <span style="color:#94a3b8">(기본 = KDS 31 30 15 표 4.4-1 최대 물소비량. 물탱크 탭의 1회 사용량과 별개)</span></span>
           <span>표 3.5 열 <select style="font-size:10.5px" onchange="sPBP('col',this.value);renderCapCalc()"><option value=""${!bp.col?' selected':''}>자동 (${defWT('f2c',0)>0?'세정밸브형':'세정탱크형'})</option><option value="valve"${bp.col==='valve'?' selected':''}>세정밸브형</option><option value="tank"${bp.col==='tank'?' selected':''}>세정탱크형</option></select></span>
         </div>
         <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse;font-size:11px">
@@ -4377,9 +4458,15 @@ function renderCapCalc(){
           <tbody>${wsRows}
             <tr style="background:#dcfce7;font-weight:700"><td colspan="4" style="padding:4px 8px">합 계</td><td style="text-align:right;padding:4px 8px">${f1(wsfu)}</td><td></td></tr>
           </tbody></table></div>
+        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">설계 유량 · 양정 — 위생배관에서 받는 값 (기본) <span style="font-weight:400;color:#94a3b8">[1.1 ②]</span></div>
+        <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;font-size:11px;padding:8px 14px;background:#f8fafc;border-radius:4px;margin-bottom:6px">
+          <span>설계 유량 Q ${inp('sanQ',sanQ||'',70,1)} L/min<span style="font-size:9px;color:#94a3b8;margin-left:4px">← 위생배관 ①</span>${sanQ>0?' <span style="color:#64748b">('+f1(sanQ*0.06)+' ㎥/h)</span>':''}</span>
+          <span>양정 H ${inp('sanH',sanH||'',60,0.1)} m<span style="font-size:9px;color:#94a3b8;margin-left:4px">← 위생배관 ②</span>${sanH>0?' <span style="color:#64748b">('+f1(sanH*9.80665)+' kPa)</span>':''}</span>
+        </div>
+        <div style="font-size:10px;margin-bottom:12px;color:${sanQ>0&&sanH>0?'#166534':'#b45309'}">${sanQ>0?'Q = 위생배관 값 '+f1(sanQ)+' L/min (참고 계산 '+f1(QlpmRef)+' L/min)':'⚠ 위생배관 Q 미입력 — 아래 참고 계산 '+f1(QlpmRef)+' L/min 사용'} · ${sanH>0?'H = 위생배관 값 '+f1(sanH)+' m (참고 계산 '+f1(Htot)+' m)':'⚠ 위생배관 H 미입력 — 아래 참고 계산 '+f1(Htot)+' m 사용'}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
           <div>
-            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">유량 계산</div>
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">유량 계산 — 참고 (위생배관 값 우선)</div>
             <div style="font-size:11px;padding:10px 14px;background:#f8fafc;border-radius:4px;display:flex;flex-direction:column;gap:8px">
               <div>WSFU 합계 <b>${f1(wsfu)}</b> → 표 3.5 <b>${colValve?'세정밸브형':'세정탱크형'}</b> 열 ${fr?`<b>${fW(fr.row)}</b> 행 (위로 근접, 공란 행 건너뜀)`:'<span style="color:#dc2626">해당 행 없음</span>'}</div>
               <div>Q<sub>일반</sub> = <b>${fr?fW(fr.q):'—'} L/min</b></div>
@@ -4387,12 +4474,12 @@ function renderCapCalc(){
                 <span>+ 연속사용 부하</span>${inp('qCont',Qcont,60,1)}<span>L/min</span>
                 <span style="font-size:9px;color:#64748b">(WSFU 에서 뺀 연속사용 기구 — 기구유량 × 동시운전 대수)</span>
               </div>
-              <div style="font-weight:700;color:#1e3a5f">Q<sub>펌프</sub> = ${f1(Qlpm)} L/min <span style="font-weight:400;font-size:9.5px;color:#64748b">— 유닛 전체 유량 (AC-033)</span></div>
+              <div style="font-weight:700;color:#1e3a5f">Q<sub>참고</sub> = ${f1(QlpmRef)} L/min${sanQ>0?' <span style="font-weight:400;color:#94a3b8">— 미사용 (위생배관 값 '+f1(sanQ)+')</span>':''} <span style="font-weight:400;font-size:9.5px;color:#64748b">— 유닛 전체 유량 (AC-033)</span></div>
               ${wsMissing.length?`<div style="color:#dc2626;font-weight:700;font-size:10px">⚠ ${wsMissing.map(esc).join('·')} — 표 3.4 원표 값이 없어 합산에서 빠졌습니다. WSFU 를 넣으세요</div>`:''}
             </div>
           </div>
           <div>
-            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">수두 계산 (TOTAL HEAD)</div>
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">수두 계산 (TOTAL HEAD) — 참고 (위생배관 값 우선)</div>
             <table style="width:100%;font-size:11px;border-collapse:collapse">
               <tr><td style="padding:3px 8px;color:#475569;white-space:nowrap">H<sub>1</sub> 관경 앱 마찰손실</td>
                 <td style="padding:3px 8px">${inp('h1direct',h1d||'',60,0.1)} m <span style="font-size:9px;color:#64748b">관경 앱 압력검토 「부하계산서 입력값」 — 넣으면 아래 길이 계산과 H<sub>2</sub> 는 쓰지 않음</span></td>
@@ -4450,19 +4537,23 @@ function renderCapCalc(){
             <input type="number" value="${defP('cnt',2)||2}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('cnt',parseInt(this.value)||1);renderCapCalc()">
             <span style="font-size:10px;color:#94a3b8">EA (2-PUMP SYSTEM)</span>
           </div>
+          ${(defP('cnt',2)||2)<2?'<div style="font-size:10px;color:#dc2626;font-weight:700;padding:3px 0">⚠ KDS 31 30 15 4.6.2(2) 「펌프는 2대 이상으로 하여야 한다」 — 1대(단독)는 기준 미달 (선택은 허용)</div>':''}
         </div>
-        ${(()=>{const n=defP('cnt',2)||2, tW=wtTanks(wt).reduce((a,t)=>a+t.cap,0)/1000;
-          const R=(a,b,c)=>`<tr><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0">${a}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:700;color:#1d4ed8">${b}</td><td class="L" style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9.5px;color:#64748b">${c}</td></tr>`;
-          return `<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:16px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">밸브 계통도 계산서(valve-calc) 입력값 <span style="font-weight:400;color:#94a3b8">— 이 값을 그대로 옮겨 넣는다</span></div>
-          <table style="width:100%;max-width:820px;border-collapse:collapse;font-size:10.5px"><thead><tr style="background:#f1f5f9"><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">밸브 앱 항목</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">입력값</th><th class="L" style="padding:3px 8px;border:1px solid #e2e8f0">근거</th></tr></thead><tbody>
-          ${R('주펌프 대수',n===1?'1대 (단독)':n===2?'2대 (1대 예비, SET) — 따로 설치면 「2대 (단독)」':n===3?'3대 (단독)':n+'대 — 밸브 앱은 1~3대','수량 '+n+' EA')}
-          ${R('토출압력 (kgf/cm²)',f1(selHVal/10),'선정 양정 '+f1(selHVal)+' m ÷ 10 — 설계유량 운전점 예비값. ⚠ 흡입측 압력 미포함, 정지양정(최대 토출압)은 펌프 곡선으로 따로 확인')}
-          ${R('토출유량 (L/min)',f1(Qlpm),'유닛 전체 유량 — WSFU '+f1(wsfu)+' → 표 3.5'+(Qcont?' + 연속부하 '+f1(Qcont):''))}
-          ${R('펌프 접속 관경',esc(String(bp.pipeSize||'50A / 50A').split('/')[0].trim()),'장비 스펙 PIPE SIZE')}
-          ${R('저수조 총용량 (㎥)',tW?f1(tW):'— (물탱크 탭 규격 입력)','물탱크 탭 탱크 '+wtTanks(wt).length+'개 합계. 5㎥ 초과면 2칸 (수도법 시행규칙 별표 3의2)')}
-          ${R('유효용량 (㎥)',tW?f1(tW*0.8):'—','총용량 × 0.8 (AC-032 예비 유효율) — 참고값')}
-          ${R('메인관 · 수도 인입관 관경','—','이 탭에서 정하지 않는다 — 메인관은 관경 앱, 인입관은 관할 수도사업자 인입 조건')}
-          </tbody></table>`;})()}
+        ${(()=>{const n=defP('cnt',2)||2, tks=wtTanks(wt), tW=tks.reduce((a,t)=>a+t.cap,0)/1000;
+          // CH-20261123-06 — 앱간_값옮기기_표기기준 2.1 「옮겨 적을 값」 상자. 열: 번호 · 받는 칸 이름 · 값 · 단위 · 받는 위치. 번호 = 밸브 화면 칸 순서
+          const td='padding:3px 8px;border:1px solid #93c5fd';
+          const R=(no,a,b,u,c)=>`<tr><td style="${td};text-align:center">${no}</td><td class="L" style="${td}">${a}</td><td style="${td};text-align:right;font-weight:700;color:#1d4ed8">${b}</td><td style="${td}">${u}</td><td class="L" style="${td};font-size:9.5px;color:#475569">${c}</td></tr>`;
+          const noTank='— (물탱크 탭 규격 미입력)';
+          return `<div style="margin:16px 0 6px;padding:8px 10px;background:#eff6ff;border:1.5px solid #2563eb;border-radius:4px;max-width:900px">
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:11px;color:#1d4ed8;margin-bottom:6px"><span>▶ 옮겨 적을 값 — 밸브(valve-calc) › 저수조·펌프</span><span>[1.1 ②]</span></div>
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;background:#fff"><thead><tr style="background:#dbeafe"><th style="${td}">번호</th><th class="L" style="${td}">받는 칸 이름</th><th style="${td}">값</th><th style="${td}">단위</th><th class="L" style="${td}">받는 위치</th></tr></thead><tbody>
+          ${R('①','주펌프 대수',n===1?'1대 (단독) ⚠ KDS 31 30 15 4.6.2(2) 2대 이상':n===2?'2대 (1대 예비, SET)':n===3?'3대 (단독)':n+'대','펌프 구성','밸브 › 펌프 사양 › 주펌프 대수'+(n===2?' (따로 설치면 「2대 (단독)」)':''))}
+          ${R('②','토출유량 (L/min)',f1(Qlpm),'L/min ('+f1(Qlpm*0.06)+' ㎥/h)','밸브 › 펌프 사양 › 토출유량 — 설계 유량 Q'+(sanQ>0?' (위생배관 ①)':' ⚠ 위생배관 Q 미입력, 참고 계산값'))}
+          ${R('③','저수조 총용량 (㎥)',tW?f1(tW):'—','㎥','밸브 › 저수조 › 저수조 총용량 — '+(tW?'물탱크 탭 '+tks.length+'개 합계':noTank))}
+          ${R('④','유효용량 (㎥)',tW?f1(tW*0.8):'—','㎥','밸브 › 저수조 › 유효용량 — '+(tW?'총용량 × 0.8 (AC-032)':noTank))}
+          ${R('⑤','저수조 칸 수','밸브 앱 『자동』 사용 — 5 ㎥ 초과 2칸(AC-032)','칸','밸브 › 저수조 › 저수조 칸 수 — 칸 수는 밸브 앱이 정한다 (표기기준 3.1). 탱크 개수는 보내지 않음')}
+          ${R('⑥','양정 H',f1(selHVal)+' ('+f1(selHVal*9.80665)+' kPa)','m','밸브에 칸 없음 — ③ 카탈로그 펌프 선정에 쓰고, 곡선에서 토출압 P_op · 최대압 P_max 를 읽어 밸브에 넣는다')}
+          </tbody></table></div>`;})()}
       </div>
     </div>`;
     el.innerHTML=html; return;
