@@ -85,7 +85,7 @@ const bpx={};new Function('g',[grab(/const BP_T35=\[[\s\S]*?\]\];/,'BP_T35'),gra
 [[68,true,80,235],[72,true,80,235],[43,true,50,193],[45,true,50,193],[275,false,300,322],[4,true,5,83],[3,false,3,11]].forEach(([w,v,row,q])=>{const r=bpx.f(w,v);ok(r&&r.row===row&&r.q===q,`WSFU ${w} ${v?'밸브':'탱크'} → ${r&&r.row}행 ${r&&r.q} ≠ ${row}행 ${q}`);});
 ok(bpx.T.length===55&&bpx.T.find(r=>r[0]===358)===undefined,'표 3.5 행 수');
 // 표 3.4 (b) 상업용 — 1회 세정량으로 행 선택 (사용자 제공 원표 356쪽)
-const bu={};new Function('g',[grab(/function bpUnit\(k,lpf\)\{[\s\S]*?\n\}/,'bpUnit'),'g.f=bpUnit;'].join('\n'))(bu);
+const bu={};new Function('g',[grab(/const BP_FLUSH_KDS=[^\n]*/,'BP_FLUSH_KDS'),grab(/function bpUnit\(k,lpf\)\{[\s\S]*?\n\}/,'bpUnit'),'g.f=bpUnit;'].join('\n'))(bu);
 [['f2',15,8.0],['f2',6,5.0],['f3',6,5.0],['f3',3.8,4.0],['f1',10,1.0],['f4',16,2.0],['f6',15,1.0],['f7',15,null]].forEach(([k,l,v])=>ok(bu.f(k,l)[0]===v,`표 3.4(b) ${k} ${l} L → ${bu.f(k,l)[0]} ≠ ${v}`));
 // 회사 엑셀 예제: 대변기 16·소변기 6·세면기 4·샤워 10 = 36개, 2,940 L/h
 ok([[15,6,16],[6,15,6],[10,12,4],[16,3,10]].reduce((s,[l,u,c])=>s+l*u*c,0)===2940,'회사 엑셀 예제 2,940 L/h');
@@ -260,7 +260,7 @@ console.log('2026-11-20 물탱크 분할');
  ok(L[0].tag==='M-WT-001'&&L[1].tag==='M-WT-002','자동 장비번호');
  ok(wtTanks({}).length===1,'추가 없으면 1개 (기존 저장 호환)');}
 ok(/wtTotCap=tanks\.reduce\(\(a,t\)=>a\+t\.cap,0\)/.test(src),'판정 = 총용량 합계');
-ok(/tW=wtTanks\(wt\)\.reduce/.test(src),'부스터펌프 저수조 총용량 = 합계');
+ok(/tks=wtTanks\(wt\), tW=tks\.reduce/.test(src),'부스터펌프 저수조 총용량 = 합계');
 
 // ── 2026-11-20 전기온수기 저탕탱크 수동 선정 ──────
 console.log('2026-11-20 저탕탱크 수동 선정');
@@ -269,5 +269,73 @@ ok(/selOK=V<=0\|\|selCap\*HW_EFF\*selCnt>=V/.test(src),'판정 = 공칭 × 0.75 
 ok(/필요 공칭 용량 = V/.test(src),'유효율 0.75 역산 표시');
 ok(/Math\.ceil\(autoKw\/selCnt\*10\)\/10/.test(src),'소비전력 기본값 = 대당');
 
+
+// ── CH-20261123-01 일괄 변경 (2026-11-23 사용자 확정) ──────
+// 앱 스크립트 전체를 가짜 document 위에서 실행해 calcLE 등을 그대로 부른다 (init() 는 부르지 않음)
+const app=(()=>{const vm=require('vm');
+  const m=src.match(/<script>\n\/\/ ═+\n\/\/  CONSTANTS[\s\S]*?\n<\/script>/); if(!m) throw new Error('앱 스크립트를 찾지 못함');
+  const code=m[0].replace(/^<script>|<\/script>$/g,'').replace(/\ninit\(\);\s*$/,'\n');
+  const noop=new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>'':noop,apply:()=>noop,construct:()=>noop});
+  const ctx={console,Math,JSON,Date,parseFloat,parseInt,isFinite,isNaN,Number,String,Array,Object,Set,Map,
+    document:noop,window:noop,localStorage:{getItem:()=>null,setItem(){},removeItem(){}},alert(){},confirm:()=>true,navigator:{},location:{},setTimeout(){},gtag(){}};
+  vm.createContext(ctx);
+  vm.runInContext(code+'\n;globalThis.__x={calcLE,roomDefaults,STATE,bpUnit,BP_FLUSH_KDS,kdsExhOf,ventCalcCMH,ventCmpTxt,elecHeatCMH,RT,radReq,radWarnOf,sfRatioC,sfRatioH};',ctx);
+  return ctx.__x;})();
+const mkRoom=(o)=>{const r=app.roomDefaults(); r.id='T1'; r.width=10; r.depth=10; r.height=3; r.wallS.en=true; r.wallS.len=10; r.winS.w=4; r.winS.h=1.5; Object.assign(r,o||{}); return r;};
+
+console.log('CH-20261123-01 1-1 외기 부하 안전율 제외');
+{const r=mkRoom(); const le=app.calcLE(r);
+ ok(le.oaCMH_raw===250,'사무실 100 ㎡ · 10 ㎡/인 → 10인 × 25 = 250 ㎥/h');
+ le.td.forEach((d,i)=>ok(Math.abs(le.tsh[i]-((d.rsh-d.oaS)*1.1+d.oaS))<1e-9,`냉방 현열 ${i}: (실현열−외기)×1.1+외기`));
+ ok(Math.abs(le.tlh-((le.rlh-le.oaL)*1.1+le.oaL))<1e-9,'냉방 잠열: (실잠열−외기)×1.1+외기');
+ ok(Math.abs(le.totalH-((le.hRsh-le.oaH)*1.1+le.oaH))<1e-9,'난방: (열손실−외기)×1.1+외기');
+ ok(le.oaS>0&&le.oaL>0&&le.oaH>0,'외기 현열·잠열·난방 모두 0 보다 큼 (시험 조건 확인)');
+ ok(le.infL>0&&Math.abs(le.sfL-(le.rlh-le.oaL)*0.1)<1e-9,'침기는 안전율 유지 (잠열 SF 에 침기 포함)');
+ ok(le.ervDef===true,'전열교환기 효율 미입력 → 기본값 경고 플래그');
+ const r2=mkRoom(); r2.capV.effC=60; r2.capV.effH=75; ok(app.calcLE(r2).ervDef===false,'효율 입력 → 경고 없음');
+ const r3=mkRoom({oa:false}); const l3=app.calcLE(r3); ok(Math.abs(l3.totalH-l3.hRsh*1.1)<1e-9&&Math.abs(l3.tlh-l3.rlh*1.1)<1e-9,'외기 없는 실은 종전과 같음 (×1.1)');
+ ok(Math.abs(app.sfRatioH(r)-le.totalH/le.hRsh)<1e-12&&app.sfRatioH(r)<1.1,'선정 총 여유의 순부하 비율 = 실제 비율 (1.10 아님)');
+ ok(/외기: 안전율 미적용\(학회 3\.10·RTS-SAREK\)/.test(src),'계산서 표시 문구');}
+
+console.log('CH-20261123-01 2-5 부스터 WSFU 기본 행');
+ok(app.BP_FLUSH_KDS.f2===6&&app.BP_FLUSH_KDS.f3===2,'기본 세정량 = KDS 표 4.4-1 대변기 6 L · 소변기 2 L');
+ok(app.bpUnit('f2',6)[0]===5.0&&app.bpUnit('f3',2)[0]===4.0,'기본 → 대변기 6 L 행 5.0 · 소변기 3.8 L 행 4.0');
+ok(/KDS 31 30 15 표 4\.4-1 최대 6 L 초과/.test(app.bpUnit('f2',13)[1]),'13 L 입력 시 KDS 초과 경고');
+ok(src.includes("bpUnit(k,BP_FLUSH_KDS[k]?defP('flush_'+k,BP_FLUSH_KDS[k]):defWT(k+'l',dl))"),'행 선택에 물탱크 1회 사용량(15·6 L)을 쓰지 않음');
+
+console.log('CH-20261123-01 2-11 · 2-12 · 2-13 · U2');
+ok(src.split('FAN SYSTEM EFFECT (팬 시스템 효과)').length===3&&src.includes('filtPa+sysPa, sf=sub*0.1')&&src.includes('louT+filtT+sysPa;'),'ESP 표 2곳에 시스템 효과 수동 칸 · 소계 포함');
+ok((src.match(/제상·저온 능력 미반영\(KDS 31 25 15 4\.2\(2\)\)/g)||[]).length===2,'PAC · EHP 실외기 저온능력 미입력 경고');
+{const r=mkRoom({capH:{radPre:null,radCor:null}}); ok(app.radReq(1000,r)===1000&&app.radWarnOf(r)==='예열 가산율·보정계수','방열기 미입력 → 그대로 + 경고');
+ const r2=mkRoom({capH:{radPre:'20',radCor:'0.8'}}); ok(Math.abs(app.radReq(1000,r2)-1500)<1e-9&&app.radWarnOf(r2)==='','1000 W × 1.2 ÷ 0.8 = 1500 W');}
+ok(src.includes('4.6.2(2) 「펌프는 2대 이상으로 하여야 한다」')&&src.includes("n===1?'1대 (단독) ⚠ KDS 31 30 15 4.6.2(2) 2대 이상'"),'부스터 1대 경고 (선택은 허용)');
+
+console.log('CH-20261123-01 U3 전기실 · U5 KDS 배기량');
+ok(app.RT.elec.tCtl===true&&app.RT.elec.tMax===40,'전기실 온도감지기 자동운전 채택 · 허용 40 ℃');
+{const r=mkRoom({type:'elec',cdb:30}); const q=app.elecHeatCMH(r); ok(Math.abs(q-27000/(0.336*(40-31.2)))<1e-6,'발열 기준 환기량(참고) = 27 kW ÷ (0.336 × 8.8 K)');}
+{const t=mkRoom({type:'toilet',ventACH:15,height:3,width:5,depth:4,kdsN:'6',oa:false}); // 60 ㎥ × 15 = 900 / 6 × 35 × 3.6 = 756
+ ok(app.ventCalcCMH(t)===900,'화장실 회/h 900 > KDS 756 → 900');
+ t.kdsN='8'; ok(Math.abs(app.ventCalcCMH(t)-1008)<1e-9,'변기 8개 → KDS 1008 채택');
+ t.kdsN=''; ok(/대·소변기 수 미입력/.test(app.ventCmpTxt(t)),'변기 수 미입력 경고');
+ const sh=mkRoom({type:'shower',ventACH:10,width:3,depth:3,height:3,kdsN:'4',oa:false}); ok(Math.abs(app.ventCalcCMH(sh)-360)<1e-9,'샤워 헤드 4 × 25 L/s = 360 > 270');
+ const lk=mkRoom({type:'locker',ventACH:5,width:5,depth:4,height:3,oa:false}); ok(app.ventCalcCMH(lk)===300,'탈의실 20 ㎡ × 2.5 L/s·㎡ = 180 < 회/h 300 → 300');
+ lk.ventACH=1; ok(Math.abs(app.ventCalcCMH(lk)-180)<1e-9,'회/h 60 < KDS 180 → 180');
+ ok(app.ventCalcCMH(mkRoom({oa:true}))===250,'사무실은 종전과 같음 (인원 × 25)');}
+
+// ── CH-20261123-06 앱 간 값 옮기기 표기 (앱간_값옮기기_표기기준.md) ──────
+console.log('CH-20261123-06 값 옮기기 표기');
+ok(src.includes('▶ 옮겨 적을 값 — 밸브(valve-calc) › 저수조·펌프</span><span>[1.1 ②]</span>'),'보내는 상자 제목 · 단계 번호');
+ok(/<th style="\$\{td\}">번호<\/th><th class="L" style="\$\{td\}">받는 칸 이름<\/th><th style="\$\{td\}">값<\/th><th style="\$\{td\}">단위<\/th><th class="L" style="\$\{td\}">받는 위치<\/th>/.test(src),'열 순서 5열 고정');
+ok(['①\',\'주펌프 대수','②\',\'토출유량 (L/min)','③\',\'저수조 총용량 (㎥)','④\',\'유효용량 (㎥)','⑤\',\'저수조 칸 수','⑥\',\'양정 H'].every(x=>src.includes("R('"+x)),'행 = 밸브 화면 칸 이름 · 순서');
+ok(src.includes('background:#eff6ff;border:1.5px solid #2563eb'),'연한 파랑 바탕 · 파랑 테두리');
+ok(src.includes('← 위생배관 ①')&&src.includes('← 위생배관 ②'),'부스터 Q·H 받는 칸 표시');
+ok(src.includes("const Qlpm=sanQ>0?sanQ:QlpmRef;")&&src.includes("(sanH>0?sanH:Htot)"),'위생배관 값 우선, 없으면 참고 계산');
+ok(src.includes('유량 계산 — 참고 (위생배관 값 우선)')&&src.includes('수두 계산 (TOTAL HEAD) — 참고 (위생배관 값 우선)'),'WSFU·수두 계산 = 참고');
+{const ord=['DUCT','FITTINGS','DIFF.&amp;GRILLE','V.D','F.D','LOUVER','FILTER','FAN SYSTEM EFFECT (팬 시스템 효과)'],no='①②③④⑤⑥⑦⑧';
+ const chk=part=>{let at=0;return ord.every((n,k)=>{const i=part.indexOf(n+'<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 '+no[k],at);if(i<0)return false;at=i;return true;});};
+ const a=src.indexOf('function espHTML'), b=src.indexOf('const espSub=');
+ ok(chk(src.slice(a,a+6000)),'전열교환기 ESP 줄 순서 · ← 덕트설계 ①~⑧');
+ ok(chk(src.slice(b,b+12000)),'인라인덕트팬 ESP 줄 순서 · ← 덕트설계 ①~⑧');}
+ok(src.includes('1.1 저수조·급수펌프 (급수 계통)')&&src.includes('1.2 덕트 정압 (환기 계통)')&&(src.match(/<tr style="font-weight:700"><td [^>]*>②<\/td><td [^>]*>용량부하/g)||[]).length===2,'안내 탭 순서표 2개 · 이 앱 단계 굵게');
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
