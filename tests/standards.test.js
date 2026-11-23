@@ -94,7 +94,7 @@ ok(new Set(wt.WT_FX.map(x=>x[0])).size===wt.WT_FX.length&&wt.WT_FX.some(x=>x[0]=
 // ── 2026-10-23 최종 검토 확정값 ─────────────────────────────
 console.log('2026-10-23 검토 확정값');
 ok(/const SC_REF = 0\.87;/.test(src),'일사 SC 기준 0.87 (SC=SHGC÷0.87)');
-ok(/sg\[d\]=wn\.w\*wn\.h\*\(wn\.shgc\/SC_REF\)/.test(src),'일사부하에 SC 적용');
+ok(/sg\[d\]=winA\(room,d\)\*\(wn\.shgc\/SC_REF\)/.test(src),'일사부하에 SC 적용 (창 면적 = 폭×높이×개수)');
 ok(/const IW_U=2\.71;/.test(src),'내벽 기본 U 2.71 (콘크리트 200·양면 미장)');
 ok(near(1/(0.11+0.11+0.2/1.6+0.036/1.5),2.71,0.005),'내벽 U 계산식 = 2.71');
 ok(/lw:6, eqKW:0/.test(src)&&g.RT.office.lw===6,'새 실 조명 기본값 = 사무실 6 W/㎡');
@@ -198,7 +198,7 @@ ok(!/AC-02[268] (2[268]\.|4-)/.test(src),'AC-022·026·028 옛 절 번호 제거
 }
 
 // ── AC-006 외기 직접 문 (2026-11-16) — 별표1 「공동주택 외 — 문」, 당사 부하계산서 DOOR 방식 ──
-{const h={}; new Function('h',[grab(/const UREF = \{[\s\S]*?\n\};/,'UREF'),grab(/function winA\([^\n]*/,'winA'),grab(/function doorA\([^\n]*/,'doorA'),
+{const h={}; new Function('h',[grab(/const UREF = \{[\s\S]*?\n\};/,'UREF'),grab(/function winA\([^\n]*/,'winA'),grab(/function wallH\([^\n]*/,'wallH'),grab(/function doorA\([^\n]*/,'doorA'),
   grab(/function wallNetA\([^\n]*/,'wallNetA'),'h.UREF=UREF;h.winA=winA;h.doorA=doorA;h.wallNetA=wallNetA;'].join('\n'))(h);
  console.log('AC-006 외기 직접 문');
  [['중부1',1.500],['중부2',1.500],['남부',1.800],['제주도',2.200]].forEach(([z,v])=>ok(near(h.UREF[z].door,v,1e-9),`${z} 문 U ${h.UREF[z].door} ≠ 별표1 ${v}`));
@@ -279,7 +279,7 @@ const app=(()=>{const vm=require('vm');
   const ctx={console,Math,JSON,Date,parseFloat,parseInt,isFinite,isNaN,Number,String,Array,Object,Set,Map,
     document:noop,window:noop,localStorage:{getItem:()=>null,setItem(){},removeItem(){}},alert(){},confirm:()=>true,navigator:{},location:{},setTimeout(){},gtag(){}};
   vm.createContext(ctx);
-  vm.runInContext(code+'\n;globalThis.__x={calcLE,roomDefaults,STATE,bpUnit,BP_FLUSH_KDS,kdsExhOf,ventCalcCMH,ventCmpTxt,elecHeatCMH,RT,radReq,radWarnOf,sfRatioC,sfRatioH};',ctx);
+  vm.runInContext(code+'\n;globalThis.__x={calcLE,roomDefaults,STATE,bpUnit,BP_FLUSH_KDS,kdsExhOf,ventCalcCMH,ventCmpTxt,elecHeatCMH,RT,radReq,radWarnOf,sfRatioC,sfRatioH,winA,wallH,wallNetA,autoVals,roomChecks};',ctx);
   return ctx.__x;})();
 const mkRoom=(o)=>{const r=app.roomDefaults(); r.id='T1'; r.width=10; r.depth=10; r.height=3; r.wallS.en=true; r.wallS.len=10; r.winS.w=4; r.winS.h=1.5; Object.assign(r,o||{}); return r;};
 
@@ -305,7 +305,11 @@ ok(src.includes("bpUnit(k,BP_FLUSH_KDS[k]?defP('flush_'+k,BP_FLUSH_KDS[k]):defWT
 
 console.log('CH-20261123-01 2-11 · 2-12 · 2-13 · U2');
 ok(src.split('FAN SYSTEM EFFECT (팬 시스템 효과)').length===3&&src.includes('filtPa+sysPa, sf=sub*0.1')&&src.includes('louT+filtT+sysPa;'),'ESP 표 2곳에 시스템 효과 수동 칸 · 소계 포함');
-ok((src.match(/제상·저온 능력 미반영\(KDS 31 25 15 4\.2\(2\)\)/g)||[]).length===2,'PAC · EHP 실외기 저온능력 미입력 경고');
+// CH-20261124-02 — 빨간 경고 → 회색 안내, 「제조사 자료 없음」 선택 시 계산서에 한 줄
+ok(src.split('저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판정, KDS 31 25 15 4.2(2)').length===3,'PAC · EHP 실외기 저온능력 미입력 안내 2곳');
+ok(!src.includes('제상·저온 능력 미반영'),'빨간 경고 문구 삭제');
+ok(src.split('저온능력: 제조사 자료 없음(정격 판정)').length===3&&src.includes("sEZ('+zi+',\\'ltNA\\',this.checked)")&&src.includes("\\'ltNA\\',this.checked);renderCapCalc()"),'「제조사 자료 없음」 선택 2곳 · 계산서 한 줄');
+ok(/<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력/.test(src),'안내는 회색 글씨');
 {const r=mkRoom({capH:{radPre:null,radCor:null}}); ok(app.radReq(1000,r)===1000&&app.radWarnOf(r)==='예열 가산율·보정계수','방열기 미입력 → 그대로 + 경고');
  const r2=mkRoom({capH:{radPre:'20',radCor:'0.8'}}); ok(Math.abs(app.radReq(1000,r2)-1500)<1e-9&&app.radWarnOf(r2)==='','1000 W × 1.2 ÷ 0.8 = 1500 W');}
 ok(src.includes('4.6.2(2) 「펌프는 2대 이상으로 하여야 한다」')&&src.includes("n===1?'1대 (단독) ⚠ KDS 31 30 15 4.6.2(2) 2대 이상'"),'부스터 1대 경고 (선택은 허용)');
@@ -324,7 +328,7 @@ ok(app.RT.elec.tCtl===true&&app.RT.elec.tMax===40,'전기실 온도감지기 자
 
 // ── CH-20261123-06 앱 간 값 옮기기 표기 (앱간_값옮기기_표기기준.md) ──────
 console.log('CH-20261123-06 값 옮기기 표기');
-ok(src.includes('▶ 옮겨 적을 값 — 밸브(valve-calc) › 저수조·펌프</span><span>[1.1 ②]</span>'),'보내는 상자 제목 · 단계 번호');
+ok(src.includes('▶ 옮겨 적을 값 — 밸브(valve-calc) › 저수조·펌프</span>')&&src.includes('>한 줄로 복사</button>[1.1 ②]</span>'),'보내는 상자 제목 · 단계 번호');
 ok(/<th style="\$\{td\}">번호<\/th><th class="L" style="\$\{td\}">받는 칸 이름<\/th><th style="\$\{td\}">값<\/th><th style="\$\{td\}">단위<\/th><th class="L" style="\$\{td\}">받는 위치<\/th>/.test(src),'열 순서 5열 고정');
 ok(['①\',\'주펌프 대수','②\',\'토출유량 (L/min)','③\',\'저수조 총용량 (㎥)','④\',\'유효용량 (㎥)','⑤\',\'저수조 칸 수','⑥\',\'양정 H'].every(x=>src.includes("R('"+x)),'행 = 밸브 화면 칸 이름 · 순서');
 ok(src.includes('background:#eff6ff;border:1.5px solid #2563eb'),'연한 파랑 바탕 · 파랑 테두리');
@@ -337,5 +341,43 @@ ok(src.includes('유량 계산 — 참고 (위생배관 값 우선)')&&src.inclu
  ok(chk(src.slice(a,a+6000)),'전열교환기 ESP 줄 순서 · ← 덕트설계 ①~⑧');
  ok(chk(src.slice(b,b+12000)),'인라인덕트팬 ESP 줄 순서 · ← 덕트설계 ①~⑧');}
 ok(src.includes('1.1 저수조·급수펌프 (급수 계통)')&&src.includes('1.2 덕트 정압 (환기 계통)')&&(src.match(/<tr style="font-weight:700"><td [^>]*>②<\/td><td [^>]*>용량부하/g)||[]).length===2,'안내 탭 순서표 2개 · 이 앱 단계 굵게');
+// ── CH-20261124-03 화면 개편 (웹앱_화면_기준.md) — 계산 불변 · 저장 호환 ──────
+console.log('CH-20261124-03 화면 개편');
+{const r=mkRoom(); const le0=app.calcLE(r);
+ ok(app.winA(r,'S')===6,'창 개수 없음(예전 저장본) → 1개로 계산 (4×1.5)');
+ r.winS.n=2; ok(app.winA(r,'S')===12,'창 개수 2 → 면적 2배');
+ r.winS.n=1; const le1=app.calcLE(r); ok(Math.abs(le1.maxRth-le0.maxRth)<1e-9&&Math.abs(le1.totalH-le0.totalH)<1e-9,'창 개수 1 = 종전 결과');
+ ok(app.wallH(r,'S')===3&&app.wallNetA(r,'S',3)===30-6,'외벽 높이 없음 → 층고 (10×3 − 창 6)');
+ r.wallS.h=2.5; ok(app.wallH(r,'S')===2.5&&Math.abs(app.wallNetA(r,'S',3)-(25-6))<1e-9,'외벽 높이 입력 → 그 값');
+ const r2=mkRoom(); r2.iw1.len=5; r2.iw1.dw=0.9; r2.iw1.dh=2.1; r2.iw1.dn=1; const r3=mkRoom(); r3.iw1.len=5;
+ ok(Math.abs(app.calcLE(r2).totalH-app.calcLE(r3).totalH)<1e-9,'내벽 문 치수는 기록용 — 계산 불변');}
+{const r=mkRoom(); const L=app.roomChecks(r);
+ ok(L.some(x=>x.lv==='c'&&/전열교환기 효율 미입력/.test(x.msg)),'확인 목록: 전열교환기 효율 미입력 = 확인');
+ ok(L.some(x=>x.lv==='n'&&/외벽 U/.test(x.msg)),'확인 목록: 기본값 사용 = 참고');
+ const p=mkRoom({ce:'PAC',he:'PAC'}); p.capC.selC='100'; ok(app.roomChecks(p).some(x=>x.lv==='v'&&x.tgt==='tab:PAC'),'확인 목록: PAC 능력 부족 = 위반 → 용량계산서로 이동');
+ const w=mkRoom(); w.winS.w=20; w.winS.h=3; ok(app.roomChecks(w).some(x=>x.lv==='v'&&/창·문 면적이 벽 면적보다 큼/.test(x.msg)),'확인 목록: 창이 벽보다 큼 = 위반');
+ const av=app.autoVals(r); ok(av.filter(x=>x.chg).length===0,'기본 실은 바꾼 값 0개'); r.lw=9; ok(app.autoVals(r).filter(x=>x.chg).length===1,'조명 바꾸면 1개');}
+ok(src.includes('<span class="appn">용량부하 계산서</span>')&&!src.includes('class="stepc"'),'상단 바: 앱 이름 · 프로젝트명 · 저장·불러오기 (단계 번호 줄 없음, 2026-11-24)');
+ok(src.includes('#cst,#cc{max-width:1200px;margin-left:auto;margin-right:auto}'),'용량계산서 1,200 px 가운데 상자');
+ok(src.includes('function stackWideTables(root)')&&src.includes("mk(gA,cells,'계산 · 사양').concat(mk(gB,cells,'선정 · 판정 · 비고'))"),'15열 이상 표는 두 묶음으로 쌓기');
+ok(src.includes('.lec td,.lec th{overflow-wrap:anywhere}'),'계산서 근거 문자열 줄바꿈 (글자 겹침 제거)');
+ok(src.includes('자동값 요약 ▸')&&src.includes('바꾼 값 \'+nChg+\'개'),'자동값 요약 한 줄 · 바꾼 값 n개');
+ok(src.includes('<th rowspan="2">구분</th><th rowspan="2">방위 · 조건</th><th colspan="3">외벽 · 내벽</th><th colspan="3">창</th><th colspan="3">문</th>'),'외피 한 표: 구분 | 방위·조건 | 외벽·내벽 | 창 | 문 | 면적');
+// 보충 2 — 줄 추가 · 자동 정렬 · 내벽 인접 조건
+{const x={};
+ const fn=['IW_ADJ','iwAdj','iwLoad','iwShown'].map(k=>k==='IW_ADJ'?grab(/const IW_ADJ=\{[^\n]*/,k):grab(new RegExp('function '+k+'\\([^\\n]*'),k)).join('\n');
+ new Function('x',fn+'\nObject.assign(x,{iwAdj,iwLoad,iwShown});')(x);
+ ok(x.iwAdj({len:5})==='unc'&&x.iwLoad({len:5}),'예전 저장본(adj 없음) = 비공조 인접 → 종전 계산');
+ ok(!x.iwLoad({len:5,adj:'cond'})&&x.iwLoad({len:5,adj:'corr'}),'공조 인접 = 손실 없음 · 복도(비공조) = ΔT/2');
+ ok(x.iwShown({len:0,on:true})&&!x.iwShown({len:0}),'추가만 한 빈 줄도 보임');}
+{const r=mkRoom(); r.iw1.len=5; const a=app.calcLE(r).totalH; r.iw1.adj='cond'; const b=app.calcLE(r).totalH; r.iw1.adj='corr'; const c=app.calcLE(r).totalH;
+ ok(b<a&&Math.abs(c-a)<1e-9,'공조 인접이면 내벽 난방손실 0, 복도는 종전과 같음');}
+ok(/const envBody=D\.map\(envRow\)\.join\(''\)\+\[1,2,3,4\]\.filter\(n=>iwShown\(r\['iw'\+n\]\)\)\.map\(iwRow\)\.join\(''\)\+\(r\.roofOn\?roofRow\(\):''\)\+\(r\.floorOn\?floorRow\(\):''\)\+newRow;/.test(src),'정렬: 외벽 N→E→S→W → 내벽 → 지붕 → 바닥 → 새 줄');
+ok(src.includes("msg='내벽은 4줄까지입니다 (저장 구조 iw1~iw4)'")&&src.includes('같은 방위 두 번째 줄은 저장 구조상 만들 수 없습니다'),'저장 구조 한도 안내');
+// 보충 3 — 천장고 칸은 층고 옆
+ok(src.indexOf('외벽 높이·침기 체적')>0&&src.indexOf('내벽 높이 (AC-005)')>src.indexOf('외벽 높이·침기 체적'),'층고 → 천장고 순, 설명 문구');
+// 보충 4 — 한 줄로 복사
+ok(src.includes("const oneLine='펌프='+pumpTxt+'; Q='+r1(Qlpm)+' L/min; 총용량='+(tW?r1(tW):'—')+' ㎥; 유효='+(tW?r1(tW*0.8):'—')+' ㎥; 칸=자동; H='+r1(selHVal)+' m';")&&src.includes('onclick="copyLine(this)"'),'한 줄로 복사 형식');
+
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
