@@ -88,7 +88,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 .csb{padding:5px 12px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--sur);color:var(--tx);cursor:pointer;font-size:11px;font-family:inherit}
 .csb.on{background:var(--nv);color:#fff;border-color:var(--nv)}
 /* LOAD ESTIMATE CARD */
-.lec{background:#fff;border:1px solid #555;border-top:3px solid var(--nv);margin-bottom:32px;width:210mm;box-sizing:border-box;font-size:9px}
+.lec{background:#fff;border:1px solid #555;border-top:3px solid var(--nv);margin-bottom:32px;width:100%;max-width:1200px;box-sizing:border-box;font-size:9px}
 .leh{background:var(--nv);color:#fff;padding:9px 12px}
 .leh-t{font-size:14px;font-weight:700;letter-spacing:.5px}
 .leh-g{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:6px;font-size:10px}
@@ -104,7 +104,10 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 .empty{text-align:center;padding:32px;color:var(--tsm)}
 .print-only{display:none}
 /* ── CH-20261124-03 화면 기준 (웹앱_화면_기준.md) ── */
-.lec td,.lec th{overflow-wrap:anywhere}                       /* 3절 — 긴 근거 문자열이 옆 숫자 칸으로 넘치지 않게 줄바꿈 */
+.lec td,.lec th{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 4-1절 — 한 항목은 한 줄 (넘치면 … , 전체는 마우스 올림) */
+.lec .src-badge{all:unset;font-weight:400;color:#64748b;font-size:7.5px;margin-left:6px}
+.lec-tot>div{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lcc{max-width:1200px;margin:0 auto}
 #tbar .pname{min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fv{min-width:0}.fv input,.fv select{min-width:0;width:100%;box-sizing:border-box}
 @media (max-width:1100px){.fg6{grid-template-columns:repeat(3,minmax(0,1fr))}.fg5{grid-template-columns:repeat(3,minmax(0,1fr))}.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -118,6 +121,10 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 .env-t td input{min-width:40px}
 .env-t td select{min-width:118px;font-size:10px}
 .env-t th{white-space:normal;font-size:10px}
+.card2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.card2>div{margin-bottom:0 !important}
+@media (max-width:900px){.card2{grid-template-columns:1fr}}
+.esp-t td{text-align:left !important}.esp-t td:last-child{text-align:right !important;white-space:nowrap}
 .star-card{border:2px solid #f59e0b;background:#fffbeb}
 .star-card .ch{color:#92400e}
 .star{color:#f59e0b}
@@ -133,6 +140,8 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 .lv-v{background:#fee2e2;color:#b91c1c}.lv-c{background:#ffedd5;color:#c2410c}.lv-n{background:#f1f5f9;color:#64748b}
 .flash{animation:flash 1.4s ease-out}
 @keyframes flash{0%{box-shadow:0 0 0 3px #f59e0b}100%{box-shadow:0 0 0 0 transparent}}
+.tw table td,.tw table th{white-space:nowrap}
+#cc table td{white-space:nowrap}
 .stk-item{border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
 .stk-item table{width:100%;border-collapse:collapse}
 .stk-item th{position:static;white-space:normal}
@@ -163,16 +172,19 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
   .print-room-page{break-after:page}
 
   /* ── 부하계산서: 실당 1페이지 ── */
-  .lec{break-after:page;page-break-after:always;page-break-inside:avoid;border:1px solid #333;border-top:3px solid #1e3a5f !important;margin-bottom:0;width:100%;overflow:hidden}
+  .lec{break-after:page;page-break-after:always;page-break-inside:avoid;border:1px solid #333;border-top:3px solid #1e3a5f !important;margin-bottom:0}
+  /* 4-1절 — 인쇄 = 화면 폭 그대로. 1,200 px 화면을 A4 폭에 맞춰 축소만 한다 (배치 바꾸지 않음) */
+  #lcc,#cst,#cc{width:1200px !important;max-width:none !important;margin:0 !important}
+  body[print-mode="load"] #tab2,body[print-mode="capacity"] #tab3{zoom:.6}
   .lec:last-child{break-after:auto}
 
   /* ── 용량계산서: 카드당 1페이지 ── */
   #cc .card{break-after:page}
   .cap-card{break-after:page;page-break-inside:avoid}
   .cap-card:last-child{break-after:auto}
-  .cap-pac-card,.cap-cth-card{break-after:page;font-size:9px}
+  .cap-pac-card,.cap-cth-card{break-after:page}
   .cap-pac-card:last-child,.cap-cth-card:last-child{break-after:auto}
-  .ehp-zone{break-after:page;font-size:9px}
+  .ehp-zone{break-after:page}
   .ehp-zone:last-child{break-after:auto}
 
   /* ── 색상 강제 출력 ── */
@@ -189,7 +201,7 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
 .src-badge{font-size:9px;font-weight:400;color:#64748b;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;padding:1px 6px;margin-left:6px;white-space:nowrap}
-@media print{.src-badge{display:none}}
+
 </style>
 </head>
 <body>
@@ -232,19 +244,19 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
     </div>
   </div>
   <div class="card">
-    <div class="ch">기상 조건<span class="src-badge">[별표7]·[별표1] 건축물의 에너지절약설계기준 (국토교통부고시 제2025-738호, 2025.12.31 시행)</span></div>
+    <div class="ch">기상 조건</div>
     <div class="cb">
       <div class="fg c3">
         <div class="fv"><label>지역 선택</label><select id="p-loc" onchange="onLocChange()"></select></div>
-        <div class="fv" style="grid-column:span 2"><label>외기온 직접입력 냉방 (℃ DB, 선택) <span style="color:#b45309;font-weight:400">— 국내 지역 보정용. 습구온도는 선택 지역 값을 유지하므로 해외 현장에는 쓰지 마세요 (AC-002)</span></label><input type="number" id="p-cust" placeholder="직접 입력 시" onchange="updP()"></div>
+        <div class="fv" style="grid-column:span 2"><label>외기온 직접입력 냉방 (℃ DB, 선택) <span style="color:#b45309;font-weight:400">— 국내 지역 보정용. 습구온도는 선택 지역 값을 유지하므로 해외 현장에는 쓰지 마세요</span></label><input type="number" id="p-cust" placeholder="직접 입력 시" onchange="updP()"></div>
       </div>
       <div class="fg c4" style="margin-top:8px">
-        <div class="fv"><label>단열 지역구분 [별표1] (자동·변경 가능)</label><select id="p-zone" onchange="onZoneChange(this.value)"></select></div>
+        <div class="fv"><label>단열 지역구분 (자동·변경 가능)</label><select id="p-zone" onchange="onZoneChange(this.value)"></select></div>
         <div class="fv"><label>외벽 U 기준값</label><input type="text" id="p-uw" class="au" readonly></div>
         <div class="fv"><label>지붕 U 기준값</label><input type="text" id="p-ur" class="au" readonly></div>
         <div class="fv"><label>창 U 기준값</label><input type="text" id="p-uwin" class="au" readonly></div>
       </div>
-      <div style="font-size:10px;color:var(--gray);margin-top:4px">※ [별표1] 「공동주택 외 · 외기에 직접 면하는 경우」 기준값(이하). <b>건축 단열검토서를 받으면 그 값이 우선합니다.</b> 새로 만드는 실의 기본값에 적용되며, 이미 만든 실은 바뀌지 않습니다.</div>
+      <div style="font-size:10px;color:var(--gray);margin-top:4px">※ 「공동주택 외 · 외기에 직접 면하는 경우」 기준값(이하). <b>건축 단열검토서를 받으면 그 값이 우선합니다.</b> 새로 만드는 실의 기본값에 적용되며, 이미 만든 실은 바뀌지 않습니다.</div>
       <div class="fg c4" style="margin-top:8px">
         <div class="fv"><label>여름 DB (℃)</label><input type="number" id="p-cdb" class="au" readonly></div>
         <div class="fv"><label>여름 WB (℃)</label><input type="number" id="p-cwb" class="au" readonly></div>
@@ -533,6 +545,9 @@ const UREF = {          //  거실외벽  최상층지붕  창(공동주택 외)
 //   문 틈새 바람은 침기(AC-010)에 이미 들어 있어 전도만 계산한다 (이중 계상 금지)
 function winA(r,d){const o=r&&r['win'+d];return o?(o.w||0)*(o.h||0)*(o.n==null||o.n===''?1:(+o.n||0)):0;}   // n = 개수 (CH-20261124-03, 없으면 1 — 예전 저장본 그대로)
 // 외벽 높이 — 입력이 없으면 층고 (CH-20261124-03, 예전 저장본 그대로)
+// 외벽 있음 = 길이 > 0 (2026-11-24 「외기접함」 칸 삭제). 옛 저장본의 en:false(외기접함 해제)는 계산 제외를 유지한다
+function wallOn(r,d){ const w=r&&r['wall'+d]; return !!w&&(w.len||0)>0&&w.en!==false; }
+function wallLegacyOff(r,d){ const w=r&&r['wall'+d]; return !!w&&(w.len||0)>0&&w.en===false; }
 function wallH(r,d,fb){const v=parseFloat(r&&r['wall'+d]&&r['wall'+d].h);return v>0?v:(fb!=null?fb:(+r.height||0));}
 function doorA(r,d){const o=r&&r['door'+d];return o?(o.w||0)*(o.h||0)*(o.n==null?1:o.n):0;}
 function wallNetA(r,d,h){const wd=r['wall'+d];return Math.max(0,(wd.len||0)*wallH(r,d,h)-winA(r,d)-doorA(r,d));}   // 외벽 높이 입력이 있으면 그 값, 없으면 h(층고)
@@ -547,7 +562,7 @@ const UFLOOR = {
   '제주도':{ground:0.470, outdoor:0.330},
 };
 // 종전 기본값 3.13 이 남은 저장본은 계산서에 출처 경고를 붙인다 (AC-006: 출처를 설명할 수 없는 값)
-function floorLegacy(r){ return (r&&r.floorOn&&Math.abs((r.floorU||0)-3.13)<1e-9)?' ⚠ U 3.13 — 종전 기본값, 출처 확인 필요 (AC-006 [별표1] '+uFloor(r.floorMode)+')':''; }
+function floorLegacy(r){ return (r&&r.floorOn&&Math.abs((r.floorU||0)-3.13)<1e-9)?' ⚠ U 3.13 — 종전 기본값, 출처 확인 필요 (기준값 '+uFloor(r.floorMode)+')':''; }
 // 내벽 높이 = 천장고 — 기준: AC-005 (2026-11-17 사용자 결정 「천장고까지」). 천장 속은 실 밖으로 본다
 //   천장고를 넣지 않은 실(예전 저장본 포함)은 층고로 계산해 결과가 바뀌지 않게 하고, 계산서에 「천장고 미입력」을 표시한다
 // 내벽 인접 조건 — CH-20261124-03 보충 2 (2026-11-24). unc 비공조 인접 · corr 복도(비공조) = ΔT/2 (종전과 같음), cond 공조 인접 = 손실 없음(0)
@@ -1497,33 +1512,16 @@ function oaOf(r,area){ return (r.oa!==false)?occOf(r,area):0; }      // 신선�
 function oaPP(r){ const v=parseFloat(r&&r.oaPP); return v>0?v:25; }
 // 환기 장비 계산풍량 = max(체적×환기횟수, 신선외기 인원×인당 외기량) — 전열교환기·팬 공통 (2026-11-20)
 //   사무실류처럼 환기횟수 0 · 인원 기준인 실에 팬을 골라도 0 이 되지 않게. oa:false 유형(화장실 등)은 인원 항이 0 이라 변화 없음
-// 기준: KDS 31 25 20 4.5 (1) · 4.8.2 (1) 표 4.5-1 최소 배기량 (CH-20261123-01, U5 — 2026-11-23 사용자 확정)
-//   화장실·샤워·탈의실은 KDS 값으로도 계산해 회/h 값과 비교하고 큰 쪽을 쓴다. 둘 다 계산서에 표시
-//   [단위, 기본 배기량, 범위 설명] — 화장실: 공중용 25/35 L/s·(대·소변기 1개) — 주 D 「사용 빈도가 높은 시간대가 있으면 큰 값」 → 교대 근무 시설이라 35
-//   샤워: 샤워부스 10/25 L/s·헤드 — 주 G 「거주 중 연속 배기면 낮은 값, 그 외 높은 값」 → 25
-//   탈의실: 체육·산업·의료시설 탈의실 2.5 L/s·㎡ (기타 탈의실 1.25)
-const KDS_EXH={
-  toilet:{u:'n',def:35,lb:'공중용 화장실',unit:'L/s·변기',fld:'kdsN',nLb:'대·소변기 수'},
-  shower:{u:'n',def:25,lb:'샤워부스',unit:'L/s·헤드',fld:'kdsN',nLb:'샤워헤드 수'},
-  locker:{u:'a',def:2.5,lb:'체육·산업·의료시설 탈의실',unit:'L/s·㎡'},
-};
-function kdsExhOf(r){ const t=KDS_EXH[r&&r.type]; if(!t) return null;
-  const v=parseFloat(r.kdsRate), rate=v>0?v:t.def;
-  const n=t.u==='n'?(parseFloat(r.kdsN)||0):gA(r);
-  return {t, rate, n, cmh:n*rate*3.6, missing:t.u==='n'&&!(parseFloat(r.kdsN)>0)}; }
-function kdsExhCMH(r){ const k=kdsExhOf(r); return k?k.cmh:0; }
-function ventCalcCMH(r,ach){ return Math.max(gV(r)*(ach??r.ventACH), oaOf(r,gA(r))*oaPP(r), kdsExhCMH(r)); }
-// 계산서 표시용 — 「회/h ○○ · KDS ○○ → 큰 쪽」
+// (2026-11-24 CH-20261124-05) 화장실·샤워·탈의 KDS 표 4.5-1 배기량 비교는 삭제 — 회/h(15·10·5)만 쓴다 (AC-017 머리말)
+function ventCalcCMH(r,ach){ return Math.max(gV(r)*(ach??r.ventACH), oaOf(r,gA(r))*oaPP(r)); }   // 화장실 15 · 샤워 10 · 탈의 5 회/h 만 (KDS 비교 삭제, 2026-11-24)
 // 전기실 — 발열 기준 환기량(참고) = 기기발열 ÷ (0.336 × (허용 최고 40 ℃ − 여름 설계외기)). 선정에는 쓰지 않는다 (U3 검토용)
 function elecHeatCMH(r){ const t=RT[r&&r.type]; if(!t||!t.tMax) return null; const p=STATE.project, dt=t.tMax-(p.cust||p.cdb);
   return dt>0?eqOf(r,gA(r))/(0.336*dt):null; }
 function elecVentTxt(r){ const t=RT[r&&r.type]; if(!t||!t.tCtl) return '';
   const q=elecHeatCMH(r);
-  return '운전: 실내 온도감지기 자동운전 <b>채택</b> (고시 [별표3] 2.1.2(3)④ · KDS 31 25 20 4.8.4) · 허용 최고 '+t.tMax+' ℃'
+  return '운전: 실내 온도감지기 자동운전 · 허용 최고 '+t.tMax+' ℃'
     +(q!=null?' · 발열 기준 환기량(참고, 선정 미반영) '+Math.round(q).toLocaleString('ko-KR')+' ㎥/h = '+f1(eqOf(r,gA(r))/1000)+' kW ÷ (0.336 × '+f1(t.tMax-(STATE.project.cust||STATE.project.cdb))+' K)':''); }
-function ventCmpTxt(r,ach){ const e=elecVentTxt(r); if(e) return e; const k=kdsExhOf(r); if(!k) return '';
-  const a=gV(r)*(ach??r.ventACH), big=k.cmh>a?'KDS':'회/h';
-  return '회/h '+Math.round(a).toLocaleString('ko-KR')+' · KDS 표 4.5-1 '+(k.missing?'<b style="color:#dc2626">⚠ '+k.t.nLb+' 미입력</b>':Math.round(k.cmh).toLocaleString('ko-KR')+' ('+(k.t.u==='n'?k.n+' × ':f1(k.n)+'㎡ × ')+k.rate+' '+k.t.unit+')')+' → '+big+' 채택'; }
+function ventCmpTxt(r){ return elecVentTxt(r); }   // 팬 표 아래 비고 줄용 (전기실만)
 // 인체발열 — 학회 「건축기계설비 설계기준」(2010) 표 2.32 「인체에서의 발생열량」 [W/인], 작업 상태 × 실온 (AC-007 Rule 4)
 //   전발생열은 실온과 무관하고 현열/잠열 배분만 실온에 따라 바뀐다. 표에 없는 실온은 직선보간, 21~28 ℃ 밖은 끝값
 //   실 유형이 작업 상태를 정한다 — 사무실 · 중앙제어실류 = 사무소·경보행(131 W, 표가 사무실을 예로 듦), 그 밖 = 경작업(117 W)
@@ -1566,8 +1564,9 @@ function roomDefaults(){ // 신규 실 기본값 — RT.office(사무실류)와 
     type:'office',
     width:0, depth:0, height:4.0,
     cdb:26, crh:50, hdb:21, hrh:null,   // hrh:null — RT.office 와 동일 (겨울 가습 미실시)
-    wallN:{en:false,len:0,u:U.wall}, wallE:{en:false,len:0,u:U.wall},
-    wallS:{en:true, len:0,u:U.wall}, wallW:{en:false,len:0,u:U.wall},
+    // en — 「외기접함」 칸은 2026-11-24 삭제. 외벽 여부는 길이로 정한다. en:false 는 옛 저장본의 「해제」만 뜻한다
+    wallN:{en:true,len:0,u:U.wall}, wallE:{en:true,len:0,u:U.wall},
+    wallS:{en:true,len:0,u:U.wall}, wallW:{en:true,len:0,u:U.wall},
     winN:{w:0,h:0,shgc:0.6,u:U.win}, winE:{w:0,h:0,shgc:0.6,u:U.win},
     winS:{w:0,h:0,shgc:0.6,u:U.win}, winW:{w:0,h:0,shgc:0.6,u:U.win},
     // 외기 직접 문 — 기준: AC-006 [별표1] 공동주택 외 문. n=개수. 예전 저장본은 면적 0 으로 읽혀 결과가 바뀌지 않는다
@@ -1619,7 +1618,7 @@ function getInfACH(room){
   // 면 수에 비례시키지 않는다 — 학회 3.4 (1) 「바람이 불어오는 쪽의 창문, 도어에 대해서만」 (4면이 2.0 이 되지 않음)
   // 창 없는 실(기계실·전기실·창고)도 낮추지 않는다 — 배기 환기가 난방부하에 안 들어가 침기가 유일한 외기 경로다 (동결방지)
   // 회수표 0.5·0.6·0.8·1.0 — 인용 출처 「공기조화 설비설계 가이드북」 표 2-23 (업체 계산서 인용, 원문 미대조. AC-010 11 a)
-  const faces=['N','E','S','W'].filter(d=>room['wall'+d].en).length;
+  const faces=['N','E','S','W'].filter(d=>wallOn(room,d)).length;   // 외벽 = 길이 있는 방위 (2026-11-24)
   return [0,0.5,0.6,0.8,1.0][faces];
 }
 
@@ -1748,16 +1747,17 @@ function setCE(v){const i=getRi();if(i<0)return;const r=STATE.rooms[i],t=RT[r.ty
 function setHE(v){const i=getRi();if(i<0)return;const r=STATE.rooms[i],t=RT[r.type]||{};r.he=v;
   if(v==='없음')r.hdb=null;else if(r.hdb===null)r.hdb=(t.hdb!=null?t.hdb:20);renderRoomDetail();}
 
-// ── CH-20261124-03 실 상세 화면 (웹앱_화면_기준.md 1·2절) ─────────────────
+// ── CH-20261124-03·05 실 상세 화면 (웹앱_화면_기준.md 1·2·4-1절) ─────────────────
 //   ★ 설계자 판단(실 유형·장비)을 맨 위에, 사실값(치수·외피·내벽·지붕·바닥)은 펼쳐 두고,
 //   루틴 자동값(U값·SHGC·재실밀도·조명·기기·침기·전열교환기 효율)은 「자동값 요약 ▸」 한 줄로 접는다.
-//   외피 치수는 외벽(길이·높이) | 창(폭·높이·개수) | 문(폭·높이·개수) | 벽 면적 한 표, 동서남북 네 줄 (2026-11-24 사용자 지시)
+//   외피 표 기본 줄 = 외벽 4(북·동·남·서) + 내벽 1 + 지붕 1 + 바닥 1 (2026-11-24). 외벽은 길이를 넣으면 계산, 0 이면 없음
 //   저장 데이터는 예전 것과 호환 — 창 개수(n)·외벽 높이(h)·내벽 문(dw·dh·dn)이 없으면 1 · 층고 · 0 으로 읽는다
+//   화면에 기준 코드(AC·KDS 조항)는 쓰지 않는다 — 근거는 사용 가이드 「적용 기준」 (4-1절)
 const _eqz=(a,b)=>Math.abs((parseFloat(a)||0)-(parseFloat(b)||0))<1e-9;
 function autoVals(r){   // [{k,lab,cur,def,chg}] — 바꾼 값 세기와 요약용
   const U=uRef(), t=RT[r.type]||{}, D=['N','E','S','W'], out=[];
   const add=(k,lab,cur,def)=>out.push({k,lab,cur,def,chg:!_eqz(cur,def)});
-  D.forEach(d=>{ if(r['wall'+d].en) add('wall'+d,'외벽 U '+d,r['wall'+d].u,U.wall);
+  D.forEach(d=>{ if(wallOn(r,d)) add('wall'+d,'외벽 U '+d,r['wall'+d].u,U.wall);
     const w=r['win'+d]; if(winA(r,d)>0){ add('winU'+d,'창 U '+d,w.u,U.win); add('shgc'+d,'창 SHGC '+d,w.shgc,0.6);}
     if(doorA(r,d)>0) add('door'+d,'문 U '+d,r['door'+d].u,U.door); });
   [1,2,3,4].forEach(n=>{ if(r['iw'+n].len>0) add('iw'+n,'내벽 U ('+n+')',r['iw'+n].u,IW_U); });
@@ -1774,11 +1774,11 @@ function autoVals(r){   // [{k,lab,cur,def,chg}] — 바꾼 값 세기와 요약
 function roomChecks(r){   // 확인 목록 — v 위반(빨강) · c 확인(주황) · n 참고(회색). tgt = 이동할 칸 id 또는 'tab:탭이름'
   const L=[], area=gA(r);
   if(!(area>0)) L.push({lv:'c',msg:'가로·세로 미입력 — 면적 0',tgt:'rd-size'});
-  ['N','E','S','W'].forEach(d=>{ if(r['wall'+d].en&&!(r['wall'+d].len>0)) L.push({lv:'c',msg:'외벽 '+d+' 외기접함인데 길이 0',tgt:'rd-walls'});
-    if(r['wall'+d].en&&winA(r,d)+doorA(r,d)>r['wall'+d].len*wallH(r,d)+1e-9) L.push({lv:'v',msg:'외벽 '+d+' 창·문 면적이 벽 면적보다 큼',tgt:'rd-walls'}); });
-  if(r.cdb!==null&&eqMissing(r)) L.push({lv:'c',msg:'기기발열 미입력 (AC-009) — 0 으로 계산 중',tgt:'rd-eq'});
-  if([1,2,3,4].some(n=>r['iw'+n].len>0)&&!(parseFloat(r.ceilH)>0)) L.push({lv:'c',msg:'천장고 미입력 — 내벽 면적을 층고로 계산 중 (AC-005)',tgt:'rd-ceil'});
-  const k=kdsExhOf(r); if(k&&k.missing) L.push({lv:'c',msg:k.t.nLb+' 미입력 — KDS 31 25 20 표 4.5-1 배기량 비교 불가',tgt:'rd-kds'});
+  ['N','E','S','W'].forEach(d=>{
+    if(wallLegacyOff(r,d)) L.push({lv:'c',msg:'외벽 '+d+' 길이 '+r['wall'+d].len+' m — 예전 저장본에서 「외기접함」 해제라 계산 제외 중. 길이를 다시 넣으면 반영',tgt:'rd-walls'});
+    if(wallOn(r,d)&&winA(r,d)+doorA(r,d)>r['wall'+d].len*wallH(r,d)+1e-9) L.push({lv:'v',msg:'외벽 '+d+' 창·문 면적이 벽 면적보다 큼',tgt:'rd-walls'}); });
+  if(r.cdb!==null&&eqMissing(r)) L.push({lv:'c',msg:'기기발열 미입력 — 0 으로 계산 중',tgt:'rd-eq'});
+  if([1,2,3,4].some(n=>r['iw'+n].len>0)&&!(parseFloat(r.ceilH)>0)) L.push({lv:'c',msg:'천장고 미입력 — 내벽 면적을 층고로 계산 중',tgt:'rd-ceil'});
   if(r.ve==='전열교환기'&&oaOf(r,area)>0&&!(parseFloat(r.capV&&r.capV.effC)>0&&parseFloat(r.capV&&r.capV.effH)>0)) L.push({lv:'c',msg:'전열교환기 효율 미입력 — 기본값 냉방 50·난방 70·잠열 40 % 사용',tgt:'rd-erv'});
   if(r.ce==='PAC'&&r.cdb!==null){ const pc=r.capC||{}, cnt=pc.cnt||1, mc=getMaxCool(r), sc=parseInt(pc.selC)||0;
     if(sc>0&&mc!==null&&sc<mc/cnt) L.push({lv:'v',msg:'PAC 선정 냉방능력 '+fW(sc)+' W < 필요 '+fW(Math.round(mc/cnt))+' W',tgt:'tab:PAC'}); }
@@ -1786,7 +1786,6 @@ function roomChecks(r){   // 확인 목록 — v 위반(빨강) · c 확인(주�
     if(sh>0&&hl!==null&&sh<hl/cnt) L.push({lv:'v',msg:'PAC 선정 난방능력 '+fW(sh)+' W < 필요 '+fW(Math.round(hl/cnt))+' W',tgt:'tab:PAC'}); }
   defaultsOf(r).filter(x=>!/미입력|전열교환기 효율/.test(x)).forEach(x=>L.push({lv:'n',msg:'기본값 사용 — '+x,tgt:/기기|조명/.test(x)?'rd-eq':'rd-auto'}));
   if(r.oa!==false&&occDens(r)>0&&parseFloat(r.oaPP)>0&&parseFloat(r.oaPP)!==25) L.push({lv:'n',msg:'인당 외기량 '+oaPP(r)+' ㎥/h·인 (기본 25 아님)',tgt:'rd-oapp'});
-  if(k&&!k.missing) L.push({lv:'n',msg:ventCmpTxt(r).replace(/<[^>]+>/g,''),tgt:'rd-vent'});
   if(RT[r.type]&&RT[r.type].tCtl) L.push({lv:'n',msg:elecVentTxt(r).replace(/<[^>]+>/g,''),tgt:'rd-vent'});
   if(floorLegacy(r)) L.push({lv:'n',msg:floorLegacy(r).trim(),tgt:'rd-auto'});
   return L;
@@ -1804,23 +1803,24 @@ function rdJump(t){
   const d=el.closest('details'); if(d&&!d.open){ d.open=true; window._rdAutoOpen=true; }
   el.scrollIntoView({block:'center',behavior:'smooth'}); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
-// 외피 표 「+ 줄 추가」 — 저장 구조는 원안 그대로: 외벽 4방위(wallN~W) · 내벽 4칸(iw1~iw4) · 지붕 1(roofOn) · 바닥 1(floorOn)
-//   외벽 같은 방위 두 번째 줄, 내벽 5번째 줄은 저장 구조를 바꿔야 해서 만들지 않고 안내한다
+// 외피 표 줄 — 저장 구조는 원안 그대로: 외벽 4방위(wallN~W) · 내벽 4칸(iw1~iw4) · 지붕 1(roofOn) · 바닥 1(floorOn)
+//   「+ 내벽 줄 추가」는 iw2~iw4 를 차례로 연다. 내벽 1 · 지붕 · 바닥 줄은 늘 보인다
 function envAdd(k,sub){
   const i=getRi(); if(i<0) return; const r=STATE.rooms[i]; let msg='';
-  if(k==='w'){ if(r['wall'+sub].en) msg='외벽 '+sub+' 줄은 이미 있습니다 — 같은 방위 두 번째 줄은 저장 구조상 만들 수 없습니다'; else r['wall'+sub].en=true; }
-  else if(k==='i'){ const n=[1,2,3,4].find(n=>!iwShown(r['iw'+n])); if(!n) msg='내벽은 4줄까지입니다 (저장 구조 iw1~iw4)'; else { r['iw'+n].on=true; r['iw'+n].adj=IW_ADJ[sub]?sub:'unc'; } }
-  else if(k==='r'){ if(r.roofOn) msg='지붕 줄은 하나입니다'; else r.roofOn=true; }
-  else if(k==='f'){ if(r.floorOn) msg='바닥 줄은 하나입니다'; else { r.floorOn=true; onFloorMode(sub||'soil'); } }
-  window._envNew=msg?{k:k,msg:msg}:null; renderRoomDetail(); renderRoomList();
+  if(k==='i'){ const n=[1,2,3,4].find(n=>n>1&&!iwShown(r['iw'+n])); if(!n) msg='내벽은 4줄까지입니다'; else { r['iw'+n].on=true; r['iw'+n].adj=IW_ADJ[sub]?sub:'unc'; } }
+  window._envMsg=msg; renderRoomDetail(); renderRoomList();
 }
 function envDel(k,n){
   const i=getRi(); if(i<0) return; const r=STATE.rooms[i];
   if(k==='i'){ const iw=r['iw'+n]; iw.len=0; iw.on=false; iw.dw=0; iw.dh=0; iw.dn=0; delete iw.adj; }
-  else if(k==='r') r.roofOn=false;
-  else if(k==='f') r.floorOn=false;
-  renderRoomDetail(); renderRoomList();
+  window._envMsg=''; renderRoomDetail(); renderRoomList();
 }
+// 외벽 길이 — 넣으면 외벽 있음(en=true), 비우거나 0 이면 없음. 옛 저장본의 「외기접함 해제」도 길이를 다시 넣으면 반영된다
+function setWallLen(d,v){ const i=getRi(); if(i<0) return; const w=STATE.rooms[i]['wall'+d]; w.len=parseFloat(v)||0; w.en=true; renderRoomDetail(); renderRoomList(); }
+// 지붕 — 면적을 넣으면 반영, 비우면 지붕 없음 (지붕 면적 칸이 곧 「지붕 있음」 표시)
+function setRoofA(v){ const i=getRi(); if(i<0) return; const r=STATE.rooms[i], x=parseFloat(v); if(x>0){ r.roofOn=true; r.roofA=x; } else { r.roofOn=false; } renderRoomDetail(); }
+// 바닥 — 조건 「없음」이면 바닥 부하 반영 안 함
+function setFloorCond(v){ const i=getRi(); if(i<0) return; const r=STATE.rooms[i]; if(!v){ r.floorOn=false; renderRoomDetail(); return; } r.floorOn=true; onFloorMode(v); }
 function renderRoomDetail(){
   const el=document.getElementById('rdc');
   if(!selRid){el.innerHTML='<div class="empty">실을 선택하세요.</div>';return;}
@@ -1838,47 +1838,38 @@ function renderRoomDetail(){
   const bOpts=STATE.buildings.map(x=>'<option value="'+x.id+'" '+(x.id===r.bldgId?'selected':'')+'>'+esc(x.name)+'</option>').join('');
   const fOpts=(b?b.floors:[]).map(x=>'<option value="'+x.id+'" '+(x.id===r.floorId?'selected':'')+'>'+esc(x.name)+'</option>').join('');
   const tOpts=opt(Object.keys(RT),r.type,k=>RT[k].lb);
-  const num=(val,on,o)=>'<input type="number" value="'+(val==null?'':val)+'" step="'+((o&&o.step)||0.1)+'"'+(o&&o.ph?' placeholder="'+o.ph+'"':'')+(o&&o.dis?' disabled':'')+(o&&o.min!=null?' min="'+o.min+'"':'')+' onchange="'+on+'">';
-  // 외피 치수 한 표 — 외벽(길이·높이) | 창(폭·높이·개수) | 문(폭·높이·개수) | 벽 면적
-  //   CH-20261124-03 보충 2 — 구분(외벽·내벽·지붕·바닥) 한 표. 순서는 외벽 N→E→S→W → 내벽 → 지붕 → 바닥 (자동 정렬)
+  const num=(val,on,o)=>'<input type="number" value="'+(val==null?'':val)+'" step="'+((o&&o.step)||0.1)+'"'+(o&&o.ph!=null?' placeholder="'+o.ph+'"':'')+(o&&o.dis?' disabled':'')+(o&&o.min!=null?' min="'+o.min+'"':'')+' onchange="'+on+'">';
+  // 외피 한 표 — 구분 | 방위·조건 | 길이 | 높이 | 창(폭·높이·개수) | 문(폭·높이·개수) | 면적 | 삭제
   const NA='<td class="C" style="color:#cbd5e1">—</td>', DIRK={N:'북 N',E:'동 E',S:'남 S',W:'서 W'};
   const delBtn=(k,n)=>'<td class="C"><button class="ri-d" title="줄 삭제" style="border:none;background:none" onclick="envDel(\''+k+'\','+(n||0)+')">×</button></td>';
-  const envRow=d=>{const wo=r['wall'+d], wn=r['win'+d], dr=r['door'+d], gross=(wo.len||0)*wallH(r,d);
+  const envRow=d=>{const wo=r['wall'+d], wn=r['win'+d], dr=r['door'+d], gross=(wo.len||0)*wallH(r,d), lg=wallLegacyOff(r,d);
     return '<tr><td class="C" style="font-weight:700">외벽</td><td class="C" style="font-weight:700">'+DIRK[d]+'</td>'
-      +'<td class="C"><input type="checkbox" '+(wo.en?'checked':'')+' onchange="sW(\''+d+'\',\'en\',this.checked);renderRoomDetail()"></td>'
-      +'<td>'+num(wo.len,"sW('"+d+"','len',parseFloat(this.value)||0);renderRoomDetail()",{dis:!wo.en})+'</td>'
-      +'<td>'+num(parseFloat(wo.h)>0?wo.h:'',"sW('"+d+"','h',parseFloat(this.value)>0?parseFloat(this.value):null);renderRoomDetail()",{ph:r.height,dis:!wo.en})+'</td>'
+      +'<td>'+num(wo.len||'',"setWallLen('"+d+"',this.value)",{ph:'없음'})+'</td>'
+      +'<td>'+num(parseFloat(wo.h)>0?wo.h:'',"sW('"+d+"','h',parseFloat(this.value)>0?parseFloat(this.value):null);renderRoomDetail()",{ph:r.height})+'</td>'
       +'<td>'+num(wn.w,"sWw('"+d+"','w',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(wn.h,"sWw('"+d+"','h',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(wn.n==null||wn.n===''?1:wn.n,"sWw('"+d+"','n',Math.max(0,parseFloat(this.value)||0));renderRoomDetail()",{step:1,min:0})+'</td>'
       +'<td>'+num(dr.w,"sDr('"+d+"','w',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(dr.h,"sDr('"+d+"','h',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(dr.n,"sDr('"+d+"','n',Math.max(0,parseFloat(this.value)||0));renderRoomDetail()",{step:1,min:0})+'</td>'
-      +'<td class="au C" style="white-space:nowrap">'+(wo.en?f1(wallNetA(r,d))+'<span style="font-size:9px;color:var(--gray)"> / '+f1(gross)+'</span>':'—')+'</td><td></td></tr>';};
+      +'<td class="au C">'+(wallOn(r,d)?f1(wallNetA(r,d))+'<span style="font-size:9px;color:var(--gray)"> / '+f1(gross)+'</span>':(lg?'<span style="color:#c2410c">계산 제외</span>':'—'))+'</td><td></td></tr>';};
   const iwRow=n=>{const iw=r['iw'+n];
     return '<tr><td class="C" style="font-weight:700">내벽 ('+n+')</td>'
       +'<td><select onchange="sIW('+n+',\'adj\',this.value);renderRoomDetail()">'+Object.keys(IW_ADJ).map(k=>'<option value="'+k+'" '+(iwAdj(iw)===k?'selected':'')+'>'+IW_ADJ[k]+'</option>').join('')+'</select></td>'
-      +NA
-      +'<td>'+num(iw.len,"sIW("+n+",'len',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
-      +'<td class="au C" title="내벽 높이 = 천장고 (AC-005)">'+f1(iwH(r))+'</td>'
+      +'<td>'+num(iw.len||'',"sIW("+n+",'len',parseFloat(this.value)||0);renderRoomDetail()",{ph:'없음'})+'</td>'
+      +'<td class="au C" title="내벽 높이 = 천장고">'+f1(iwH(r))+'</td>'
       +NA+NA+NA
       +'<td>'+num(iw.dw||'',"sIW("+n+",'dw',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(iw.dh||'',"sIW("+n+",'dh',parseFloat(this.value)||0);renderRoomDetail()")+'</td>'
       +'<td>'+num(iw.dn||'',"sIW("+n+",'dn',Math.max(0,parseFloat(this.value)||0));renderRoomDetail()",{step:1,min:0})+'</td>'
-      +'<td class="au C">'+f1(iw.len*iwH(r))+(iwAdj(iw)==='cond'?'<br><span style="font-size:9px;color:var(--gray)">손실 없음</span>':'<br><span style="font-size:9px;color:var(--gray)">ΔT '+_dtcIW+'</span>')+'</td>'+delBtn('i',n)+'</tr>';};
-  const roofRow=()=>'<tr><td class="C" style="font-weight:700">지붕</td><td class="C">최상층</td>'+NA+NA+NA+NA+NA+NA+NA+NA+NA
-      +'<td>'+num(r.roofA||'',"sR('roofA',parseFloat(this.value)||0);renderRoomDetail()",{ph:f1(area)})+'</td>'+delBtn('r')+'</tr>';
-  const FMODE={soil:'땅 접촉 (냉방 0 · 난방 ΔT/2)',under:'비공조실 위·지하실 위 (ΔT/2)',outdoor:'외기 직접 노출·필로티 (ΔT)'};
-  const floorRow=()=>'<tr><td class="C" style="font-weight:700">바닥</td><td><select onchange="onFloorMode(this.value)">'+Object.keys(FMODE).map(k=>'<option value="'+k+'" '+(fMode(r)===k?'selected':'')+'>'+FMODE[k]+'</option>').join('')+'</select></td>'
-      +NA+NA+NA+NA+NA+NA+NA+NA+NA+'<td class="au C">'+f1(area)+'</td>'+delBtn('f')+'</tr>';
-  const nk=window._envNew||null;   // 「+ 줄 추가」로 만든 새 줄 — 구분·방위(조건)를 고르면 확정
-  const subOpts=k=>k==='w'?D.map(d=>'<option value="'+d+'">'+DIRK[d]+'</option>').join(''):k==='i'?Object.keys(IW_ADJ).map(x=>'<option value="'+x+'">'+IW_ADJ[x]+'</option>').join(''):k==='f'?Object.keys(FMODE).map(x=>'<option value="'+x+'">'+FMODE[x]+'</option>').join(''):'<option value="">최상층</option>';
-  const newRow=nk?'<tr style="background:#eff6ff"><td><select id="env-k" onchange="window._envNew.k=this.value;renderRoomDetail()">'
-      +[['w','외벽'],['i','내벽'],['r','지붕'],['f','바닥']].map(([k,l])=>'<option value="'+k+'" '+(nk.k===k?'selected':'')+'>'+l+'</option>').join('')+'</select></td>'
-      +'<td><select id="env-s">'+subOpts(nk.k)+'</select></td>'
-      +'<td colspan="10" style="text-align:left"><button class="btn btP btS" onclick="envAdd(document.getElementById(\'env-k\').value,document.getElementById(\'env-s\').value)">확정</button> <button class="btn btS" onclick="window._envNew=null;renderRoomDetail()">취소</button>'
-      +(nk.msg?' <span style="color:#c2410c;font-size:10px">'+esc(nk.msg)+'</span>':'')+'</td><td></td></tr>':'';
-  const envBody=D.map(envRow).join('')+[1,2,3,4].filter(n=>iwShown(r['iw'+n])).map(iwRow).join('')+(r.roofOn?roofRow():'')+(r.floorOn?floorRow():'')+newRow;
+      +'<td class="au C">'+(iw.len>0?f1(iw.len*iwH(r))+'<span style="font-size:9px;color:var(--gray)"> · '+(iwAdj(iw)==='cond'?'손실 없음':'ΔT '+_dtcIW)+'</span>':'—')+'</td>'+(n>1?delBtn('i',n):'<td></td>')+'</tr>';};
+  const roofRow='<tr><td class="C" style="font-weight:700">지붕</td><td class="C">최상층</td>'+NA+NA+NA+NA+NA+NA+NA+NA
+      +'<td>'+num(r.roofOn?(r.roofA||Math.round(area*10)/10):'',"setRoofA(this.value)",{ph:'없음'})+'</td><td></td></tr>';
+  const FMODE={'':'없음 (반영 안 함)',soil:'땅 접촉 (냉방 0 · 난방 ΔT/2)',under:'비공조실 위·지하실 위 (ΔT/2)',outdoor:'외기 직접 노출·필로티 (ΔT)'};
+  const fCur=r.floorOn?fMode(r):'';
+  const floorRow='<tr><td class="C" style="font-weight:700">바닥</td><td><select onchange="setFloorCond(this.value)">'+Object.keys(FMODE).map(k=>'<option value="'+k+'" '+(fCur===k?'selected':'')+'>'+FMODE[k]+'</option>').join('')+'</select></td>'
+      +NA+NA+NA+NA+NA+NA+NA+NA+'<td class="au C">'+(r.floorOn?f1(area):'—')+'</td><td></td></tr>';
+  const envBody=D.map(envRow).join('')+[1,2,3,4].filter(n=>n===1||iwShown(r['iw'+n])).map(iwRow).join('')+roofRow+floorRow;
   // 자동값 — 외피 U·SHGC (방위별)
   const uIn=(cur,def,on)=>'<td class="'+cls(cur,def)+'">'+num(cur,on,{step:0.01})+'</td>';
   const envTbl='<div class="tw"><table>'
@@ -1892,9 +1883,9 @@ function renderRoomDetail(){
     +'<div class="fg c4" style="margin-top:8px">'
     +'<div class="fv '+cls(r.roofU,U.roof)+'"><label>지붕 U값 (W/m²K) · 기본 '+U.roof+'</label>'+num(r.roofU,"sRd('roofU',parseFloat(this.value)||uRef().roof)",{step:0.01,dis:!r.roofOn})+'</div>'
     +'<div class="fv '+cls(r.floorU,uFloor(fMode(r)))+'"><label>바닥 U값 (W/m²K) · 기본 '+uFloor(fMode(r))+'</label>'+num(r.floorU,"sRd('floorU',parseFloat(this.value)||uFloor('"+fMode(r)+"'))",{step:0.01,dis:!r.floorOn})+'</div>'
-    +'</div><div style="font-size:10px;color:var(--gray);margin-top:4px">※ [별표1] '+insulZone()+' 기준값. 건축 단열검토서·창호 성적서 값을 받으면 그 값이 우선합니다. 내벽 기본 U '+IW_U+' = 콘크리트 200 양면미장.</div>';
+    +'</div><div style="font-size:10px;color:var(--gray);margin-top:4px">※ 지역 '+insulZone()+' 기준값. 건축 단열검토서·창호 성적서 값을 받으면 그 값이 우선합니다. 내벽 기본 U '+IW_U+' = 콘크리트 200 양면미장.</div>';
   const allSame=arr=>arr.length?(arr.every(v=>_eqz(v,arr[0]))?arr[0]:'여러 값'):'—';
-  const wallsOn=D.filter(d=>r['wall'+d].en), winsOn=D.filter(d=>winA(r,d)>0);
+  const wallsOn=D.filter(d=>wallOn(r,d)), winsOn=D.filter(d=>winA(r,d)>0);
   const ervC=parseFloat(r.capV&&r.capV.effC), ervH=parseFloat(r.capV&&r.capV.effH);
   const sumTxt=[
     '외벽 U <b>'+allSame(wallsOn.map(d=>r['wall'+d].u))+'</b>',
@@ -1904,10 +1895,9 @@ function renderRoomDetail(){
     '기기 <b>'+(r.eqKW>0?r.eqKW+' kW':(eqDefKW(r)>0?eqDefKW(r)+' kW/실':(eqDefW(r)>0?eqDefW(r)+' W/㎡':'—')))+'</b>',
     '침기 <b>'+getInfACH(r)+'</b> 회/h',
   ].concat(r.ve==='전열교환기'?['전열교환 <b>'+(ervC>0?ervC:50)+'/'+(ervH>0?ervH:70)+'</b> %'+(ervC>0&&ervH>0?'':' (기본)')]:[]).join(' · ');
-  const kx=KDS_EXH[r.type]?kdsExhOf(r):null;
   const ph=phOf(r);
   const sel=(on,opts)=>'<select onchange="'+on+'">'+opts+'</select>';
-  const yn=(on,v,yes)=>sel(on,'<option value="false" '+(!v?'selected':'')+'>아니오</option><option value="true" '+(v?'selected':'')+'>'+yes+'</option>');
+  const capN=t=>'<span style="font-size:9px;color:var(--gray);white-space:nowrap">'+t+'</span>';
 
   el.innerHTML='<div class="st" style="margin-top:0">'+esc(r.name)+' — 실 상세</div>'
 +'<div class="rd-grid"><div class="rd-main">'
@@ -1929,12 +1919,12 @@ function renderRoomDetail(){
 +'<div class="fv"><label>가로 (m)</label>'+num(r.width,"sRd('width',parseFloat(this.value)||0)")+'</div>'
 +'<div class="fv"><label>세로 (m)</label>'+num(r.depth,"sRd('depth',parseFloat(this.value)||0)")+'</div>'
 +'<div class="fv"><label>바닥면적 (m²) 자동</label><input class="au" readonly value="'+f1(area)+'"></div>'
-+'<div class="fv"><label>층고 (m)</label>'+num(r.height,"sRd('height',parseFloat(this.value)||3.0)")+'<span style="font-size:9px;color:var(--gray)">외벽 높이·침기 체적</span></div>'
-+'<div class="fv" id="rd-ceil"><label>천장고 (m)</label>'+num(r.ceilH>0?r.ceilH:'',"sRd('ceilH',parseFloat(this.value)>0?parseFloat(this.value):null)",{ph:'미입력 → 층고'})+'<span style="font-size:9px;color:var(--gray)">내벽 높이 (AC-005)</span></div>'
++'<div class="fv"><label>층고 (m)</label>'+num(r.height,"sRd('height',parseFloat(this.value)||3.0)")+capN('외벽 높이·침기 체적')+'</div>'
++'<div class="fv" id="rd-ceil"><label>천장고 (m)</label>'+num(r.ceilH>0?r.ceilH:'',"sRd('ceilH',parseFloat(this.value)>0?parseFloat(this.value):null)",{ph:'미입력 → 층고'})+capN('내벽 높이')+'</div>'
 +'<div class="fv"><label>체적 (m³) 자동</label><input class="au" readonly value="'+f1(vol)+'"></div>'
 +'</div></div></div>'
 
-+'<div class="card"><div class="ch">§2 실내 설계조건<span class="src-badge">[별표8] 실내 온·습도 기준 / AC-003</span></div><div class="cb"><div class="fg c2">'
++'<div class="card"><div class="ch">§2 실내 설계조건</div><div class="cb"><div class="fg c2">'
 +'<div><div style="font-weight:700;color:var(--bl);font-size:11px;margin-bottom:6px">여름 (냉방)</div><div class="fgr" style="flex-wrap:wrap;gap:8px">'
 +'<label class="fgr" style="font-size:11px;gap:4px"><input type="checkbox" '+(r.cdb===null?'checked':'')+' onchange="togCool(this.checked)"> 냉방없음</label>'
 +(r.cdb!==null?'<div class="fv" style="flex:1"><label>설계온도 (℃ DB)</label>'+num(r.cdb,"sR('cdb',parseFloat(this.value)||26)",{step:0.5})+'</div>'
@@ -1946,39 +1936,37 @@ function renderRoomDetail(){
 +'</div></div></div></div></div>'
 
 +'<div class="card"><div class="ch">§3 외피 입력<span class="src-badge">U값·SHGC 는 아래 「자동값 요약」</span></div><div class="cb">'
-+'<div class="st" style="font-size:11px" id="rd-walls">외피 치수 — 외벽(북→동→남→서) → 내벽 → 지붕 → 바닥 · 외벽 높이를 비우면 층고 ('+r.height+' m) · 내벽 높이는 천장고 ('+f1(iwH(r))+' m)</div>'
++'<div class="st" style="font-size:11px" id="rd-walls">외피 치수 — 외벽 길이를 넣으면 계산, 비우면 그 방위에 외벽 없음 · 외벽 높이를 비우면 층고 ('+r.height+' m) · 내벽 높이 = 천장고 ('+f1(iwH(r))+' m)</div>'
 +'<div class="tw"><table class="env-t"><thead>'
-+'<tr><th rowspan="2">구분</th><th rowspan="2">방위 · 조건</th><th colspan="3">외벽 · 내벽</th><th colspan="3">창</th><th colspan="3">문</th><th rowspan="2">면적 (m²)<br><span style="font-weight:400;font-size:9px">외벽: 순 / 전체</span></th><th rowspan="2"></th></tr>'
-+'<tr><th>외기접함</th><th>길이 (m)</th><th>높이 (m)</th><th>폭 (m)</th><th>높이 (m)</th><th>개수</th><th>폭 (m)</th><th>높이 (m)</th><th>개수</th></tr>'
++'<tr><th rowspan="2">구분</th><th rowspan="2">방위 · 조건</th><th colspan="2">외벽 · 내벽</th><th colspan="3">창</th><th colspan="3">문</th><th rowspan="2">면적 (m²)</th><th rowspan="2"></th></tr>'
++'<tr><th>길이 (m)</th><th>높이 (m)</th><th>폭 (m)</th><th>높이 (m)</th><th>개수</th><th>폭 (m)</th><th>높이 (m)</th><th>개수</th></tr>'
 +'</thead><tbody>'+envBody+'</tbody></table></div>'
-+(nk?'':'<button class="btn btS" style="margin-top:6px" onclick="window._envNew={k:\'i\'};renderRoomDetail()">+ 줄 추가</button>')
-+'<div style="font-size:10px;color:var(--gray);margin-top:4px">※ 외벽 면적(순) = 길이×높이 − 창 − 문. 외벽 문은 출입문·셔터, 내벽 문은 내벽 U 로 같은 면적에 포함(치수 기록). 내벽 ΔT = (외기−실내)/2, 공조 인접은 손실 없음. 지붕 면적을 비우면 바닥면적. 문 틈새 바람은 침기(AC-010)에 들어 있어 전도만 계산합니다.</div>'
++'<div style="display:flex;gap:10px;align-items:center;margin-top:6px"><button class="btn btS" onclick="envAdd(\'i\',\'unc\')">+ 내벽 줄 추가</button>'+(window._envMsg?'<span style="color:#c2410c;font-size:10px">'+esc(window._envMsg)+'</span>':'')+'</div>'
++'<div style="font-size:10px;color:var(--gray);margin-top:4px">※ 외벽 면적 = 길이×높이 − 창 − 문 (순 / 전체). 내벽 문은 내벽 U 로 같은 면적에 포함. 지붕은 면적을 넣으면 반영, 바닥은 조건을 고르면 반영. 문 틈새 바람은 침기에 들어 있어 전도만 계산합니다.</div>'
 +'</div></div>'
 
-+'<div class="card" id="rd-vent"><div class="ch">§4 환기 (팬 선정용)<span class="src-badge">학회 설계기준 표 4.5 · KDS 31 25 20 표 4.5-1</span></div><div class="cb"><div class="fg fg6">'
++'<div class="card" id="rd-vent"><div class="ch">§4 환기 (팬 선정용)</div><div class="cb"><div class="fg fg6">'
 +'<div class="fv"><label>환기 횟수 (회/h)</label>'+num(r.ventACH,"sRd('ventACH',parseFloat(this.value)||0)",{step:1})+'</div>'
 +'<div class="fv"><label>필요환기량 (m³/h) 자동</label><input class="au" readonly value="'+f0(ventCMH)+'"></div>'
-+(kx?((kx.t.u==='n'?'<div class="fv" id="rd-kds"><label>'+kx.t.nLb+' (KDS 표 4.5-1)'+(kx.missing?' <span style="color:#c2410c">← 미입력</span>':'')+'</label>'+num(r.kdsN??'',"sRd('kdsN',this.value)",{step:1,min:0,ph:'개'})+'</div>':'')
-  +'<div class="fv"><label>KDS 배기량 ('+kx.t.unit+')</label>'+num(r.kdsRate??'',"sRd('kdsRate',this.value)",{step:0.5,min:0,ph:kx.t.def})+'</div>'):'')
 +'<div class="fv" style="grid-column:span 2"><label>난방 시 배기 가동 (보충외기 부하)</label><label class="fgr" style="font-size:11px;gap:5px;padding:4px 0"><input type="checkbox" '+(r.exhHeat?'checked':'')+' onchange="sRd(\'exhHeat\',this.checked)"> 배기 보충외기를 난방부하에 가산</label></div>'
-+'</div><div style="font-size:10px;color:var(--gray);margin-top:4px">※ 필요환기량 = max(체적×환기횟수, 재실인원×인당 외기량, KDS 표 4.5-1 배기량). 비교 내역은 확인 목록에 있습니다.</div></div></div>'
++'</div><div style="font-size:10px;color:var(--gray);margin-top:4px">※ 필요환기량 = max(체적×환기횟수, 재실인원×인당 외기량).</div></div></div>'
 
 +'<details class="card" id="rd-auto" '+(window._rdAutoOpen?'open':'')+' ontoggle="window._rdAutoOpen=this.open">'
 +'<summary class="auto-sum"><b>자동값 요약 ▸</b> <span>'+sumTxt+'</span> <span class="auto-chgn">바꾼 값 '+nChg+'개</span></summary>'
 +'<div class="cb" style="border-top:1px solid var(--bdr)"><div style="font-size:10px;color:var(--tsm);margin-bottom:6px">흐린 글씨 = 기본값 · 진한 글씨 = 바꾼 값</div>'
 +'<div class="st" style="font-size:11px;margin-top:0">외피 U값 · SHGC</div>'+envTbl
-+'<div class="st" style="font-size:11px">내부 발열<span class="src-badge">AC-007 인체 · AC-008 조명 · AC-009 기기</span></div><div class="fg fg6">'
++'<div class="st" style="font-size:11px">내부 발열</div><div class="fg fg6">'
 +'<div class="fv '+cls(occDens(r),rt.ia||0)+'"><label>재실 밀도 (m²/인) · 기본 '+(rt.ia||'무인')+'</label>'+num(occDens(r)||'',"sRd('ia',parseFloat(this.value)||0)",{step:1,ph:'무인'})+'</div>'
 +((r.oa!==false&&occDens(r)>0)?'<div class="fv '+cls(oaPP(r),25)+'" id="rd-oapp"><label>인당 외기량 (㎥/h·인) · 기본 25</label>'+num(oaPP(r),"sRd('oaPP',parseFloat(this.value)||25)",{step:1,min:1})+'</div>':'')
 +'<div class="fv"><label>재실인원 (인) 자동</label><input class="au" readonly value="'+f1(occ)+'"></div>'
-+'<div class="fv" style="grid-column:span 2"><label style="color:#888">인체발열 현열/잠열 (W/인, 학회 표 2.32)</label><input readonly value="'+ph.s+' / '+ph.l+' W/인 · '+PH_ACT[actOf(r)].lb+' '+ph.t+'℃" style="background:var(--glr);color:var(--tsm)"></div>'
++'<div class="fv" style="grid-column:span 2"><label style="color:#888">인체발열 현열/잠열 (W/인)</label><input readonly value="'+ph.s+' / '+ph.l+' W/인 · '+PH_ACT[actOf(r)].lb+' '+ph.t+'℃" style="background:var(--glr);color:var(--tsm)"></div>'
 +'<div class="fv '+cls(r.lw,rt.lw!=null?rt.lw:r.lw)+'"><label>조명 (W/m²) · 기본 '+(rt.lw!=null?rt.lw:'—')+'</label>'+num(r.lw,"sRd('lw',parseFloat(this.value)||0)",{step:1})+'</div>'
-+'<div class="fv"><label>조명발열 (W) 자동 (LED 기준)</label><input class="au" readonly value="'+f0(lightW)+'"></div>'
++'<div class="fv"><label>조명발열 (W) 자동</label><input class="au" readonly value="'+f0(lightW)+'"></div>'
 +'<div class="fv '+(r.eqKW>0?'auto-chg':'auto-dflt')+'" id="rd-eq"><label>기기발열 (kW)'+(eqMissing(r)?' <span style="color:#c2410c;font-weight:700">← 미입력</span>':(eqIsDefault(r)?' · 기본 '+eqDefTxt(r):''))+'</label>'+num(r.eqKW,"sRd('eqKW',parseFloat(this.value)||0)")+'</div>'
-+'</div><div class="st" style="font-size:11px">침기 (INFILTRATION)<span class="src-badge">AC-010 — 외벽 면 수 기준 자동</span></div><div class="fg fg6">'
-+'<div class="fv"><label>INFILTRATION 횟수 (회/h) 자동</label><input class="au" readonly value="'+getInfACH(r)+'" title="외벽 체크 수 기준 자동 (기준: AC-010): 0면(내부실)=0, 1면=0.5, 2면=0.6, 3면=0.8, 4면=1.0"></div>'
++'</div><div class="st" style="font-size:11px">침기 — 외벽 면 수 기준 자동</div><div class="fg fg6">'
++'<div class="fv"><label>침기 (회/h) 자동</label><input class="au" readonly value="'+getInfACH(r)+'" title="외벽 면 수: 0면=0, 1면=0.5, 2면=0.6, 3면=0.8, 4면=1.0"></div>'
 +'<div class="fv"><label>침입량 (m³/h) 자동</label><input class="au" readonly value="'+f0(infCMH)+'"></div></div>'
-+(r.ve==='전열교환기'?'<div class="st" style="font-size:11px">전열교환기 효율<span class="src-badge">카탈로그 값 — 용량계산서 전열교환기 탭과 같은 칸</span></div><div class="fg fg6" id="rd-erv">'
++(r.ve==='전열교환기'?'<div class="st" style="font-size:11px">전열교환기 효율 — 카탈로그 값</div><div class="fg fg6" id="rd-erv">'
   +'<div class="fv '+(ervC>0?'auto-chg':'auto-dflt')+'"><label>냉방 효율 (%) · 기본 50</label>'+num(ervC>0?ervC:'',"sCV('"+r.id+"','effC',this.value);renderRoomDetail()",{step:1,ph:50})+'</div>'
   +'<div class="fv '+(ervH>0?'auto-chg':'auto-dflt')+'"><label>난방 효율 (%) · 기본 70</label>'+num(ervH>0?ervH:'',"sCV('"+r.id+"','effH',this.value);renderRoomDetail()",{step:1,ph:70})+'</div></div>':'')
 +'</div></details>'
@@ -2003,7 +1991,7 @@ function calcLE(room){
   const dTh=room.hdb!==null?room.hdb-outH:null;
   const dOm=room.cdb!==null?dOmega(outDB,outWB,room.cdb,room.crh||50):0;
   const outRH_val=RHfromWB(outDB,outWB);
-  const ventCMH=Math.max(vol*room.ventACH,kdsExhCMH(room));   // 배기 실은 KDS 표 4.5-1 과 큰 쪽 (U5)
+  const ventCMH=vol*room.ventACH;
   // 난방 시 배기 가동: 열회수 없는 배기팬 실은 배기량만큼 보충외기가 난방부하로 유입
   // 기준: AC-005 — 기본 미적용(exhH:false). 그 보충공기는 화장실 자체의 외기 창문으로 직접 들어오며
   // 인접실(전열교환기로 자체 균형)을 끌어당기지 않는다. 라디에이터는 외피·침기만 감당하고
@@ -2040,7 +2028,7 @@ function calcLE(room){
     const CLTD_WALL=(_bldg?.wallType||'heavy')==='light'?CLTD_WALL_LIGHT:CLTD_WALL_HEAVY;
     const cltdAdj=26-room.cdb;
     const wc={N:0,E:0,S:0,W:0};
-    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const netA=wallNetA(room,d,h);wc[d]=wd.u*netA*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);}}); // 창·문 면적 공제
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wallOn(room,d)){const netA=wallNetA(room,d,h);wc[d]=wd.u*netA*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);}}); // 창·문 면적 공제
     // Door conduction — 같은 방위 외벽 CLTD (AC-006 2026-11-16)
     const dc={N:0,E:0,S:0,W:0};
     DIRS.forEach(d=>{const A=doorA(room,d);if(A>0)dc[d]=room['door'+d].u*A*Math.max(0,(CLTD_WALL[d]||CLTD_WALL.N)[ti]+cltdAdj);});
@@ -2087,7 +2075,7 @@ function calcLE(room){
   const hdoorD={N:0,E:0,S:0,W:0};   // hDir: 방위할증으로 더해진 양 (기준: AC-011)
   let hiw=[0,0,0,0];
   if(dTh!==null){
-    DIRS.forEach(d=>{const wd=room['wall'+d];if(wd.en){const netA=wallNetA(room,d,h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창·문 면적 공제 — 유리·문 손실과 이중계상 방지
+    DIRS.forEach(d=>{const wd=room['wall'+d];if(wallOn(room,d)){const netA=wallNetA(room,d,h);const v=wd.u*netA*dTh*DIR_HF[d];hDir+=wd.u*netA*dTh*(DIR_HF[d]-1);if(d==='N')hwN=v;else if(d==='E')hwE=v;else if(d==='S')hwS=v;else hwW=v;}}); // 창·문 면적 공제 — 유리·문 손실과 이중계상 방지
     DIRS.forEach(d=>{const A=doorA(room,d);if(A>0){const u=room['door'+d].u;hdoorD[d]=u*A*dTh*DIR_HF[d];hdoor+=hdoorD[d];hDir+=u*A*dTh*(DIR_HF[d]-1);}}); // 문 — 외벽과 같게 방위계수 (AC-011)
     if(room.roofOn){hroof=room.roofU*roofA*dTh*DIR_HF_ROOF;hDir+=room.roofU*roofA*dTh*(DIR_HF_ROOF-1);}
     DIRS.forEach(d=>{const wn=room['win'+d];hglass+=wn.u*winA(room,d)*dTh*DIR_HF[d];hDir+=wn.u*winA(room,d)*dTh*(DIR_HF[d]-1);});
@@ -2135,13 +2123,13 @@ function stageLb(){ return STATE.project.stage==='final'?'실시설계':'기본�
 function defaultsOf(r){
   const U=uRef(), eq=(a,b)=>Math.abs((parseFloat(a)||0)-b)<1e-9, out=[];
   const D=['N','E','S','W'];
-  if(D.some(d=>r['wall'+d].en&&eq(r['wall'+d].u,U.wall))) out.push('외벽 U (별표1 기본값)');
+  if(D.some(d=>wallOn(r,d)&&eq(r['wall'+d].u,U.wall))) out.push('외벽 U (기본값)');
   const wins=D.filter(d=>winA(r,d)>0).map(d=>r['win'+d]);
-  if(wins.some(w=>eq(w.u,U.win))) out.push('창 U (별표1 기본값)');
+  if(wins.some(w=>eq(w.u,U.win))) out.push('창 U (기본값)');
   if(wins.some(w=>eq(w.shgc,0.6))) out.push('SHGC 0.6 (성적서 미반영)');
   if([1,2,3,4].some(n=>r['iw'+n]&&r['iw'+n].len>0)&&!(parseFloat(r.ceilH)>0)) out.push('천장고 미입력 — 내벽 층고 적용');
-  if(D.some(d=>doorA(r,d)>0&&eq(r['door'+d].u,U.door))) out.push('문 U (별표1 기본값)');
-  if(r.roofOn&&eq(r.roofU,U.roof)) out.push('지붕 U (별표1 기본값)');
+  if(D.some(d=>doorA(r,d)>0&&eq(r['door'+d].u,U.door))) out.push('문 U (기본값)');
+  if(r.roofOn&&eq(r.roofU,U.roof)) out.push('지붕 U (기본값)');
   if(r.cdb!==null&&eqIsDefault(r)) out.push('기기발열 기본값 '+eqDefTxt(r));
   if(r.cdb!==null&&eqMissing(r)) out.push('기기발열 미입력');
   const t=RT[r.type]; if(r.cdb!==null&&t&&eq(r.lw,t.lw)) out.push('조명 '+r.lw+'W/㎡ (조도÷50)');
@@ -2186,7 +2174,6 @@ function renderLoadCalc(){
     <div style="background:#1e3a5f;color:#fff;text-align:center;padding:5px 8px;font-size:11px;font-weight:700;letter-spacing:1.5px">LOAD SUMMARY (부하 요약표) — ${stageLb()}</div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 10px;border-bottom:1px solid #ccc;font-size:9px;flex-wrap:wrap">
       <div>PROJECT : <b>${esc(p.name||'—')}</b> &nbsp;|&nbsp; 발주처 : <b>${esc(p.client||'—')}</b> &nbsp;|&nbsp; 작성일 : <b>${esc(p.date||'—')}</b></div>
-      <table style="border-collapse:collapse;font-size:8px"><tr><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">작 성</td><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">검 토</td><td style="border:1px solid #999;padding:1px 0;text-align:center;background:#f1f5f9;width:56px">승 인</td></tr><tr><td style="border:1px solid #999;height:24px"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td></tr></table>
     </div>
     <div style="padding:8px 10px">
     <table style="width:100%;border-collapse:collapse;font-size:9px">
@@ -2196,7 +2183,6 @@ function renderLoadCalc(){
       </tr></thead>
       <tbody>${sumRows}</tbody>
     </table>
-    ${defaultsBlock()}
     </div>
   </div></div>`;
   STATE.rooms.forEach(room=>{
@@ -2207,19 +2193,19 @@ function renderLoadCalc(){
     const DIRS=['N','E','S','W'];
 
     // ── Section headers ────────────────────────────────────────
-    const sHC=(txt)=>`<tr><td colspan="6" style="background:#dce8dc;font-weight:700;color:#1e3a5f;padding:1px 5px;font-size:8px;border-bottom:1px solid #b0ccb0">${txt}</td></tr>`;
-    const sHH=(txt)=>`<tr><td colspan="3" style="background:#dce8dc;font-weight:700;color:#1e3a5f;padding:1px 5px;font-size:8px;border-bottom:1px solid #b0ccb0">${txt}</td></tr>`;
+    const sHC=(txt)=>`<tr><td colspan="6" title="${String(txt).replace(/<[^>]+>/g,' ').replace(/"/g,'')}" style="background:#dce8dc;font-weight:700;color:#1e3a5f;padding:1px 5px;font-size:8px;border-bottom:1px solid #b0ccb0">${txt}</td></tr>`;
+    const sHH=(txt)=>`<tr><td colspan="3" title="${String(txt).replace(/<[^>]+>/g,' ').replace(/"/g,'')}" style="background:#dce8dc;font-weight:700;color:#1e3a5f;padding:1px 5px;font-size:8px;border-bottom:1px solid #b0ccb0">${txt}</td></tr>`;
 
     // ── Cooling row helpers ────────────────────────────────────
     const cRow=(label,basis,vals)=>
-      `<tr><td style="text-align:left;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee">${label}</td><td style="text-align:left;padding:1px 5px;font-size:8px;color:#475569;border-bottom:1px solid #eee">${basis}</td>${
+      `<tr><td style="text-align:left;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee">${label}</td><td style="text-align:left;padding:1px 5px;font-size:8px;color:#475569;border-bottom:1px solid #eee" title="${String(basis).replace(/<[^>]+>/g,'').replace(/"/g,'')}">${basis}</td>${
         TIME_SLOTS.map((_,ti)=>`<td style="text-align:right;padding:1px 4px;font-size:8.5px;border-bottom:1px solid #eee;${cn?'color:#ccc':ti===le.pkIdx?'background:#fef9c3;font-weight:700':''}">${cn?'—':fW(vals[ti])}</td>`).join('')
       }</tr>`;
     const cRowFixed=(label,basis,val)=>cRow(label,basis,TIME_SLOTS.map(()=>val));
 
     // ── Heating row helper ─────────────────────────────────────
     const hRow=(label,basis,val)=>
-      `<tr><td style="text-align:left;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee">${label}</td><td style="text-align:left;padding:1px 5px;font-size:8px;color:#475569;border-bottom:1px solid #eee">${basis}</td><td style="text-align:right;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee${hn?';color:#ccc':''}">${hn?'—':fW(val)}</td></tr>`;
+      `<tr><td style="text-align:left;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee">${label}</td><td style="text-align:left;padding:1px 5px;font-size:8px;color:#475569;border-bottom:1px solid #eee" title="${String(basis).replace(/<[^>]+>/g,'').replace(/"/g,'')}">${basis}</td><td style="text-align:right;padding:1px 5px;font-size:8.5px;border-bottom:1px solid #eee${hn?';color:#ccc':''}">${hn?'—':fW(val)}</td></tr>`;
 
     // ── Cooling sub-totals ─────────────────────────────────────
     const grnC=(label,vals)=>
@@ -2229,7 +2215,7 @@ function renderLoadCalc(){
       }</tr>`;
     const grnCf=(label,val)=>grnC(label,TIME_SLOTS.map(()=>val));
     const sfCrow=(vals)=>
-      `<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율) — 외기: 안전율 미적용(학회 3.10·RTS-SAREK)</td>${
+      `<tr><td colspan="2" style="color:#64748b;font-size:7.5px;padding:1px 5px;border-bottom:1px solid #eee">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율) — 외기는 안전율 미적용</td>${
         cn?TIME_SLOTS.map(()=>'<td style="border-bottom:1px solid #eee;text-align:right;color:#aaa">—</td>').join('')
           :TIME_SLOTS.map((_,ti)=>`<td style="text-align:right;font-size:8.5px;padding:1px 4px;border-bottom:1px solid #eee">${fW(vals[ti])}</td>`).join('')
       }</tr>`;
@@ -2276,11 +2262,11 @@ function renderLoadCalc(){
     const floorRowC=cRowFixed('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTc!==null?(le.dTc*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.td&&le.td[0]?le.td[0].flC:0);
     const infRowC=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].infS:0);
     const oaRowC=le.oaCMH_raw>0
-      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`×ERV회수${Math.round(le.ervRecC*100)}%→${f0(le.oaCMHc)}㎥/h`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336${le.ervDef?' <b style="color:#dc2626">⚠ 전열교환기 효율 미입력 — 기본값(냉방 50·난방 70·잠열 40 %) 사용</b>':''} <span style="color:#7c3aed">안전율 미적용</span>`,le.td&&le.td[0]?le.td[0].oaS||0:0)
+      ?cRowFixed('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}=${f0(le.oaCMH_raw)}㎥/h${le.ervEffC<1?`→회수${Math.round(le.ervRecC*100)}% ${f0(le.oaCMHc)}`:''}×ΔT${le.dTc!==null?le.dTc.toFixed(1):'—'}℃×0.336`,le.td&&le.td[0]?le.td[0].oaS||0:0)
       :'';
     const st1Row=grnC('SUB TOTAL ①②③',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st1:0));
     const pplRowC=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).s}W/인(표 2.32 ${PH_ACT[actOf(room)].lb} ${phOf(room).t}℃)`,le.occ*phOf(room).s);
-    const eqRowC=cRowFixed('POWER',eqMissing(room)?'⚠ 기기발열 미입력':(eqIsDefault(room)?(eqDefKW(room)>0?`기본값 ${eqDefKW(room)}kW/실 (AC-009, 면적 무관)`:`기본값 ${eqDefW(room)}W/㎡×${f0(le.area)}㎡`):`${room.eqKW}kW×1,000`),le.eqW);
+    const eqRowC=cRowFixed('POWER',eqMissing(room)?'⚠ 기기발열 미입력':(eqIsDefault(room)?(eqDefKW(room)>0?`기본값 ${eqDefKW(room)}kW/실`:`기본값 ${eqDefW(room)}W/㎡×${f0(le.area)}㎡`):`${room.eqKW}kW×1,000`),le.eqW);
     const ltRowC=cRowFixed('LIGHT',`${room.lw}W/㎡×${f1(le.area)}㎡ (LED)`,le.lightW);
     const miscRowC=cRowFixed('MISC.','—',0);
     const st2Row=grnC('SUB TOTAL ④',TIME_SLOTS.map((_,ti)=>le.td[ti]?le.td[ti].st2:0));
@@ -2288,7 +2274,7 @@ function renderLoadCalc(){
     const sfSRow=sfCrow(le.sfC);
     const tshRow=grnC('TOTAL SENSIBLE HEAT',le.tsh);
     const infLRow=cRowFixed('INFILTRATION',`${f0(le.infCMH)}㎥/h×${le.dOm.toFixed(4)}×833`,le.infL);
-    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833 <span style="color:#7c3aed">안전율 미적용</span>`,le.oaL):'';
+    const oaLRow=le.oaL>0?cRowFixed('OUTSIDE AIR',`${f0(le.oaCMHl)}㎥/h×${le.dOm.toFixed(4)}×833`,le.oaL):'';
     const pplLRow=cRowFixed('PEOPLE',`${f1(le.occ)}인×${phOf(room).l}W/인`,le.pplL);
     const rlhRow=grnCf('ROOM LATENT HEAT',le.rlh);
     const sfLRow=sfCrow(TIME_SLOTS.map(()=>le.sfL));
@@ -2324,7 +2310,7 @@ function renderLoadCalc(){
     const floorRowH=hRow('FLOOR',room.floorOn?`${f1(le.area)}㎡×ΔT${fFacR===0.5?'/2':''}=${le.dTh!==null?(le.dTh*fFacR).toFixed(1):'—'}℃×U${room.floorU}${floorLegacy(room)}`:'비활성',le.hfloor||0);
     const infRowH=hRow('INFILTRATION',`${f0(le.infCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hinf);
     const oaRowH=le.oaCMH_raw>0
-      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}㎥/h=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`×ERV회수${Math.round(le.ervRecH*100)}%→${f0(le.oaCMHh)}㎥/h`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336${le.ervDef?' <b style="color:#dc2626">⚠ 전열교환기 효율 미입력 — 기본값(냉방 50·난방 70·잠열 40 %) 사용</b>':''} <span style="color:#7c3aed">안전율 미적용</span>`,le.oaH||0)
+      ?hRow('OUTSIDE AIR',`${f0(le.oaPpl)}인×${oaPP(room)}=${f0(le.oaCMH_raw)}㎥/h${le.ervEffH<1?`→회수${Math.round(le.ervRecH*100)}% ${f0(le.oaCMHh)}`:''}×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.oaH||0)
       :'';
     const exhRowH=le.exhOn
       ?hRow('EXHAUST MAKE-UP',`배기 ${f0(le.ventCMH)}㎥/h×ΔT${le.dTh!==null?le.dTh.toFixed(1):'—'}℃×0.336`,le.hExh)
@@ -2332,9 +2318,9 @@ function renderLoadCalc(){
     const hRshRow=grnH('ROOM HEAT LOSS',le.hRsh);
     // 기준: AC-011 · AC-012 — 여유가 어디에 얼마나 들어갔는지 드러낸다
     const hDirRow=le.hDir>0
-      ?hRow('└ 방위할증 포함분',`외벽·문·유리·지붕 (N1.20/E·W1.10/S1.00/지붕1.20, 학회 표 2.36) · 실 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
+      ?hRow('└ 방위할증 포함분',`N1.20·E/W1.10·S1.00·지붕1.20 · 전체의 ${f1(le.hRsh>0?le.hDir/le.hRsh*100:0)}%`,le.hDir)
       :'';
-    const hSfRow=hRow('SAFETY FACTOR','(ROOM HEAT LOSS − 외기) × 10% — 외기: 안전율 미적용(학회 3.10·RTS-SAREK) (AC-012)',le.sfH);
+    const hSfRow=hRow('SAFETY FACTOR','(손실 − 외기) × 10% · 외기는 안전율 미적용',le.sfH);
     const hTotRow=grnH(`ROOM TOTAL HEATING LOSS  (누적 ×${(le.hRsh>0?le.totalH/(le.hRsh-le.hDir):1.10).toFixed(3)})`,le.totalH);
     const humRow=(!hn&&room.hrh&&le.humKgh>0)
       ?`<tr><td colspan="2" style="text-align:left;padding:2px 5px;font-size:8px;color:#7c3aed;font-weight:600">가습부하 G = 1.2×(침기${f0(le.infCMH)}+외기(잠열회수 후)${f0(le.oaCMHl)}${le.exhOn?`+배기${f0(le.ventCMH)}`:''})㎥/h×Δx</td><td style="text-align:right;padding:2px 5px;font-size:8.5px;color:#7c3aed;font-weight:700">${le.humKgh.toFixed(1)} kg/h</td></tr>`
@@ -2368,7 +2354,7 @@ function renderLoadCalc(){
   </tr>
 </table>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;width:100%">
+<div style="display:grid;grid-template-columns:11fr 9fr;width:100%">
 
   <div style="border-right:1px solid #555;min-width:0;overflow:hidden${cn?';background:#f5f5f5':''}">
   ${cn?`<div style="display:flex;align-items:center;justify-content:center;min-height:120px;color:#bbb;font-size:10px;font-style:italic">냉방 미적용</div>`
@@ -2376,10 +2362,10 @@ function renderLoadCalc(){
     <thead>
       <tr style="background:#1e3a5f;color:#fff">
         <th colspan="2" style="text-align:center;padding:2px 5px;font-size:8px;border-right:1px solid rgba(255,255,255,.3)">냉 방 (COOLING)</th>
-        ${TIME_SLOTS.map(t=>`<th style="text-align:center;padding:2px 4px;font-size:8px">${t}h</th>`).join('')}
+        ${TIME_SLOTS.map(t=>`<th style="text-align:center;padding:2px 4px;font-size:8px;width:58px">${t}h</th>`).join('')}
       </tr>
       <tr style="background:#2d4f7c;color:rgba(255,255,255,.9)">
-        <th style="text-align:left;padding:2px 5px;font-size:7.5px;width:120px">ITEM</th>
+        <th style="text-align:left;padding:2px 5px;font-size:7.5px;width:104px">ITEM</th>
         <th style="text-align:left;padding:2px 5px;font-size:7.5px;border-right:1px solid rgba(255,255,255,.2)">기준</th>
         ${TIME_SLOTS.map(()=>`<th style="text-align:right;padding:2px 4px;font-size:7.5px">W</th>`).join('')}
       </tr>
@@ -2392,7 +2378,7 @@ function renderLoadCalc(){
       ${sHC('③ 전열에 의한 부하 (TRANS. GAIN EXCEPT WALLS &amp; ROOF)<span class="src-badge">Q = 0.336 × 풍량 × ΔT (현열) / 833 × 풍량 × Δx (잠열)</span>')}
       ${glassCRows}${iwRowsC}${floorRowC}${infRowC}${oaRowC}
       ${st1Row}
-      ${sHC('④ 내부 발열 (INTERNAL HEAT GAIN)<span class="src-badge">AC-007·008·009 내부발열 기준</span>')}
+      ${sHC('④ 내부 발열 (INTERNAL HEAT GAIN)')}
       ${pplRowC}${eqRowC}${ltRowC}${miscRowC}
       ${st2Row}
       ${rshRow}${sfSRow}${tshRow}
@@ -2412,9 +2398,9 @@ function renderLoadCalc(){
         <th colspan="3" style="text-align:center;padding:2px 5px;font-size:8px">난 방 (HEATING)</th>
       </tr>
       <tr style="background:#2d4f7c;color:rgba(255,255,255,.9)">
-        <th style="text-align:left;padding:2px 5px;font-size:7.5px;width:120px">ITEM</th>
+        <th style="text-align:left;padding:2px 5px;font-size:7.5px;width:104px">ITEM</th>
         <th style="text-align:left;padding:2px 5px;font-size:7.5px;border-right:1px solid rgba(255,255,255,.2)">기준</th>
-        <th style="text-align:right;padding:2px 5px;font-size:7.5px">W</th>
+        <th style="text-align:right;padding:2px 5px;font-size:7.5px;width:66px">W</th>
       </tr>
     </thead>
     <tbody>
@@ -2431,7 +2417,7 @@ function renderLoadCalc(){
 
 </div>
 
-<div style="background:#1e3a5f;color:#fff;display:flex;align-items:center;padding:7px 12px;gap:12px;font-size:9px">
+<div class="lec-tot" style="background:#1e3a5f;color:#fff;display:flex;align-items:center;padding:7px 12px;gap:12px;font-size:9px">
   <div style="flex:1;display:flex;align-items:baseline;gap:8px">
     ${cn?'<span style="opacity:.5">COOLING : 미적용</span>'
       :`<span style="opacity:.8">COOLING GRAND TOTAL :</span><span style="font-size:13px;font-weight:700">${fW(le.maxRth)} W</span><span style="opacity:.7;font-size:8px">${f1(le.area>0?le.maxRth/le.area:0)} W/㎡ &nbsp;▶ 검토한 4개 시각 중 최대 냉방부하 (${TIME_SLOTS[le.pkIdx]}h)</span>`}
@@ -2501,7 +2487,7 @@ function printCurrent(){
 // ══════════════════════════════════════════════
 const CAP_TABS=[
   {k:'장비일람표',lb:'📋 장비일람표'},
-  {k:'PAC',lb:'PAC'},{k:'EHP실내기',lb:'EHP실내기'},{k:'EHP실외기',lb:'EHP실외기'},
+  {k:'PAC',lb:'PAC'},{k:'EHP실내기',lb:'EHP (실내기·실외기)'},
   {k:'CTH',lb:'CTH'},{k:'전열교환기',lb:'전열교환기'},
   {k:'인라인덕트팬',lb:'인라인덕트팬'},{k:'천정형팬',lb:'천정형팬'},
   {k:'벽부형팬',lb:'벽부형팬'},{k:'루프팬',lb:'루프팬'},
@@ -2531,10 +2517,10 @@ const WT_SIM=[[2,100],[3,80],[4,75],[5,70],[10,53],[15,48],[20,44],[30,40],[50,3
 const BP_FLUSH_KDS={f2:6,f3:2};
 //   null = 원표 미확보 → 사용자가 넣는다 (추정하지 않는다)
 function bpUnit(k,lpf){
-  const over=(BP_FLUSH_KDS[k]&&lpf>BP_FLUSH_KDS[k])?' ⚠ KDS 31 30 15 표 4.4-1 최대 '+BP_FLUSH_KDS[k]+' L 초과':'';
+  const over=(BP_FLUSH_KDS[k]&&lpf>BP_FLUSH_KDS[k])?' ⚠ 기구 최대 물소비량 '+BP_FLUSH_KDS[k]+' L 초과':'';
   if(k==='f2') return lpf>6 ?[8.0,'표 3.4(b) 대변기 세정밸브 13 L/회 행'+over]:[5.0,'표 3.4(b) 대변기 세정밸브 6 L/회 행'+over];
   if(k==='f3') return lpf>3.8?[5.0,'표 3.4(b) 소변기 3.8 L 이상/회 행'+over]:[4.0,'표 3.4(b) 소변기 3.8 L/회 행'+over];
-  return ({f1:[1.0,'표 3.4(b) 세면기'],f4:[2.0,'샤워 — AC-033 전사값'],f6:[1.0,'표 3.4(b) 주방싱크(가정용) 행']})[k]||[null,'표 3.4 원표 미확보'];
+  return ({f1:[1.0,'표 3.4(b) 세면기'],f4:[2.0,'샤워'],f6:[1.0,'표 3.4(b) 주방싱크(가정용) 행']})[k]||[null,'표 3.4 원표 미확보'];
 }
 //   혼합수전(급탕 원수 포함) 기구 — 부스터가 냉수 가지만 공급할 때만 주 6) 3/4 보정 (AC-033 2.3)
 const BP_MIX={f1:true,f4:true,f6:true};
@@ -2550,7 +2536,7 @@ const BP_T35=[[3,11,null],[4,15,null],[5,17,83],[6,19,87],[7,23,91],[8,26,95],[9
 function bpFlow(w,valve){ if(!(w>0))return null; for(const r of BP_T35){ if(r[0]>=w){ const q=valve?r[2]:r[1]; if(q!=null)return {row:r[0],q}; } } return null; }
 function wtSimRate(n){ if(n<=1)return 100; const r=WT_SIM.find(x=>x[0]>=n); return r?r[1]:WT_SIM[WT_SIM.length-1][1]; }
 
-function setCapTab(k){if(k==='급수량')k='전기온수기';capTab=k;renderCapCalc();}
+function setCapTab(k){if(k==='급수량')k='전기온수기';if(k==='EHP실외기')k='EHP실내기';capTab=k;renderCapCalc();}
 
 function sCC(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capC[f]=v;}
 function sCEo(rid,f,v){const r=STATE.rooms.find(x=>x.id===rid);if(r)r.capEo[f]=v;}
@@ -2607,8 +2593,8 @@ function espHTML(r){
   const ep=` <span style="font-size:8px;color:#94a3b8">최원 경로상</span>`;
   const sp=parseFloat(v.sp)||0;
   const judge=sp>0?(sp>=sel?'<span style="color:#166534;font-weight:700">✓ 카탈로그 기외정압 '+sp+' Pa ≥ '+sel+' Pa</span>':'<span style="color:#dc2626;font-weight:700">✗ 카탈로그 기외정압 '+sp+' Pa < '+sel+' Pa — 한 단계 큰 모델 또는 덕트 축소</span>'):'<span style="color:#94a3b8">위 표의 「정압(Pa)」 칸에 카탈로그 기외정압을 넣으면 판정합니다</span>';
-  return `<div style="padding:0 14px 12px"><div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">EXTERNAL STATIC PRESSURE (급기·배기 중 큰 쪽) — ${stageLb()}</div>
-    <table style="width:100%;font-size:10px;border-collapse:collapse"><tbody>
+  return `<div style="padding:0 14px 12px;max-width:720px"><div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">EXTERNAL STATIC PRESSURE (급기·배기 중 큰 쪽)<span style="font-weight:400;font-size:9px;color:#94a3b8;margin-left:8px">덕트설계 앱과 최종 연동할 것</span></div>
+    <table class="esp-t" style="width:100%;font-size:10px;border-collapse:collapse"><tbody>
     ${row('DUCT<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ①</span>',`${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m`,ductT)}
     ${row('FITTINGS<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ②</span>',`DUCT &times; ${inp('fitPct',fitPct,42,'%')} %`,fittT)}
     ${row('DIFF.&amp;GRILLE<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ③</span>',`${inp('diffEa',diffEa,32,'EA')} EA${ep} &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC35 급기 12 / 배기 17</span>`,diffT)}
@@ -2616,45 +2602,32 @@ function espHTML(r){
     ${row('F.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑤</span>',`${inp('fdPa',fdPa,55,'Pa')} Pa`,fdPa)}
     ${row('LOUVER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑥</span>',`${inp('louEa',louEa,32,'EA')} EA${ep} &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA`,louT)}
     ${row('FILTER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑦</span>',`${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">내장 필터 제외</span>`,filtPa)}
-    ${row('FAN SYSTEM EFFECT (팬 시스템 효과)<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑧</span>',`${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실 (KDS 31 25 30 4.2(2)). 앱은 계산하지 않음</span>`,sysPa)}
+    ${row('FAN SYSTEM EFFECT (팬 시스템 효과)<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑧</span>',`${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실</span>`,sysPa)}
     <tr style="border-top:1px solid #e2e8f0"><td colspan="2" style="padding:3px 6px;color:#475569">소 계</td><td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sub)} Pa</td></tr>
     <tr><td colspan="2" style="padding:3px 6px;color:#94a3b8;font-size:9px">SAFETY FACTOR 10% (설계 불확실성을 고려한 여유율)</td><td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sf)} Pa</td></tr>
     <tr style="background:#fef08a"><td colspan="2" style="padding:5px 6px;font-weight:700;color:#713f12">필요 기외정압 (50 Pa 올림)</td><td style="text-align:right;padding:5px 6px;font-weight:700">${sel} Pa</td></tr>
     </tbody></table><div style="font-size:9px;margin-top:4px">${judge}</div></div>`;
 }
-// CH-20261124-03 4절 — 15열 이상 표는 장비 한 줄을 「계산·사양」 / 「선정·판정·비고」 두 묶음으로 나눠 위아래로 쌓는다.
-//   칸(입력칸 포함)을 그대로 옮기므로 값과 동작은 같다. 계산은 바뀌지 않는다
-const STK_B=/선정|장비선정|모델|정압|소비전력|효율|EPI|전원|전압|규격|비고|판정|주수|수량/;
-function stackWideTables(root){ if(!root) return;
-  root.querySelectorAll('table').forEach(t=>{
-    if(t.closest('.stk-item')||t.dataset.nostack) return;
-    const hrs=t.querySelectorAll('thead tr'); if(hrs.length!==1) return;
-    const H=[...hrs[0].children], n=H.length; if(n<15) return;
-    const gA=[],gB=[]; H.forEach((h,i)=>(i>2&&STK_B.test(h.textContent)?gB:gA).push(i));
-    if(!gB.length) return;
-    const wrap=document.createElement('div'); wrap.className='stk-wrap';
-    const mk=(idx,cells,lab)=>{const g=document.createElement('div'); g.className='stk-g'; g.textContent=lab;
-      const tb=document.createElement('table'), th=document.createElement('thead'), hr=document.createElement('tr'), bd=document.createElement('tbody'), br=document.createElement('tr');
-      idx.forEach(i=>{const c=H[i].cloneNode(true); hr.appendChild(c); br.appendChild(cells[i]);});
-      th.appendChild(hr); bd.appendChild(br); tb.appendChild(th); tb.appendChild(bd); return [g,tb];};
-    [...t.querySelectorAll('tbody tr')].forEach(tr=>{
-      const cells=[...tr.children];
-      if(cells.length===n){ const it=document.createElement('div'); it.className='stk-item';
-        mk(gA,cells,'계산 · 사양').concat(mk(gB,cells,'선정 · 판정 · 비고')).forEach(x=>it.appendChild(x)); wrap.appendChild(it); return; }
-      // 합계 줄(colspan) — 각 값을 그 열 제목과 함께 한 줄로
-      let col=0; const parts=[];
-      cells.forEach(c=>{const sp=+c.getAttribute('colspan')||1, tx=c.textContent.trim();
-        if(tx) parts.push(sp===1&&H[col]?(H[col].textContent.trim()+' '+tx):tx); col+=sp;});
-      const d=document.createElement('div'); d.className='stk-tot'; d.textContent=parts.join('   ·   '); wrap.appendChild(d);
-    });
-    t.replaceWith(wrap);
-  });
+// CH-20261124-05 4-1절 — 「한 실 = 한 줄」. 표 칸은 한 줄로 두고 넓으면 상자 안에서만 가로 스크롤.
+//   전기실 등 실별 설명은 칸 안이 아니라 표 아래 작은 글씨 한 줄로 (fanNotes)
+function fanNotes(root){ if(!root||!['천정형팬','벽부형팬','루프팬','인라인덕트팬','전열교환기','환기유니트'].includes(capTab)) return;
+  const rs=STATE.rooms.filter(r=>r.ve===capTab&&RT[r.type]&&RT[r.type].tCtl); if(!rs.length) return;
+  const t=root.querySelector('table'); if(!t) return;
+  const d=document.createElement('div'); d.style.cssText='font-size:9px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  d.textContent=rs.map(r=>'※ '+r.name+' — '+elecVentTxt(r).replace(/<[^>]+>/g,'')).join('   '); d.title=d.textContent;
+  (t.closest('.tw')||t).after(d); }
+// 4-1절 — 숫자 천 단위 쉼표. 1,000 이상인 숫자 입력칸은 쉼표로 보이고, 고칠 때는 쉼표 없이 읽는다 (저장값은 그대로 숫자)
+function fmtNumInputs(root){ if(!root) return;
+  root.querySelectorAll('input[type=number],input[type=text]').forEach(i=>{ if(i.type==='text'&&!/^\s*-?\d+(\.\d+)?\s*$/.test(i.value)) return; const v=parseFloat(i.value); if(!(Math.abs(v)>=1000)) return;
+    i.type='text'; i.setAttribute('inputmode','decimal'); i.dataset.num='1'; i.value=v.toLocaleString('ko-KR',{maximumFractionDigits:3}); });
 }
+document.addEventListener('change',e=>{ const t=e.target; if(t&&t.tagName==='INPUT'&&(t.dataset.num||/^\s*-?[\d,]+(\.\d+)?\s*$/.test(t.value))&&/,/.test(t.value)) t.value=String(t.value).replace(/,/g,''); },true);   // 쉼표 넣어 입력해도 숫자로 읽음
+document.addEventListener('focusin',e=>{ const t=e.target; if(t&&t.dataset&&t.dataset.num) t.value=String(t.value).replace(/,/g,''); });
 // 「한 줄로 복사」 — 클립보드에 넣고 버튼 글자로 결과를 알린다 (CH-20261124-03 보충 4)
 function copyLine(btn){ const t=btn.getAttribute('data-line')||''; const done=ok=>{const o=btn.textContent; btn.textContent=ok?'복사됨 ✓':'복사 실패 — 글자를 직접 선택'; setTimeout(()=>{btn.textContent=o;},1800);};
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(()=>done(true),()=>done(fallbackCopy(t))); else done(fallbackCopy(t)); }
 function fallbackCopy(t){ try{ const a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0'; document.body.appendChild(a); a.select(); const ok=document.execCommand('copy'); a.remove(); return ok; }catch(e){ return false; } }
-function renderCapCalc(){ _renderCapCalc.apply(this,arguments); stackWideTables(document.getElementById('cc')); }
+function renderCapCalc(){ _renderCapCalc.apply(this,arguments); const cc=document.getElementById('cc'); fanNotes(cc); fmtNumInputs(cc); }
 function _renderCapCalc(){
   STATE.rooms.forEach(r=>{if(r.ve==='항온항습기'){r.ce='CTH';r.ve='없음';}});
   document.getElementById('cst').innerHTML=CAP_TABS.map(t=>
@@ -2889,7 +2862,7 @@ function _renderCapCalc(){
         +'<span style="color:#713f12;white-space:nowrap;margin-left:2px;font-size:9px">W</span>'
         +'<span style="font-size:8px;color:#92400e">※ 입력 시 난방 여유율을 저온능력 기준으로 판정 (히트펌프는 설계외기에서 정격 대비 능력 저하)</span>'
         +'<label style="display:flex;align-items:center;gap:3px;font-size:9px;color:#64748b"><input type="checkbox" '+(pc.ltNA?'checked':'')+' onchange="sCP(\''+rid+'\',\'ltNA\',this.checked);renderCapCalc()">제조사 자료 없음</label>'
-        +((perH!==null&&selH>0&&!(selHLt>0))?(pc.ltNA?'<span style="font-size:9px;color:#94a3b8">저온능력: 제조사 자료 없음(정격 판정)</span>':'<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판정, KDS 31 25 15 4.2(2)</span>'):'')   // CH-20261124-02 — 회색 안내
+        +((perH!==null&&selH>0&&!(selHLt>0))?(pc.ltNA?'<span style="font-size:9px;color:#94a3b8">저온능력: 제조사 자료 없음(정격 판정)</span>':'<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판정</span>'):'')   // CH-20261124-02 — 회색 안내
         +'</div>'
         +'</div></div>'
 
@@ -3126,7 +3099,7 @@ function _renderCapCalc(){
       STATE.project.ehpZ=[{rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:'',ouLtHc:null,ouPwC:null,ouPwH:null,ouPwLt:null,ouLiq:null,ouGas:null,ouRef:'',ouTempC:'',ouTempH:''}];
     }
     const EZ=STATE.project.ehpZ;
-    window._ezField=function(zi,fld,val){if(STATE.project.ehpZ&&STATE.project.ehpZ[zi])STATE.project.ehpZ[zi][fld]=val;renderCapCalc();};
+    window._ezField=function(zi,fld,val){if(typeof val==='string'&&/^[\d,.\-\s]+$/.test(val))val=val.replace(/[,\s]/g,'');if(STATE.project.ehpZ&&STATE.project.ehpZ[zi])STATE.project.ehpZ[zi][fld]=val;renderCapCalc();};
     window._ezRoom=function(zi,action,rid){if(!STATE.project.ehpZ||!STATE.project.ehpZ[zi])return;const z=STATE.project.ehpZ[zi];if(action==='add'&&!z.rooms.includes(rid))z.rooms.push(rid);if(action==='del')z.rooms=z.rooms.filter(x=>x!==rid);renderCapCalc();};
     window._ezAdd=function(){if(!Array.isArray(STATE.project.ehpZ))STATE.project.ehpZ=[];STATE.project.ehpZ.push({rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:'',ouLtHc:null,ouPwC:null,ouPwH:null,ouPwLt:null,ouLiq:null,ouGas:null,ouRef:'',ouTempC:'',ouTempH:''});renderCapCalc();};
     window._ezDel=function(zi){if(!Array.isArray(STATE.project.ehpZ))return;STATE.project.ehpZ.splice(zi,1);if(!STATE.project.ehpZ.length)STATE.project.ehpZ=[{rooms:[],inModel:'',inType:'',inCc:'',inHc:'',inPwC:null,inPwH:null,inPw:'',inFanType:'',inFanW:null,inAfH:null,inAfM:null,inAfL:null,inAf:'',inLiq:null,inGas:null,inDrain:'',inVolt:'',inWt:null,inSize:'',ouTag:'',ouModel:'',ouCc:'',ouHc:'',ouPw:'',ouVolt:'',ouLtHc:null,ouPwC:null,ouPwH:null,ouPwLt:null,ouLiq:null,ouGas:null,ouRef:'',ouTempC:'',ouTempH:''}];renderCapCalc();};
@@ -3162,7 +3135,7 @@ function _renderCapCalc(){
         +(divPct>0.5?' <span style="color:#7c3aed;font-size:9px">(실별최대합 '+fW(Math.round(totInCsum))+' → 동시최대 '+fW(Math.round(totInC))+', −'+divPct.toFixed(1)+'%)</span>':'');
       const hcTxt=!hasRooms?'— 실 없음':(ouHeatW===0?'— 미입력':(hcOK?'✓ 난방 OK':'✗ 난방 부족')+(ouLtW>0?' (저온-15℃ 기준)':' (정격 기준)'));
       // CH-20261124-02 — 저온능력 미입력은 회색 안내. 「제조사 자료 없음」을 고르면 안내 대신 계산서에 한 줄 남긴다
-      const ltNote=(hasRooms&&ouHeatW>0&&!(ouLtW>0))?(z.ltNA?'<span style="font-size:9px;color:#94a3b8">저온능력: 제조사 자료 없음(정격 판정)</span>':'<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판정, KDS 31 25 15 4.2(2)</span>'):'';
+      const ltNote=(hasRooms&&ouHeatW>0&&!(ouLtW>0))?(z.ltNA?'<span style="font-size:9px;color:#94a3b8">저온능력: 제조사 자료 없음(정격 판정)</span>':'<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판정</span>'):'';
       // 연결률(Combination Ratio) = 실내기 정격냉방 합계 / 실외기 정격냉방 — 80~130 % 판정 (130 은 제조사 한계, 기준: AC-013)
       let totRatedInC=0; zRooms.forEach(r=>{totRatedInC+=(parseFloat(r.capC.ehpInCc)||0)*(r.capC.cnt||1);});
       const combR=(ouCcN>0&&totRatedInC>0)?totRatedInC/ouCcN*100:null;
@@ -3171,9 +3144,9 @@ function _renderCapCalc(){
       const addable=ehpRooms.filter(r=>!assignedInOther.includes(r.id)&&!z.rooms.includes(r.id));
       const autoOuTag='M-HV-EHP-OU-'+String(zi+1).padStart(3,'0');
       const lbl=(lab,fld,val,unit,ph)=>'<label style="display:flex;align-items:center;gap:4px">'
-        +'<span style="font-size:9px;color:#64748b;white-space:nowrap">'+lab+'</span>'
-        +'<input type="text" value="'+esc(String(val||''))+'" placeholder="'+(ph||'')+'" '
-        +'style="width:80px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" '
+        +'<span style="font-size:9px;color:#64748b;white-space:nowrap;min-width:78px">◆ '+lab+'</span>'
+        +'<input type="text" value="'+esc(String(val==null?'':(fld==='ouCc'||fld==='ouHc')&&parseFloat(val)>=1000?parseFloat(val).toLocaleString('ko-KR'):val))+'" placeholder="'+(ph||'')+'" '
+        +'style="width:110px;padding:2px 5px;border:1px solid #cbd5e1;border-radius:3px;font-size:10px;font-family:inherit;text-align:left" '
         +'onchange="_ezField('+zi+',\''+fld+'\',this.value)">'
         +(unit?' <span style="font-size:9px;color:#94a3b8">'+unit+'</span>':'')
         +'</label>';
@@ -3266,19 +3239,8 @@ function _renderCapCalc(){
         +'<div style="font-weight:700;font-size:10px;color:#166534">▶ 실외기 선정</div>'
         +'<button class="btn btP btS no-print" onclick="openCatModal(\'EHP_OUT\',function(row){_catEHP_OUT('+zi+',row)},{val:'+Math.round(totInC)+',unit:\'W\',label:\'냉방능력(존 합계)\'})">📋 카탈로그에서 선택</button>'
         +'</div>'
-        +(z.ouModel?
-          '<div style="font-size:9px;background:#fff;border:1px solid #bbf7d0;border-radius:4px;padding:6px 8px;margin-bottom:6px">'
-          +'<div style="font-weight:700;color:#166534;margin-bottom:4px">'+esc(z.ouModel)+'</div>'
-          +'<div style="display:flex;flex-direction:column;gap:2px;color:#334155">'
-          +((z.ouCc||z.ouHc||z.ouLtHc!=null)?'<span>'+(z.ouCc?'냉방&nbsp;<b>'+(parseFloat(z.ouCc)/1000).toFixed(1)+'</b>kW&nbsp;&nbsp;':'')+(z.ouHc?'난방&nbsp;<b>'+(parseFloat(z.ouHc)/1000).toFixed(1)+'</b>kW&nbsp;&nbsp;':'')+(z.ouLtHc!=null?'저온(-15°C)&nbsp;<b>'+z.ouLtHc+'</b>kW':'')+'</span>':'')
-          +((z.ouPwC!=null||z.ouPwH!=null||z.ouPwLt!=null)?'<span>소비전력&nbsp;'+(z.ouPwC!=null?'냉방&nbsp;<b>'+z.ouPwC+'</b>kW&nbsp;&nbsp;':'')+(z.ouPwH!=null?'난방&nbsp;<b>'+z.ouPwH+'</b>kW&nbsp;&nbsp;':'')+(z.ouPwLt!=null?'저온&nbsp;<b>'+z.ouPwLt+'</b>kW':'')+'</span>':'')
-          +(z.ouVolt?'<span>전원&nbsp;<b>'+esc(z.ouVolt)+'</b></span>':'')
-          +((z.ouLiq!=null||z.ouGas!=null)?'<span>'+(z.ouLiq!=null?'액관&nbsp;<b>'+z.ouLiq+'</b>mm&nbsp;&nbsp;':'')+(z.ouGas!=null?'가스관&nbsp;<b>'+z.ouGas+'</b>mm':'')+'</span>':'')
-          +(z.ouRef?'<span>냉매&nbsp;<b>'+esc(z.ouRef)+'</b></span>':'')
-          +((z.ouTempC||z.ouTempH)?'<span>사용온도&nbsp;'+(z.ouTempC?'냉방&nbsp;<b>'+esc(z.ouTempC)+'</b>°C&nbsp;&nbsp;':'')+(z.ouTempH?'난방&nbsp;<b>'+esc(z.ouTempH)+'</b>°C':'')+'</span>':'')
-          +'</div></div>'
-        :'')
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px">'
+        // CH-20261124-05 — 카탈로그 요약 상자와 입력칸이 겹쳐 보이던 것을 입력칸 한 블록으로 (카탈로그 선택값은 아래 칸에 채워진다)
+        +'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,max-content));gap:6px 18px;align-items:center;margin-bottom:8px">'
         +lbl('장비번호','ouTag',z.ouTag,'',autoOuTag)
         +lbl('형식*','ouModel',z.ouModel,'','형식')
         +lbl('냉방(W)*','ouCc',z.ouCc,'W','')
@@ -3351,7 +3313,7 @@ function _renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="au">${r.ventACH}</td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r)}</span>`:''}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','전열교환기',this.value)"></td>
         <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
@@ -3380,7 +3342,7 @@ function _renderCapCalc(){
       </select>
       <span style="color:#92400e;font-size:9px;margin-left:6px">대형 = 연면적 3,000㎡ 이상 · 소형 = 500~3,000㎡ 미만. 6번의 기본배점은 어느 쪽이든 3점입니다</span>
     </div>
-    <div style="font-size:9px;color:#64748b;margin-top:2px">※ EPI 배점 = 에너지절약계획서 검토서 [별지 1] 기계설비부문 6번. <b>전열교환기는 난방 74% 이상 · 냉방 57% 이상</b>이면 배점 1.0(만점 3점)입니다. 난방·냉방 중 낮은 쪽이 배점이 됩니다 — 기준 AC-020 20.3.1.2</div></div></div>`;
+    <div style="font-size:9px;color:#64748b;margin-top:2px">※ EPI 배점 = 에너지절약계획서 검토서 [별지 1] 기계설비부문 6번. <b>전열교환기는 난방 74% 이상 · 냉방 57% 이상</b>이면 배점 1.0(만점 3점)입니다. 난방·냉방 중 낮은 쪽이 배점이 됩니다</div></div></div>`;
     // 전열교환기 상세 카드 (read-only)
     html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">전열교환기 장비 상세 사양</div>`;
     rooms.forEach((r,idx)=>{
@@ -3439,10 +3401,10 @@ function _renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="C"><input type="number" value="${effACH}" step="0.5" min="0" style="width:50px;font-size:11px" onchange="sCV('${rid}','ventACH',parseFloat(this.value)||0);renderCapCalc()"></td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r,effACH)}</span>`:''}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td style="text-align:right;background:#dbeafe;font-weight:700;color:#1d4ed8">${fW(autoSaf)}</td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량·ESP 에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','인라인덕트팬',this.value)"></td>
-        <td class="L" style="font-size:10px">${r.capV.autoMsg?`<span style="color:#dc2626">${esc(r.capV.autoMsg)}</span>`:(r.capV.model||r.capV.maxAf?esc([r.capV.model,r.capV.fno,r.capV.maxAf?fW(r.capV.maxAf)+' m³/h':'',r.capV.maxSp?r.capV.maxSp+' Pa':''].filter(Boolean).join(' · ')):'—')}</td>
+        <td class="L" style="font-size:10px">${r.capV.autoMsg?`<span style="color:#dc2626">${esc(r.capV.autoMsg)}</span>`:(r.capV.maxAf?fW(r.capV.maxAf)+' m³/h':'—')}</td>
         <td class="L"><input type="text" value="${esc(r.capV.note||'인라인덕트팬')}" style="width:80px" onchange="sCV('${rid}','note',this.value)"></td>
       </tr>`;
     });
@@ -3491,13 +3453,13 @@ function _renderCapCalc(){
       _ventReq[rid]={calc:calcCMH,sp:parseFloat(selEspVal)||0};
       if(autoSelIfEmpty(rid,'인라인덕트팬')) _inlineRedraw=true;   // 위 집계표에도 보이도록 한 번 더 그린다
       const inp=(fld,val,w,ph)=>`<input type="number" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:${w||45}px;padding:2px 4px;border:1px solid #e2e8f0;border-radius:2px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value);renderCapCalc()">`;
-      const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="flex:1;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
-      html+=`<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px">
+      const selRow=(fld,label,val,unit,ph)=>`<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">${label}</span><span style="color:#94a3b8;margin-right:4px">:</span><input type="text" value="${esc(String(val||''))}" placeholder="${ph||''}" style="width:200px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:left" onchange="sCV('${rid}','${fld}',this.value)">${unit?`<span style="font-size:9px;color:#94a3b8;margin-left:4px;white-space:nowrap">${unit}</span>`:''}</div>`;
+      html+=`<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:16px;max-width:760px">
         <div style="background:#1e3a5f;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">
           <span style="font-weight:700;font-size:11px;letter-spacing:.5px">ITEM NO : ${esc(tag)}</span>
           <span style="font-size:10px;opacity:.8">${f?esc(f.name)+' ':''}${esc(r.name)} / 인라인덕트팬</span>
         </div>
-        <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:14px">
           <div>
             <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 풍량 계산</div>
             <table style="width:100%;font-size:9px;border-collapse:collapse">
@@ -3520,8 +3482,8 @@ function _renderCapCalc(){
             </table>
           </div>
           <div>
-            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② EXTERNAL STATIC PRESSURE</div>
-            <table style="width:100%;font-size:10px;border-collapse:collapse">
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② EXTERNAL STATIC PRESSURE<span style="font-weight:400;font-size:9px;color:#94a3b8;margin-left:8px">덕트설계 앱과 최종 연동할 것</span></div>
+            <table class="esp-t" style="width:100%;font-size:10px;border-collapse:collapse">
               <tbody>
                 <tr><td style="padding:3px 6px;white-space:nowrap;color:#475569">DUCT<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ①</span></td>
                   <td style="padding:3px 6px">${inp('ductLen',ductLen,42,'m')} m &times; ${inp('ductPa',ductPa,42,'Pa/m')} Pa/m</td>
@@ -3530,7 +3492,7 @@ function _renderCapCalc(){
                   <td style="padding:3px 6px">DUCT &times; ${inp('fitPct',fitPct,42,'%')} %</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(fittT)} Pa</td></tr>
                 <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">DIFF.&amp;GRILLE<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ③</span></td>
-                  <td style="padding:3px 6px">${inp('diffEa',diffEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC45 흡입 26 (AC-028 Rule 2-1)</span></td>
+                  <td style="padding:3px 6px">${inp('diffEa',diffEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('diffPa',diffPa,42,'Pa')} Pa/EA <span style="font-size:8px;color:#94a3b8">유효풍속 동압×3 · RC45 흡입 26</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(diffT)} Pa</td></tr>
                 <tr><td style="padding:3px 6px;color:#475569;white-space:nowrap">V.D<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ④</span></td>
                   <td style="padding:3px 6px">${inp('vdEa',vdEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('vdPa',vdPa,42,'Pa')} Pa/EA</td>
@@ -3541,11 +3503,11 @@ function _renderCapCalc(){
                 <tr><td style="padding:3px 6px;color:#475569">LOUVER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑥</span></td>
                   <td style="padding:3px 6px">${inp('louEa',louEa,32,'EA')} EA <span style="font-size:8px;color:#94a3b8">최원 경로상</span> &times; ${inp('louPa',louPa,42,'Pa')} Pa/EA</td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(louT)} Pa</td></tr>
-                <tr><td style="padding:3px 6px;color:#475569" title="별도 필터가 있는 계통만. 말기(최종) 압손을 넣는다 — 중성능 240~380 Pa. 전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 있으므로 넣지 않는다 (AC-083)">FILTER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑦</span></td>
+                <tr><td style="padding:3px 6px;color:#475569" title="별도 필터가 있는 계통만. 말기(최종) 압손을 넣는다 — 중성능 240~380 Pa. 전열교환기·실내기의 내장 필터는 제조사 기외정압에 이미 있으므로 넣지 않는다">FILTER<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑦</span></td>
                   <td style="padding:3px 6px">${inp('filtPa',filtPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">말기 압손</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(filtT)} Pa</td></tr>
                 <tr><td style="padding:3px 6px;color:#475569">FAN SYSTEM EFFECT (팬 시스템 효과)<span style="font-size:8px;color:#94a3b8;font-weight:400"> ← 덕트설계 ⑧</span></td>
-                  <td style="padding:3px 6px">${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실 (KDS 31 25 30 4.2(2)). 앱은 계산하지 않음</span></td>
+                  <td style="padding:3px 6px">${inp('sysPa',sysPa,55,'Pa')} Pa <span style="font-size:9px;color:#94a3b8">수동 입력 — 팬 흡입·토출 연결부 손실</span></td>
                   <td style="text-align:right;padding:3px 6px">=&nbsp;${f1(sysPa)} Pa</td></tr>
                 <tr style="border-top:1px solid #e2e8f0">
                   <td colspan="2" style="padding:3px 6px;color:#475569">소 계</td>
@@ -3568,7 +3530,6 @@ function _renderCapCalc(){
             <button class="btn btP btS no-print" onclick="openCatModal('FAN_INLINE',function(row){_catFAN_INLINE('${rid}',row)},{val:${autoSaf},unit:'CMH',label:'풍량'})">📋 카탈로그</button>
           </div>
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px"><span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span><span style="min-width:110px;color:#334155">TYPE</span><span style="color:#94a3b8;margin-right:4px">:</span><b>${VENT_TYPE['인라인덕트팬']}${r.capV.ftype?' · '+esc(r.capV.ftype):''}</b></div>
-          ${selRow('model','MODEL',r.capV.model,'','')}
           ${selRow('fno','SIZE (임펠러)',r.capV.fno,'mm','')}
           <div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:10px;gap:4px">
             <span style="font-weight:700;color:#1e3a5f;min-width:14px">◆</span>
@@ -3588,7 +3549,7 @@ function _renderCapCalc(){
             <span style="color:#94a3b8;margin-right:4px">:</span>
             <span style="font-size:10px;color:#1d4ed8;font-weight:600;white-space:nowrap">${fW(autoSaf)} CMH &times; ${selEspVal} Pa</span>
             <span style="color:#94a3b8;margin:0 4px">&times;</span>
-            <input type="text" value="${esc(r.capV.mp||'')}" placeholder="kW" style="width:65px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:right" onchange="sCV('${rid}','mp',this.value)">
+            <input type="text" value="${esc(r.capV.mp||'')}" placeholder="kW" style="width:65px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:10px;font-family:inherit;text-align:left" onchange="sCV('${rid}','mp',this.value)">
             <span style="font-size:9px;color:#94a3b8;margin-left:4px">kW</span>
           </div>
           ${selRow('volt','POWER SOURCE',r.capV.volt,'','1P × 220V × 60Hz')}
@@ -3634,7 +3595,7 @@ function _renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="au">${r.ventACH}</td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r)}</span>`:''}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','${capTab}',this.value)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
@@ -3652,7 +3613,7 @@ function _renderCapCalc(){
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
     // FAN 상세 카드 (read-only)
-    html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">FAN 상세 사양</div>`;
+    html+=`<div style="margin-top:18px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">FAN 상세 사양</div><div class="card2">`;
     rooms.forEach((r,idx)=>{
       const {f}=getBF(r.bldgId,r.floorId);
       const autoTag='M-AH-'+String(idx+1).padStart(3,'0');
@@ -3665,7 +3626,6 @@ function _renderCapCalc(){
         </div>
         <div style="padding:10px 14px">
           ${dv('TYPE',VENT_TYPE[capTab]+(r.capV.ftype?' · '+r.capV.ftype:''),'')}
-          ${dv('MODEL',r.capV.model,'')}
           ${dv('SIZE (임펠러)',r.capV.fno,'mm')}
           ${dv('선정풍량',r.capV.saf?fW(r.capV.saf):null,'m³/h (대당)')}
           ${dv('정압',r.capV.sp,'Pa')}
@@ -3675,7 +3635,7 @@ function _renderCapCalc(){
         </div>
       </div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
     el.innerHTML=html; return;
   }
 
@@ -3712,7 +3672,7 @@ function _renderCapCalc(){
         <td class="au">${r.height}</td>
         <td class="au">${f1(vol)}</td>
         <td class="C"><input type="number" value="${effACH}" step="0.5" min="0" style="width:50px;font-size:11px" onchange="sCV('${rid}','ventACH',parseFloat(this.value)||0);renderCapCalc()"></td>
-        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}${(KDS_EXH[r.type]||RT[r.type]?.tCtl)?`<br><span style="font-size:8px;font-weight:400;color:#475569;white-space:normal">${ventCmpTxt(r,effACH)}</span>`:''}</td>
+        <td style="text-align:right;background:#fef9c3;font-weight:600">${fW(Math.round(calcCMH))}</td>
         <td class="C"><input type="number" value="${cnt}" min="1" style="width:42px" onchange="sCV('${rid}','cnt',parseInt(this.value)||1);renderCapCalc()"></td>
         <td style="text-align:right;background:#dbeafe;font-weight:700;color:#1d4ed8">${fW(perCMH)}</td>
         <td style="background:#f8fafc"><input type="text" value="${esc(r.capV.fno||'')}" placeholder="Φmm" style="width:60px" onchange="sCV('${rid}','fno',this.value)"></td>
@@ -3774,7 +3734,7 @@ function _renderCapCalc(){
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
     // 유니트히터 상세 카드 (read-only)
-    html+=`<div style="margin-top:16px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div>`;
+    html+=`<div style="margin-top:16px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div><div class="card2">`;
     rooms.forEach((r,idx)=>{
       const {f}=getBF(r.bldgId,r.floorId);
       const hl=getHeatLoad(r);
@@ -3799,7 +3759,7 @@ function _renderCapCalc(){
         </div>
       </div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
     el.innerHTML=html; return;
   }
 
@@ -3811,7 +3771,7 @@ function _renderCapCalc(){
     let html=`<div class="card"><div class="ch">라디에이터 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th><th>수량</th>
-      <th>열손실량(W)</th><th title="KDS 31 25 15 4.4(1) — 간헐 난방이면 예열부하 가산, 실내온도·열매온도 조건에 따라 보정계수">예열 가산(%)<br>/ 보정계수<br><span style="font-weight:400;font-size:8px">KDS 31 25 15 4.4(1)</span></th><th>필요용량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
+      <th>열손실량(W)</th><th title="간헐 난방이면 예열부하 가산, 실내온도·열매온도 조건에 따라 보정계수">예열 가산(%)<br>/ 보정계수</th><th>필요용량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
       <th>선정용량(W)</th><th>선정주수(쪽)</th>
       <th>모델</th><th>소비전력<br>(kW)</th><th>전압(V)</th><th>규격</th>
       <th style="text-align:left">비고</th>
@@ -3836,7 +3796,7 @@ function _renderCapCalc(){
         <td class="L">${esc(r.name)}</td>
         <td class="C"><input type="number" value="${cntR}" min="1" style="width:40px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1);renderCapCalc()"></td>
         <td style="text-align:right;background:#fee2e2;font-weight:600">${hl!==null?fW(hl):'난방없음'}</td>
-        <td style="padding:2px 4px;font-size:10px;white-space:nowrap"><input type="number" value="${r.capH.radPre??''}" placeholder="%" step="5" min="0" style="width:42px" onchange="sCH('${rid}','radPre',this.value===''?null:this.value);renderCapCalc()"> / <input type="number" value="${r.capH.radCor??''}" placeholder="1.0" step="0.05" min="0.1" style="width:42px" onchange="sCH('${rid}','radCor',this.value===''?null:this.value);renderCapCalc()">${radWarn?`<br><span style="font-size:8px;color:#dc2626;font-weight:700">⚠ ${radWarn} 미입력 (KDS 31 25 15 4.4(1))</span>`:''}</td>
+        <td style="padding:2px 4px;font-size:10px;white-space:nowrap"><input type="number" value="${r.capH.radPre??''}" placeholder="%" step="5" min="0" style="width:42px" onchange="sCH('${rid}','radPre',this.value===''?null:this.value);renderCapCalc()"> / <input type="number" value="${r.capH.radCor??''}" placeholder="1.0" step="0.05" min="0.1" style="width:42px" onchange="sCH('${rid}','radCor',this.value===''?null:this.value);renderCapCalc()">${radWarn?`<br><span style="font-size:8px;color:#dc2626;font-weight:700">⚠ ${radWarn} 미입력)</span>`:''}</td>
         <td style="text-align:right;font-weight:600">${hlReq!==null?fW(hlReq):'—'}</td>
         <td style="padding:3px 6px;background:#f8fafc;color:#475569;font-size:10px;white-space:nowrap"><select style="width:52px" onchange="sCH('${rid}','radType',this.value);renderCapCalc()"><option value="elec" ${r.capH.radType!=='water'?'selected':''}>전기</option><option value="water" ${r.capH.radType==='water'?'selected':''}>온수</option></select> ${r.capH.radType==='water'?edrRef+' ㎡':''}</td>
         <td style="padding:2px 4px;background:#fef9c3">
@@ -3863,7 +3823,7 @@ function _renderCapCalc(){
     </tr>`;
     html+=`</tbody></table></div></div></div>`;
     // 라디에이터 상세 카드 (read-only)
-    html+=`<div style="margin-top:16px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div>`;
+    html+=`<div style="margin-top:16px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div><div class="card2">`;
     rooms.forEach((r,idx)=>{
       const {f}=getBF(r.bldgId,r.floorId);
       const autoTag='M-HX-RAD-'+String(idx+1).padStart(3,'0');
@@ -3886,7 +3846,7 @@ function _renderCapCalc(){
         </div>
       </div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
     el.innerHTML=html; return;
   }
 
@@ -3936,7 +3896,7 @@ function _renderCapCalc(){
     const fxTxt=(fx,uk)=>{const v=fxRaw(fx,uk);const o=fx[3]?fx[3][HW_USE.findIndex(x=>x[0]===uk)]:0;
       return (Array.isArray(v)?v[0]+'~'+v[1]:(v?String(v):'−'))+(o?' (표 '+o+')':'');};
     const SH_NOTE='※ 샤워 — 공장·학교·YMCA·체육관은 표 4.5 의 850 대신 <b>360 lit/h</b>: 샤워헤드 9.5 L/min × 60분 × 급탕비율 0.64. '
-      +'9.5 L/min 은 수도법 시행규칙 [별표 2] 절수 샤워헤드 7.5 L/min(공급수압 98 kPa)을 실사용 약 160 kPa 로 환산한 값 (7.5 × √(160/98)), '
+      +'9.5 L/min 은 수도법 시행규칙 절수 샤워헤드 7.5 L/min(공급수압 98 kPa)을 실사용 약 160 kPa 로 환산한 값 (7.5 × √(160/98)), '
       +'급탕비율 = (사용 40℃ − 급수 5℃) ÷ (급탕 60℃ − 급수 5℃). 한 시간 연속 사용이므로 상한값이다. 표 값이 이보다 작은 용도는 표 값을 쓴다. 헤드 유량을 알면 그 값으로 고친다.';
     let html='';
 
@@ -4029,9 +3989,9 @@ function _renderCapCalc(){
       html+='<div class="cap-card" style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.10);margin-bottom:16px">'
         +'<div style="background:#7c2d12;color:#fff;padding:7px 14px;display:flex;justify-content:space-between;align-items:center">'
         +'<span style="font-weight:700;font-size:12px">중앙식 급탕 — 보일러 · 저탕조 · 순환펌프 선정</span>'
-        +'<span style="font-size:9px;opacity:.85">기준: AC-022 · HW-001 &nbsp;|&nbsp; 대상 '+bRooms.length+'개 실</span></div>'
+        +'<span style="font-size:9px;opacity:.85">대상 '+bRooms.length+'개 실</span></div>'
         +'<div style="padding:10px 14px">'
-        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 계통 형식 <span style="font-weight:400;color:#94a3b8">— 열을 만드는 곳과 담는 곳이 한 몸이냐 (기준: AC-022 Rule 4)</span></div>'
+        +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">① 계통 형식 <span style="font-weight:400;color:#94a3b8">— 열을 만드는 곳과 담는 곳이 한 몸이냐</span></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>'+SEL('sysT',[['A','A · 저탕식 보일러 (저탕 일체형)'],['B','B · 저탕식 보일러 + 별도 저탕조'],['C','C · 순간식 보일러 + 저탕조']],sysT)+'</span>'
         +'<span>환탕(2차 순환) '+SEL('hasRet',[['Y','채용'],['N','없음']],hasRet?'Y':'N')+'</span></div>'
@@ -4041,7 +4001,7 @@ function _renderCapCalc(){
           :(sysT==='B'
             ?'<b>보일러 저탕 + 별도 저탕조.</b> 회복이 모자라 증설하는 형태 → <b>1차 펌프 필요.</b>'
             :'<b>보일러는 열만 만들고 저장은 탱크가 한다.</b> → <b>1차 펌프 필수.</b> 대형·연소식(경유) 구간이다.'))
-        +(hasRet?'':'<br><b>환탕 없음</b> — 열원에서 말단까지 배관거리 30 m 미만이고 기구까지 15 m 이하일 때만 (HW-001, AC-022 Rule 5).')
+        +(hasRet?'':'<br><b>환탕 없음</b> — 열원에서 말단까지 배관거리 30 m 미만이고 기구까지 15 m 이하일 때만.')
         +'</div>'
         +'<div style="font-weight:700;font-size:10px;color:#1e3a5f;margin:12px 0 6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">② 급탕량 집계 (보일러 그룹) <span style="font-weight:400;color:#94a3b8">— 표 4.5 기구별 급탕량, 급탕온도 60℃ 기준 · 열 머리의 값은 '+useRow[1]+' 용도 값</span></div>'
         +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9">'
@@ -4079,28 +4039,28 @@ function _renderCapCalc(){
         +'<div style="margin-top:8px;padding:7px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;font-size:10.5px">'
         +(selKWp>0
           ?('회복 시간 = '+f0(stRec)+' lit × ('+Th+'−'+Tc+')℃ ÷ ('+selKWp+' kW × 860) = <b>'+rcvHr.toFixed(1)+' 시간</b>'
-            +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다 (AC-022 Rule 3)</span>')
+            +'<span style="color:#64748b"> — 교대 간격보다 짧아야 다음 교대까지 채운다</span>')
           :'<span style="color:#64748b">제품 가열능력을 넣으면 판정과 회복 시간(참고)을 계산한다</span>')
         +'</div>'
-        +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다 (AC-022 Rule 3)')
+        +HD('⑤','피크 검산','본 계산이 아니다 — 교대 몰림을 한 번 더 본다')
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>피크 시간 '+I('pkMin',pkMin,5,45)+' 분</span>'
         +'<span>피크 회전수 '+I('pkTurn',pkTurn,0.1,45)+' 회 <span style="color:#94a3b8">(교대인원 × 이용률 ÷ 샤워기수)</span></span>'
         +'<span>유효율 '+I('effR',effR,0.05,45)+'</span>'
-        +'<span>샤워 헤드 유량 '+I('shFlow',gv('shFlow',11.4),0.1,45)+' L/min × 15 분 <span style="color:#94a3b8">(ASHRAE 2023 Ch.51 Table 16)</span></span></div>'
+        +'<span>샤워 헤드 유량 '+I('shFlow',gv('shFlow',11.4),0.1,45)+' L/min × 15 분 <span style="color:#94a3b8"></span></span></div>'
         +'<div style="margin-top:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;font-size:10.5px;line-height:1.9">'
         +'혼합계수 = ('+Th+'−'+Tc+') ÷ ('+tUse+'−'+Tc+') = <b>'+mix.toFixed(2)+'</b><br>'
         +'피크 필요량 = '+(gShBase>0?('샤워 '+f0(gShBase)+' lit(1회 = '+gv('shFlow',11.4)+' L/min × 15 분, 사용온도) × 회전 '+pkTurn+'회'):('Q<sub>h</sub> × 혼합계수 × '+pkMin+'/60'))+' = <b>'+f0(pkNeed)+' lit</b><br>'
         +'가용량 = 저장 '+f0(stVol)+'×'+effR+'×'+mix.toFixed(2)+' ('+f0(stAvail)+') + 회복 '+f0(rcvLph)+' lit/h×'+pkMin+'분×'+mix.toFixed(2)+' ('+f0(rcAvail)+')'
         +' = <b style="color:'+(okS?'#16a34a':'#dc2626')+'">'+f0(stTot)+' lit</b></div>'
         +'<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:'+(okS?'#16a34a':'#dc2626')+'">'
-        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 검산이 본 계산을 이긴다. '+f0(stReqChk)+' lit 이상으로 올린다 (AC-022 Rule 3)')):'— 저탕용량 미입력')+'</div>'
+        +(stVol>0?(okS?('✓ OK — 여유 '+f0(stTot-pkNeed)+' lit'):('✗ 부족 '+f0(pkNeed-stTot)+' lit — 검산이 본 계산을 이긴다. '+f0(stReqChk)+' lit 이상으로 올린다')):'— 저탕용량 미입력')+'</div>'
         +(sepTank
           ?('<div style="margin-top:6px;font-size:10.5px">선정 저탕조 <b>'+I('selTank',selTank,10,70)+'</b> lit'
             +OKM(okT,selTank>0)+'</div>')
           :'<div style="margin-top:6px;font-size:10px;color:#64748b">※ A형은 <b>보일러 사양의 저탕용량이 곧 이 값</b>이다. 장비일람표에 별도 저탕조를 올리지 않는다.</div>')
         +(needP1
-          ?(HD('⑥','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다 (기준: AC-022 Rule 4)')
+          ?(HD('⑥','1차 · 열원순환펌프','보일러 ↔ 저탕조. 열을 실어 나른다')
             +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
             +'<span>보일러 입·출구 온도차 ΔT '+I('dT1',dT1,1,45)+' ℃</span>'
             +'<span>→ 순환유량 <b style="color:#b45309">'+f0(p1Lph)+' lit/h ('+f1(p1Lph/60)+' lit/min)</b></span>'
@@ -4111,9 +4071,9 @@ function _renderCapCalc(){
             +'<div style="margin-top:6px;font-size:10.5px">선정 1차펌프 <b>'+I('sel1Q',sel1Q,0.1,60)+'</b> lit/min &nbsp;×&nbsp; <b>'+I('sel1H',sel1H,0.1,55)+'</b> m'
             +OKM(ok1,sel1Q>0&&sel1H>0)+'</div>')
           :'')
-        +HD(needP1?'⑦':'⑥','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 열원에서 말단까지 30 m 이상일 때 (기준: AC-022 Rule 5 · HW-001)')
+        +HD(needP1?'⑦':'⑥','2차 · 급탕순환펌프 (환탕)','식지 않게 돌린다. 열원에서 말단까지 30 m 이상일 때')
         +(hasRet?'':'<div style="padding:7px 12px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;font-size:10.5px;color:#475569">환탕 <b>없음</b>으로 선택했다 — 2차 펌프를 두지 않는다. 보일러를 사용처 가까이 두는 계통이다.</div>')
-        +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 열손실 ÷ (1.163 × ΔT). 자료가 없으면 30 W/m × 순환배관 길이 (HW-001)</div>'
+        +(hasRet?('<div style="font-size:10px;color:#64748b;margin-bottom:6px">순환수량은 <b>배관 열손실을 보충하는 양</b>이며 급탕 사용량과 무관하다 — 열손실 ÷ (1.163 × ΔT). 자료가 없으면 30 W/m × 순환배관 길이</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:10.5px">'
         +'<span>순환배관 길이 '+I('retLen',retLen,1,50)+' m × '+I('retWpm',retWpm,1,40)+' W/m ÷ (1.163 × ΔT '+I('retDT',retDT,1,35)+' K)</span>'
         +(retLen>0?'':'<span style="color:#dc2626;font-weight:700">순환배관 길이를 넣으세요 (위생앱 환탕 루프)</span>')
@@ -4154,9 +4114,9 @@ function _renderCapCalc(){
             +'<td class="L" colspan="3" style="padding:3px 8px;border:1px solid #cbd5e1">환탕 없음 — 두지 않는다</td></tr>'))
         +'</tbody></table>'
         +'<div style="margin-top:8px;font-size:9.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:6px 10px">'
-        +'※ <b>급탕 공급관·환탕관 관경은 위생앱(sanitary-pipe-calc)에서 산정</b>한다 — 기준: HW-001. '
+        +'※ <b>급탕 공급관·환탕관 관경은 위생앱(sanitary-pipe-calc)에서 산정</b>한다 '
         +'여기서는 <b>기기 용량만</b> 정한다. <b>2차 펌프 양정</b>은 그 배관 산정 결과를 옮겨 넣는다.<br>'
-        +'※ 부속·밸브류는 <b>기준 IN-001</b> 의 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
+        +'※ 부속·밸브류는 <b>회사 표준</b> 기기별 세트를 따른다 — 계통 형식에 따라 부속 수량이 달라진다.</div>'
         +'</div></div>';
     }
     const boilerHtml=html; html='';
@@ -4215,7 +4175,7 @@ function _renderCapCalc(){
             <select style="font-size:10.5px;padding:2px 5px;font-family:inherit" onchange="sCHW('${rid}','hwUse',this.value);sCHW('${rid}','simRate','');sCHW('${rid}','storeFactor','');${FX45.map(x=>`sCHW('${rid}','${x[0]}Lph','');`).join('')}renderCapCalc()">
               ${HW_USE.map(x=>`<option value="${x[0]}" ${x[0]===useRowR[0]?'selected':''}>${x[1]}</option>`).join('')}
             </select>
-            <span style="font-size:9px;color:#475569">학회 설계기준 표 4.5 (2003 ASHRAE) — 동시사용률과 저탕용량 계수는 건물 용도로 정한다. 용도를 바꾸면 기구별 급탕량·동시사용률·저탕용량 계수가 그 용도의 표 값으로 돌아간다.</span>
+            <span style="font-size:9px;color:#475569">동시사용률과 저탕용량 계수는 건물 용도로 정한다. 용도를 바꾸면 기구별 급탕량·동시사용률·저탕용량 계수가 그 용도의 표 값으로 돌아간다.</span>
           </div>
           <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">급탕량 집계 <span style="font-weight:400;color:#94a3b8">— 표 4.5 기구별 급탕량 (급탕온도 60℃ 기준, lit/기구 1개·h)</span></div>
           <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse">
@@ -4267,11 +4227,11 @@ function _renderCapCalc(){
               <input type="number" value="${tHot}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sCHW('${rid}','tHot',parseFloat(this.value)||60);renderCapCalc()"> &minus;
               <input type="number" value="${tCold}" step="1" style="width:48px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="STATE.project.hwTc=this.value;renderCapCalc()" title="프로젝트 공통 급수온도 — 모든 실과 중앙식이 같이 바뀜"> )℃ &times; 1.163 &div; 1,000
               <span style="font-weight:700;color:#1e3a5f">=&nbsp;&nbsp;${autoKw} kW</span>
-              <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도 · 학회 설계기준 표 4.5 주 1)</span>
+              <span style="font-size:9px;color:#2563eb">(급탕온도 − 급수온도)</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #e2e8f0">
               <span style="color:#475569">필요 공칭 용량 = V ${f1(V)} lit &divide; 유효율 ${HW_EFF} = <b>${f1(reqStoreCap)} lit</b></span>
-              <span style="font-size:9px;color:#64748b">— V 는 「유효」 저탕용량(표 4.5 주 2). 탱크는 급수가 섞여 공칭의 약 75% 만 온수로 꺼내 쓴다 (AC-022 Rule 1)</span>
+              <span style="font-size:9px;color:#64748b">— V 는 「유효」 저탕용량 탱크는 급수가 섞여 공칭의 약 75% 만 온수로 꺼내 쓴다</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span style="color:#475569">표준 저탕탱크:</span>
@@ -4382,7 +4342,7 @@ function _renderCapCalc(){
           <tbody><tr style="background:#fef9c3">
             <td style="padding:3px 8px;border:1px solid #e2e8f0;font-weight:600">동시사용률(%)</td>
             ${SIM.map(([,v],i)=>`<td style="text-align:center;padding:3px 8px;border:1px solid #e2e8f0;${i===simMatchIdxWT?'background:#dbeafe;font-weight:700;color:#1d4ed8':''}">${v}</td>`).join('')}
-            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">AC-032 2.2 · 표 2.8 (a)</td>
+            <td style="padding:3px 8px;border:1px solid #e2e8f0;font-size:9px;color:#64748b">동시사용률 표</td>
           </tr></tbody>
         </table></div>
         <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">계산 전개</div>
@@ -4497,18 +4457,22 @@ function _renderCapCalc(){
     const colValve=(bp.col?bp.col==='valve':defWT('f2c',0)>0);   // 세정밸브 대변기가 있으면 세정밸브형 열 (AC-033 2.4 주)
     const fr=bpFlow(wsfu,colValve);
     const Qgen=fr?fr.q:0, Qcont=defP('qCont',0);
-    // CH-20261123-06 (앱간_값옮기기_표기기준 1.1 ②·4절) — 설계 유량 Q · 양정 H 는 위생배관(①)에서 받아 적는다. 자동 연결은 하지 않는다
-    //   이 탭의 WSFU·수두 계산은 「참고」 — 위생배관 값을 넣지 않았을 때만 쓴다
-    const sanQ=defP('sanQ',0), sanH=defP('sanH',0);
-    const QlpmRef=Qgen+Qcont;
-    const Qlpm=sanQ>0?sanQ:QlpmRef;
+    // CH-20261124-05 (AC-033 머리말) — 부스터 Q·H 는 이 탭이 산정한다: 유량 = WSFU → 학회 표 3.5, 양정 = H1~H5
+    //   (위생배관에서 받던 칸은 삭제). 종전 「시간평균 × 3」은 참고 비교 한 줄로만 보인다 (판정에 쓰지 않음)
+    const Qlpm=Qgen+Qcont;
+    const simT=(wt.simRate!==undefined&&wt.simRate!=='')?(parseFloat(wt.simRate)||0):wtSimRate(totCntBP);
+    const QrefOld=totLph*simT/100/60*3;   // (참고) 종전 방식 — 물탱크 탭 급수소요량 × 동시사용률 = 시간평균, × 3 배
+    const wsFormula=FX.map(([k,nm,dl])=>{const cnt=defWT(k+'c',0); if(!cnt) return ''; const [u0]=bpUnit(k,BP_FLUSH_KDS[k]?defP('flush_'+k,BP_FLUSH_KDS[k]):defWT(k+'l',dl)); const uIn=bp['ws_'+k]; const u=(uIn!==undefined&&uIn!=='')?(parseFloat(uIn)||0):u0; if(u==null) return ''; const f34=(mixMode==='cold'&&BP_MIX[k])?' × 3/4':''; return (k==='f5'?(wt.f5n||'기타'):nm.replace(/\(.*\)/,''))+' '+cnt+' × '+u+f34;}).filter(Boolean).join(' + ');
+    const t35=(()=>{ if(!fr) return []; const i=BP_T35.findIndex(r=>r[0]===fr.row); const ci=colValve?2:1; const out=[];
+      for(let j=i-1;j>=0&&out.length<1;j--) if(BP_T35[j][ci]!=null) out.unshift(BP_T35[j]);
+      out.push(BP_T35[i]); for(let j=i+1;j<BP_T35.length&&out.length<3;j++) if(BP_T35[j][ci]!=null) out.push(BP_T35[j]); return out; })();
     const h1pipe=defP('h1pipe',0),h1ppa=defP('h1ppa',30);
     // 2026-10-19 — 관경 앱 「부하계산서 입력값」 의 마찰손실(m)을 그대로 넣는 칸. 그 값에는 등가장(부속) 손실이 이미 들어 있어 H2 를 0 으로 한다
     const h1d=defP('h1direct',0);
     const H1=h1d>0?h1d:h1pipe*h1ppa/1000,H2=h1d>0?0:H1*0.5,H3=defP('h3nozzle',10.2),H4=defP('h4pump',0),H5=defP('h5static',30);
     const Hsub=H1+H2+H3+H4+H5,HSF=Hsub*0.1,Htot=Hsub+HSF;
     const selHStored=bp.selH;
-    const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):(sanH>0?sanH:Htot);
+    const selHVal=(selHStored!==undefined&&selHStored!=='')?(parseFloat(selHStored)||0):Htot;
     const eta=defP('eta',0.55);
     const KW=(Qlpm*selHVal)/(6120*eta);
     const STD_KW=[0.4,0.75,1.5,2.2,3.7,5.5,7.5,11,15];
@@ -4526,27 +4490,10 @@ function _renderCapCalc(){
     let html=`<div style="border:1px solid #cbd5e1;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)">
       <div style="background:#1e3a5f;color:#fff;padding:9px 14px"><span style="font-weight:700;font-size:12px">부스터펌프 용량 계산서</span></div>
       <div style="padding:14px">
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">급수소요량 집계</div>
-        <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse">
-          <thead><tr style="background:#e2e8f0">
-            <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">기구명</th>
-            <th style="padding:4px 8px;border:1px solid #cbd5e1">수량</th>
-            <th style="padding:4px 8px;border:1px solid #cbd5e1">1회당 급수량<br>(lit/회)</th>
-            <th style="padding:4px 8px;border:1px solid #cbd5e1">1시간당<br>사용횟수(회/h)</th>
-            <th style="padding:4px 8px;border:1px solid #cbd5e1">매시평균<br>급수량(lit/h)</th>
-            <th style="padding:4px 8px;border:1px solid #cbd5e1;text-align:left">비고</th>
-          </tr></thead>
-          <tbody>${fxRows}
-            <tr style="background:#dcfce7;font-weight:700">
-              <td colspan="4" style="padding:4px 8px">합 계</td>
-              <td style="text-align:right;padding:4px 8px">${f1(totLph)} lit/h</td><td></td>
-            </tr>
-          </tbody>
-        </table></div>
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 참고 (위생배관 값 우선) · 표 3.4 (b) 개별기구 · 상업용 건물 <span style="font-weight:400;color:#94a3b8">— 위 급수소요량은 물탱크 용량용이며 펌프 유량에는 쓰지 않는다</span></div>
+        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:6px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">기구급수부하단위 (WSFU) — 표 3.4 (b) 개별기구 · 상업용 건물 <span style="font-weight:400;color:#94a3b8">— 기구 수는 물탱크 탭에서 넣는다</span></div>
         <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:10.5px;margin-bottom:6px" class="no-print">
           <span>급수 범위 <select style="font-size:10.5px" onchange="sPBP('mixMode',this.value);renderCapCalc()"><option value="all"${mixMode==='all'?' selected':''}>이 펌프가 온수기 급수까지 공급 (일반) — 점수 그대로</option><option value="cold"${mixMode==='cold'?' selected':''}>냉수만 공급 — 급탕은 별도 펌프 (혼합수전 기구 3/4)</option></select></span>
-          <span>세정량 대변기 <input type="number" step="0.5" value="${defP('flush_f2',6)}" style="width:44px" onchange="sPBP('flush_f2',this.value);renderCapCalc()"> L · 소변기 <input type="number" step="0.5" value="${defP('flush_f3',2)}" style="width:44px" onchange="sPBP('flush_f3',this.value);renderCapCalc()"> L <span style="color:#94a3b8">(기본 = KDS 31 30 15 표 4.4-1 최대 물소비량. 물탱크 탭의 1회 사용량과 별개)</span></span>
+          <span>세정량 대변기 <input type="number" step="0.5" value="${defP('flush_f2',6)}" style="width:44px" onchange="sPBP('flush_f2',this.value);renderCapCalc()"> L · 소변기 <input type="number" step="0.5" value="${defP('flush_f3',2)}" style="width:44px" onchange="sPBP('flush_f3',this.value);renderCapCalc()"> L <span style="color:#94a3b8">(기본 = 기구 최대 물소비량 6 · 2 L)</span></span>
           <span>표 3.5 열 <select style="font-size:10.5px" onchange="sPBP('col',this.value);renderCapCalc()"><option value=""${!bp.col?' selected':''}>자동 (${defWT('f2c',0)>0?'세정밸브형':'세정탱크형'})</option><option value="valve"${bp.col==='valve'?' selected':''}>세정밸브형</option><option value="tank"${bp.col==='tank'?' selected':''}>세정탱크형</option></select></span>
         </div>
         <div class="tw" style="margin-bottom:14px"><table style="min-width:580px;border-collapse:collapse;font-size:11px">
@@ -4561,23 +4508,19 @@ function _renderCapCalc(){
           <tbody>${wsRows}
             <tr style="background:#dcfce7;font-weight:700"><td colspan="4" style="padding:4px 8px">합 계</td><td style="text-align:right;padding:4px 8px">${f1(wsfu)}</td><td></td></tr>
           </tbody></table></div>
-        <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">설계 유량 · 양정 — 위생배관에서 받는 값 (기본) <span style="font-weight:400;color:#94a3b8">[1.1 ②]</span></div>
-        <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;font-size:11px;padding:8px 14px;background:#f8fafc;border-radius:4px;margin-bottom:6px">
-          <span>설계 유량 Q ${inp('sanQ',sanQ||'',70,1)} L/min<span style="font-size:9px;color:#94a3b8;margin-left:4px">← 위생배관 ①</span>${sanQ>0?' <span style="color:#64748b">('+f1(sanQ*0.06)+' ㎥/h)</span>':''}</span>
-          <span>양정 H ${inp('sanH',sanH||'',60,0.1)} m<span style="font-size:9px;color:#94a3b8;margin-left:4px">← 위생배관 ②</span>${sanH>0?' <span style="color:#64748b">('+f1(sanH*9.80665)+' kPa)</span>':''}</span>
-        </div>
-        <div style="font-size:10px;margin-bottom:12px;color:${sanQ>0&&sanH>0?'#166534':'#b45309'}">${sanQ>0?'Q = 위생배관 값 '+f1(sanQ)+' L/min (참고 계산 '+f1(QlpmRef)+' L/min)':'⚠ 위생배관 Q 미입력 — 아래 참고 계산 '+f1(QlpmRef)+' L/min 사용'} · ${sanH>0?'H = 위생배관 값 '+f1(sanH)+' m (참고 계산 '+f1(Htot)+' m)':'⚠ 위생배관 H 미입력 — 아래 참고 계산 '+f1(Htot)+' m 사용'}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px">
           <div>
-            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">유량 계산 — 참고 (위생배관 값 우선)</div>
+            <div style="font-weight:700;font-size:10px;color:#1e3a5f;margin-bottom:8px;border-bottom:1px solid #1e3a5f;padding-bottom:3px">유량 계산 — WSFU → 표 3.5 동시사용유량</div>
             <div style="font-size:11px;padding:10px 14px;background:#f8fafc;border-radius:4px;display:flex;flex-direction:column;gap:8px">
-              <div>WSFU 합계 <b>${f1(wsfu)}</b> → 표 3.5 <b>${colValve?'세정밸브형':'세정탱크형'}</b> 열 ${fr?`<b>${fW(fr.row)}</b> 행 (위로 근접, 공란 행 건너뜀)`:'<span style="color:#dc2626">해당 행 없음</span>'}</div>
-              <div>Q<sub>일반</sub> = <b>${fr?fW(fr.q):'—'} L/min</b></div>
+              <div>WSFU = ${wsFormula||'—'} = <b>${fW(wsfu)}</b></div>
+              <div>${!fr?'<span style="color:#dc2626">표 3.5 에 맞는 값 없음</span>':(fr.row===wsfu?fW(wsfu)+' — 표 3.5 에서 읽음':fW(wsfu)+' 는 표에 없어 바로 위 '+fW(fr.row))+' → '+(colValve?'세정밸브형':'세정탱크형')+' <b>'+fW(fr.q)+' L/min</b>'}</div>
+              ${t35.length?`<table style="border-collapse:collapse;font-size:10px;width:auto"><thead><tr style="background:#e2e8f0"><th style="${'padding:2px 8px;border:1px solid #e2e8f0'}">WSFU</th><th style="${'padding:2px 8px;border:1px solid #e2e8f0'}">세정탱크형 (L/min)</th><th style="${'padding:2px 8px;border:1px solid #e2e8f0'}">세정밸브형 (L/min)</th></tr></thead><tbody>${t35.map(r=>`<tr style="${r[0]===fr.row?'background:#fef9c3;font-weight:700':''}"><td style="${'padding:2px 8px;border:1px solid #e2e8f0'};text-align:right">${fW(r[0])}</td><td style="${'padding:2px 8px;border:1px solid #e2e8f0'};text-align:right">${r[1]!=null?fW(r[1]):'—'}</td><td style="${'padding:2px 8px;border:1px solid #e2e8f0'};text-align:right">${r[2]!=null?fW(r[2]):'—'}</td></tr>`).join('')}</tbody></table><div style="font-size:9px;color:#64748b">표 3.5 동시사용유량 (해당 부근)</div>`:''}
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <span>+ 연속사용 부하</span>${inp('qCont',Qcont,60,1)}<span>L/min</span>
-                <span style="font-size:9px;color:#64748b">(WSFU 에서 뺀 연속사용 기구 — 기구유량 × 동시운전 대수)</span>
+                <span style="font-size:9px;color:#64748b">계속 흐르는 물(냉각탑 보급수·공정수 등), 없으면 비움</span>
               </div>
-              <div style="font-weight:700;color:#1e3a5f">Q<sub>참고</sub> = ${f1(QlpmRef)} L/min${sanQ>0?' <span style="font-weight:400;color:#94a3b8">— 미사용 (위생배관 값 '+f1(sanQ)+')</span>':''} <span style="font-weight:400;font-size:9.5px;color:#64748b">— 유닛 전체 유량 (AC-033)</span></div>
+              <div style="font-weight:700;color:#1e3a5f">Q<sub>펌프</sub> = ${fW(Qgen)} + ${fW(Qcont)} = ${fW(Qlpm)} L/min</div>
+              <div style="font-size:9.5px;color:#64748b">(참고) 종전 방식 시간평균 × 3배 = ${fW(totLph)} L/h × ${simT} % ÷ 60 × 3 = ${fW(QrefOld)} L/min — 판정에 쓰지 않음</div>
               ${wsMissing.length?`<div style="color:#dc2626;font-weight:700;font-size:10px">⚠ ${wsMissing.map(esc).join('·')} — 표 3.4 원표 값이 없어 합산에서 빠졌습니다. WSFU 를 넣으세요</div>`:''}
             </div>
           </div>
@@ -4640,26 +4583,27 @@ function _renderCapCalc(){
             <input type="number" value="${defP('cnt',2)||2}" min="1" style="flex:1;max-width:165px;padding:2px 6px;border:1px solid #e2e8f0;border-radius:3px;font-size:11px;font-family:inherit;text-align:right" onchange="sPBP('cnt',parseInt(this.value)||1);renderCapCalc()">
             <span style="font-size:10px;color:#94a3b8">EA (2-PUMP SYSTEM)</span>
           </div>
-          ${(defP('cnt',2)||2)<2?'<div style="font-size:10px;color:#dc2626;font-weight:700;padding:3px 0">⚠ KDS 31 30 15 4.6.2(2) 「펌프는 2대 이상으로 하여야 한다」 — 1대(단독)는 기준 미달 (선택은 허용)</div>':''}
+          ${(defP('cnt',2)||2)<2?'<div style="font-size:10px;color:#dc2626;font-weight:700;padding:3px 0">⚠ 펌프는 2대 이상이어야 함 — 1대(단독)는 기준 미달 (선택은 허용)</div>':''}
         </div>
         ${(()=>{const n=defP('cnt',2)||2, tks=wtTanks(wt), tW=tks.reduce((a,t)=>a+t.cap,0)/1000;
-          // CH-20261123-06 — 앱간_값옮기기_표기기준 2.1 「옮겨 적을 값」 상자. 열: 번호 · 받는 칸 이름 · 값 · 단위 · 받는 위치. 번호 = 밸브 화면 칸 순서
+          // 앱간_값옮기기_표기기준 2.1 (2026-11-24 개정) — 열: 번호 · 받는 칸 이름 · 값 · 단위 (받는 위치 열 없음). 보조 설명은 값 아래 작은 글씨
           const td='padding:3px 8px;border:1px solid #93c5fd';
-          const R=(no,a,b,u,c)=>`<tr><td style="${td};text-align:center">${no}</td><td class="L" style="${td}">${a}</td><td style="${td};text-align:right;font-weight:700;color:#1d4ed8">${b}</td><td style="${td}">${u}</td><td class="L" style="${td};font-size:9.5px;color:#475569">${c}</td></tr>`;
-          const noTank='— (물탱크 탭 규격 미입력)';
-          // 「한 줄로 복사」 — 밸브 앱 붙여넣기 칸(CH-20261124-04)과 같은 형식. 숫자는 천 단위 쉼표 없이 소수 1자리
+          const sub=t=>t?'<div style="font-size:9px;font-weight:400;color:#64748b">'+t+'</div>':'';
+          const R=(no,a,b,u,note)=>`<tr><td style="${td};text-align:center">${no}</td><td class="L" style="${td}">${a}</td><td style="${td};text-align:right;font-weight:700;color:#1d4ed8">${b}${sub(note)}</td><td style="${td}">${u}</td></tr>`;
+          const kan=tW>5?2:1;   // 칸 수 — 5 ㎥ 초과 시 2칸 (AC-032)
+          // 「한 줄로 복사」 — 밸브 앱 붙여넣기 칸과 같은 형식. 숫자는 천 단위 쉼표 없이 소수 1자리, 칸은 숫자
           const pumpTxt=n===1?'1대 (단독)':n===2?'2대 (1대 예비, SET)':n===3?'3대 (단독)':n+'대';
           const r1=v=>String(Math.round(v*10)/10);
-          const oneLine='펌프='+pumpTxt+'; Q='+r1(Qlpm)+' L/min; 총용량='+(tW?r1(tW):'—')+' ㎥; 유효='+(tW?r1(tW*0.8):'—')+' ㎥; 칸=자동; H='+r1(selHVal)+' m';
-          return `<div style="margin:16px 0 6px;padding:8px 10px;background:#eff6ff;border:1.5px solid #2563eb;border-radius:4px;max-width:900px">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;font-size:11px;color:#1d4ed8;margin-bottom:6px"><span>▶ 옮겨 적을 값 — 밸브(valve-calc) › 저수조·펌프</span><span style="display:flex;gap:8px;align-items:center"><button class="btn btS no-print" data-line="${esc(oneLine)}" onclick="copyLine(this)" title="${esc(oneLine)}">한 줄로 복사</button>[1.1 ②]</span></div>
-          <table style="width:100%;border-collapse:collapse;font-size:10.5px;background:#fff"><thead><tr style="background:#dbeafe"><th style="${td}">번호</th><th class="L" style="${td}">받는 칸 이름</th><th style="${td}">값</th><th style="${td}">단위</th><th class="L" style="${td}">받는 위치</th></tr></thead><tbody>
-          ${R('①','주펌프 대수',n===1?'1대 (단독) ⚠ KDS 31 30 15 4.6.2(2) 2대 이상':n===2?'2대 (1대 예비, SET)':n===3?'3대 (단독)':n+'대','펌프 구성','밸브 › 펌프 사양 › 주펌프 대수'+(n===2?' (따로 설치면 「2대 (단독)」)':''))}
-          ${R('②','토출유량 (L/min)',f1(Qlpm),'L/min ('+f1(Qlpm*0.06)+' ㎥/h)','밸브 › 펌프 사양 › 토출유량 — 설계 유량 Q'+(sanQ>0?' (위생배관 ①)':' ⚠ 위생배관 Q 미입력, 참고 계산값'))}
-          ${R('③','저수조 총용량 (㎥)',tW?f1(tW):'—','㎥','밸브 › 저수조 › 저수조 총용량 — '+(tW?'물탱크 탭 '+tks.length+'개 합계':noTank))}
-          ${R('④','유효용량 (㎥)',tW?f1(tW*0.8):'—','㎥','밸브 › 저수조 › 유효용량 — '+(tW?'총용량 × 0.8 (AC-032)':noTank))}
-          ${R('⑤','저수조 칸 수','밸브 앱 『자동』 사용 — 5 ㎥ 초과 2칸(AC-032)','칸','밸브 › 저수조 › 저수조 칸 수 — 칸 수는 밸브 앱이 정한다 (표기기준 3.1). 탱크 개수는 보내지 않음')}
-          ${R('⑥','양정 H',f1(selHVal)+' ('+f1(selHVal*9.80665)+' kPa)','m','밸브에 칸 없음 — ③ 카탈로그 펌프 선정에 쓰고, 곡선에서 토출압 P_op · 최대압 P_max 를 읽어 밸브에 넣는다')}
+          const oneLine='펌프='+pumpTxt+'; Q='+r1(Qlpm)+' L/min; 총용량='+(tW?r1(tW):'—')+' ㎥; 유효='+(tW?r1(tW*0.8):'—')+' ㎥; 칸='+(tW?kan:'—')+'; H='+r1(selHVal)+' m';
+          return `<div style="margin:16px 0 6px;padding:8px 10px;background:#eff6ff;border:1.5px solid #2563eb;border-radius:4px;max-width:720px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;font-size:11px;color:#1d4ed8;margin-bottom:6px"><span>▶ 옮겨 적을 값 → 밸브 앱에 입력</span><button class="btn btS no-print" data-line="${esc(oneLine)}" onclick="copyLine(this)" title="${esc(oneLine)}">한 줄로 복사</button></div>
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;background:#fff"><thead><tr style="background:#dbeafe"><th style="${td}">번호</th><th class="L" style="${td}">받는 칸 이름</th><th style="${td}">값</th><th style="${td}">단위</th></tr></thead><tbody>
+          ${R('①','주펌프 대수',pumpTxt,'펌프 구성',n===1?'펌프는 2대 이상이어야 함':'')}
+          ${R('②','토출유량 (L/min)',fW(Qlpm),'L/min',fW(Qlpm*0.06)+' ㎥/h')}
+          ${R('③','저수조 총용량 (㎥)',tW?f1(tW):'—','㎥',tW?'':'물탱크 탭 규격 미입력')}
+          ${R('④','유효용량 (㎥)',tW?f1(tW*0.8):'—','㎥',tW?'총용량 × 0.8':'')}
+          ${R('⑤','저수조 칸 수',tW?String(kan):'—','칸','5 ㎥ 초과 시 2칸')}
+          ${R('⑥','양정 H',f1(selHVal),'m',f1(selHVal*9.80665)+' kPa · 밸브에는 칸 없음 — 카탈로그 선정용')}
           </tbody></table></div>`;})()}
       </div>
     </div>`;
