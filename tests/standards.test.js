@@ -279,7 +279,7 @@ const app=(()=>{const vm=require('vm');
   const ctx={console,Math,JSON,Date,parseFloat,parseInt,isFinite,isNaN,Number,String,Array,Object,Set,Map,
     document:noop,window:noop,localStorage:{getItem:()=>null,setItem(){},removeItem(){}},alert(){},confirm:()=>true,navigator:{},location:{},setTimeout(){},gtag(){}};
   vm.createContext(ctx);
-  vm.runInContext(code+'\n;globalThis.__x={calcLE,roomDefaults,STATE,bpUnit,BP_FLUSH_KDS,ventCalcCMH,ventCmpTxt,elecHeatCMH,RT,radReq,radWarnOf,sfRatioC,sfRatioH,winA,wallH,wallNetA,autoVals,roomChecks,wallOn,wallLegacyOff,getInfACH};',ctx);
+  vm.runInContext(code+'\n;globalThis.__x={calcLE,roomDefaults,STATE,bpUnit,BP_FLUSH_KDS,ventCalcCMH,ventCmpTxt,elecHeatCMH,RT,radReq,sfRatioC,sfRatioH,winA,wallH,wallNetA,autoVals,roomChecks,wallOn,wallLegacyOff,getInfACH};',ctx);
   return ctx.__x;})();
 const mkRoom=(o)=>{const r=app.roomDefaults(); r.id='T1'; r.width=10; r.depth=10; r.height=3; r.wallS.en=true; r.wallS.len=10; r.winS.w=4; r.winS.h=1.5; Object.assign(r,o||{}); return r;};
 
@@ -310,8 +310,8 @@ ok(src.split('저온 난방능력 미입력 — 정격(외기 7 ℃) 기준 판�
 ok(!src.includes('제상·저온 능력 미반영'),'빨간 경고 문구 삭제');
 ok(src.split('저온능력: 제조사 자료 없음(정격 판정)').length===3&&src.includes("sEZ('+zi+',\\'ltNA\\',this.checked)")&&src.includes("\\'ltNA\\',this.checked);renderCapCalc()"),'「제조사 자료 없음」 선택 2곳 · 계산서 한 줄');
 ok(/<span style="font-size:9px;color:#94a3b8">저온 난방능력 미입력/.test(src),'안내는 회색 글씨');
-{const r=mkRoom({capH:{radPre:null,radCor:null}}); ok(app.radReq(1000,r)===1000&&app.radWarnOf(r)==='예열 가산율·보정계수','방열기 미입력 → 그대로 + 경고');
- const r2=mkRoom({capH:{radPre:'20',radCor:'0.8'}}); ok(Math.abs(app.radReq(1000,r2)-1500)<1e-9&&app.radWarnOf(r2)==='','1000 W × 1.2 ÷ 0.8 = 1500 W');}
+{const r=mkRoom({capH:{radPre:'20',radCor:'0.8'}}); ok(app.radReq(1000,r)===1000,'방열기 = 열손실 그대로 (예열 0 %·보정 1.0 고정, 저장값 무시)');
+ ok(!src.includes('예열 가산(%)')&&!src.includes('radWarnOf')&&src.includes('const RAD_DEF={pre:0,cor:1.0};')&&src.includes('※ 예열은 조기 기동으로 해결 · 보정계수 1.0(전기식·표준 조건)'),'예열·보정 열 삭제, 기본값 한 곳, 표 아래 안내');}
 ok(src.includes('⚠ 펌프는 2대 이상이어야 함')&&src.includes("n===1?'펌프는 2대 이상이어야 함'"),'부스터 1대 경고 (선택은 허용)');
 
 console.log('CH-20261123-01 U3 전기실 · 배기량 회/h');
@@ -395,5 +395,6 @@ ok(src.includes('zoom:.6')&&!src.includes('.lec{background:#fff;border:1px solid
  ok(!/AC-\d{3}|KDS ?\d|RTS-SAREK|HW-001|IN-001/.test(vis.replace(/console\.log\([^)]*\)/g,'')),'화면 문자열에 기준 코드 없음 (사용 가이드 「적용 기준」 표 제외)');}
 {const h=src.indexOf('>급수소요량 집계</div>'), w=src.indexOf('물탱크 용량 계산서'), b=src.indexOf("if(capTab==='부스터펌프')");
  ok(src.split('>급수소요량 집계</div>').length===2&&h>w&&h<b,'급수소요량 집계는 물탱크 탭에만 (부스터 탭에서 삭제)');}
+ok(!src.includes("${esc(r.capV.model)}</div>`:'')}</td>")&&!/<th style="background:#f(0fdf4|8fafc)">/.test(src),'선정 장비 모델명·연한 머리칸 없음 (CH-20261124-06)');
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);

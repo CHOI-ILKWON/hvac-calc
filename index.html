@@ -2565,11 +2565,10 @@ function getMaxCool(room){
 // 순부하(안전율 전) 대비 비율 — 외기는 안전율에서 빠지므로 1.10 이 아니다 (CH-20261123-01)
 function sfRatioC(room){ if(room.cdb===null)return 1.1; const le=calcLE(room),k=le.pkIdx,d=le.td[k]; if(!d)return 1.1; const net=d.rsh+le.rlh; return net>0?le.rth[k]/net:1.1; }
 function sfRatioH(room){ if(room.hdb===null)return 1.1; const le=calcLE(room); return le.hRsh>0?le.totalH/le.hRsh:1.1; }
-// 방열기 예열 가산·보정계수 (KDS 31 25 15 4.4(1), CH-20261123-01 2-13). 미입력 = null → 계산은 0 % · 1.0 으로 하고 경고
-function radPreOf(r){ const v=r.capH&&r.capH.radPre; return (v!==undefined&&v!==null&&v!=='')?(parseFloat(v)||0):null; }
-function radCorOf(r){ const v=r.capH&&r.capH.radCor; const x=(v!==undefined&&v!==null&&v!=='')?parseFloat(v):NaN; return x>0?x:null; }
-function radReq(hl,r){ const p=radPreOf(r), c=radCorOf(r); return hl*(1+(p||0)/100)/(c||1); }
-function radWarnOf(r){ const a=[]; if(radPreOf(r)===null)a.push('예열 가산율'); if(radCorOf(r)===null)a.push('보정계수'); return a.join('·'); }
+// 방열기 — 예열은 조기 기동으로 해결 · 보정계수 1.0 (전기식·표준 조건). 2026-11-24 사용자 결정(CH-20261124-06): 입력 열 삭제
+//   간헐운전 온수 방열기가 필요해지면 이 기본값 한 곳만 바꾸거나 「자동값 요약」 칸으로 연결한다. 저장본의 radPre·radCor 는 읽지 않는다
+const RAD_DEF={pre:0,cor:1.0};
+function radReq(hl){ return hl*(1+RAD_DEF.pre/100)/RAD_DEF.cor; }
 function getHeatLoad(room){
   if(room.hdb===null)return null;
   return calcLE(room).totalH;
@@ -3292,7 +3291,7 @@ function _renderCapCalc(){
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th>
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
       <th>계산풍량<br>(CMH)</th><th>선정풍량<br>(CMH/대)</th><th>수량</th>
-      <th>풍량(CMH)</th><th>정압(Pa)</th><th style="background:#f0fdf4">동력(kW)*</th>
+      <th>풍량(CMH)</th><th>정압(Pa)</th><th>동력(kW)*</th>
       <th>장비선정</th><th>풍량 강/중/약<br>(m³/h)</th><th>소비전력 강/중/약<br>(W)</th><th>효율 냉방/난방<br>(%)</th><th>EPI 배점<br>(6번)</th><th>전원</th>
       <th style="text-align:left">비고</th>
     </tr></thead><tbody>`;
@@ -3319,7 +3318,7 @@ function _renderCapCalc(){
         <td><input type="number" value="${r.capV.af||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','af',parseFloat(this.value)||0)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
         <td style="background:#f0fdf4"><input type="text" value="${esc(r.capV.mp||'')}" placeholder="kW" style="width:50px" onchange="sCV('${rid}','mp',this.value)"></td>
-        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:(r.capV.model?`<div style="font-size:9px;color:#475569">${esc(r.capV.model)}</div>`:'')}</td>
+        <td class="C"><button onclick="openCatModal('HEX',function(row){_catHEX('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:''}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.afH??'—'}&nbsp;/&nbsp;${r.capV.afM??'—'}&nbsp;/&nbsp;${r.capV.afL??'—'}</td>
         <td class="C" style="font-size:10px;white-space:nowrap">${r.capV.pwH??'—'}&nbsp;/&nbsp;${r.capV.pwM??'—'}&nbsp;/&nbsp;${r.capV.pwL??'—'}</td>
         <td class="C" style="font-size:10px">${r.capV.effC??'—'}&nbsp;/&nbsp;${r.capV.effH??'—'}</td>
@@ -3599,7 +3598,7 @@ function _renderCapCalc(){
         <td><input type="number" value="${r.capV.saf||''}" step="10" placeholder="CMH" style="width:65px" onchange="sCV('${rid}','saf',parseFloat(this.value)||0)"></td>
         <td class="C"><input type="number" value="${r.capV.cnt||1}" min="1" style="width:40px" title="바꾸면 대당 풍량에 맞는 장비를 카탈로그에서 자동 선정" onchange="setVentCnt('${rid}','${capTab}',this.value)"></td>
         <td><input type="number" value="${r.capV.sp||''}" step="5" placeholder="Pa" style="width:55px" onchange="sCV('${rid}','sp',parseFloat(this.value)||0)"></td>
-        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:(r.capV.model?`<div style="font-size:9px;color:#475569">${esc(r.capV.model)}</div>`:'')}</td>
+        <td class="C"><button onclick="openCatModal('${fanCatKey}',function(row){${fanCatFn}('${rid}',row)},{val:${Math.round(calcCMH/(r.capV.cnt||1))},unit:'CMH',label:'풍량(대당)'})" style="padding:2px 8px;background:#1d4ed8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">📋 선정</button>${r.capV.autoMsg?`<div style="font-size:9px;color:#dc2626;white-space:normal;max-width:140px">${esc(r.capV.autoMsg)}</div>`:''}</td>
         <td class="C" style="font-size:11px;font-weight:600">${r.capV.pw!=null?r.capV.pw:'—'}</td>
         <td><input type="text" value="${esc(r.capV.volt||'')}" placeholder="220V 60Hz" style="width:90px" onchange="sCV('${rid}','volt',this.value)"></td>
         <td class="L"><input type="text" value="${esc(r.capV.note||capTab)}" style="width:80px" onchange="sCV('${rid}','note',this.value)"></td>
@@ -3651,9 +3650,9 @@ function _renderCapCalc(){
       <th>면적(㎡)</th><th>층고(m)</th><th>체적(㎥)</th><th>환기횟수<br>(회/h)</th>
       <th>계산풍량<br>(CMH)</th><th>설치수량</th>
       <th>대당선정풍량<br>(CMH)</th>
-      <th style="background:#f8fafc">사이즈*<br>(Φmm)</th>
+      <th>사이즈*<br>(Φmm)</th>
       <th>풍량(CMH)</th><th>정압(Pa)</th>
-      <th style="background:#f0fdf4">동력(kW)*</th>
+      <th>동력(kW)*</th>
       <th style="text-align:left">비고</th>
     </tr></thead><tbody>`;
     rooms.forEach((r,idx)=>{
@@ -3771,7 +3770,7 @@ function _renderCapCalc(){
     let html=`<div class="card"><div class="ch">라디에이터 용량계산서</div><div class="cb"><div class="tw"><table>
     <thead><tr>
       <th>층</th><th>장비번호</th><th style="text-align:left">실명</th><th>수량</th>
-      <th>열손실량(W)</th><th title="간헐 난방이면 예열부하 가산, 실내온도·열매온도 조건에 따라 보정계수">예열 가산(%)<br>/ 보정계수</th><th>필요용량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
+      <th>열손실량(W)</th><th>종류 / EDR(㎡)<br><span style="font-weight:400;font-size:8px">(온수만 · 450kcal/㎡h)</span></th>
       <th>선정용량(W)</th><th>선정주수(쪽)</th>
       <th>모델</th><th>소비전력<br>(kW)</th><th>전압(V)</th><th>규격</th>
       <th style="text-align:left">비고</th>
@@ -3784,8 +3783,7 @@ function _renderCapCalc(){
       const cntR=r.capH.cnt||1;
       // 기준: KDS 31 25 15 4.4(1) (CH-20261123-01 2-13) — 간헐 난방이면 예열부하 가산, 열매·실내온도 조건이 표준과 다르면 보정계수(제조사 자료).
       //   필요용량 = 열손실 × (1 + 예열 가산율) ÷ 보정계수. 연속 난방이면 예열 0 %, 표준 조건·전기식이면 보정 1.0 을 넣는다. 비워두면 경고
-      const radPre=radPreOf(r), radCor=radCorOf(r), radWarn=radWarnOf(r);
-      const hlReq=hl!==null?radReq(hl,r):null;
+      const hlReq=hl!==null?radReq(hl):null;
       const edrRef=hlReq!==null&&cntR>0?(hlReq/cntR/523).toFixed(2):'—'; // EDR(㎡) = W ÷ 523 (온수 450kcal/㎡h 기준)
       const suggestCap=hlReq!==null&&cntR>0?Math.ceil(hlReq/cntR/500)*500:0;
       totSel+=(r.capH.selCap!=null?r.capH.selCap:suggestCap)*cntR;
@@ -3796,8 +3794,6 @@ function _renderCapCalc(){
         <td class="L">${esc(r.name)}</td>
         <td class="C"><input type="number" value="${cntR}" min="1" style="width:40px" onchange="sCH('${rid}','cnt',parseInt(this.value)||1);renderCapCalc()"></td>
         <td style="text-align:right;background:#fee2e2;font-weight:600">${hl!==null?fW(hl):'난방없음'}</td>
-        <td style="padding:2px 4px;font-size:10px;white-space:nowrap"><input type="number" value="${r.capH.radPre??''}" placeholder="%" step="5" min="0" style="width:42px" onchange="sCH('${rid}','radPre',this.value===''?null:this.value);renderCapCalc()"> / <input type="number" value="${r.capH.radCor??''}" placeholder="1.0" step="0.05" min="0.1" style="width:42px" onchange="sCH('${rid}','radCor',this.value===''?null:this.value);renderCapCalc()">${radWarn?`<br><span style="font-size:8px;color:#dc2626;font-weight:700">⚠ ${radWarn} 미입력)</span>`:''}</td>
-        <td style="text-align:right;font-weight:600">${hlReq!==null?fW(hlReq):'—'}</td>
         <td style="padding:3px 6px;background:#f8fafc;color:#475569;font-size:10px;white-space:nowrap"><select style="width:52px" onchange="sCH('${rid}','radType',this.value);renderCapCalc()"><option value="elec" ${r.capH.radType!=='water'?'selected':''}>전기</option><option value="water" ${r.capH.radType==='water'?'selected':''}>온수</option></select> ${r.capH.radType==='water'?edrRef+' ㎡':''}</td>
         <td style="padding:2px 4px;background:#fef9c3">
           <input type="number" value="${r.capH.selCap!=null?r.capH.selCap:''}" placeholder="${suggestCap||''}" step="500"
@@ -3816,12 +3812,11 @@ function _renderCapCalc(){
     html+=`<tr style="background:#fef9c3">
       <td class="L" colspan="4" style="font-weight:700;background:#fef9c3">합 계</td>
       <td style="text-align:right;font-weight:700;background:#fee2e2">${fW(totH)}</td>
-      <td colspan="2" style="background:#fef9c3"></td>
       <td style="background:#fef9c3"></td>
       <td style="text-align:right;font-weight:700;background:#fef9c3">${fW(totSel)}</td>
       <td colspan="6" style="background:#fef9c3"></td>
     </tr>`;
-    html+=`</tbody></table></div></div></div>`;
+    html+=`</tbody></table></div><div style="font-size:9px;color:#64748b;margin-top:4px">※ 예열은 조기 기동으로 해결 · 보정계수 1.0(전기식·표준 조건)</div></div></div>`;
     // 라디에이터 상세 카드 (read-only)
     html+=`<div style="margin-top:16px"><div style="font-weight:700;font-size:12px;color:#1e3a5f;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid #1e3a5f">장비 상세 사양</div><div class="card2">`;
     rooms.forEach((r,idx)=>{
