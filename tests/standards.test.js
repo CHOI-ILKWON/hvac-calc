@@ -2,7 +2,8 @@
 // 실행: node tests/standards.test.js   (외부 패키지 없음)
 // 기준서가 바뀌면 아래 기대값을 기준서와 같이 고친다. 앱과 기준서가 따로 가지 않게 하는 장치다.
 const fs=require('fs'), path=require('path');
-const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+// Windows 에서 git 이 CRLF 로 꺼내도 같은 결과가 나오게 줄바꿈을 LF 로 맞춘다 (2026-11-27)
+const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8').replace(/\r\n/g,'\n');
 const grab=(re,name)=>{const m=src.match(re); if(!m) throw new Error('코드에서 찾지 못함: '+name); return m[0];};
 const g={};
 new Function('g',[
