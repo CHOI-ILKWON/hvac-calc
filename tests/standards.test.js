@@ -336,7 +336,7 @@ ok(src.includes('유량 계산 — WSFU → 표 3.5 동시사용유량')&&src.in
  const a=src.indexOf('function espHTML'), b=src.indexOf('const espSub=');
  ok(chk(src.slice(a,a+6000)),'전열교환기 ESP 줄 순서 · ← 덕트설계 ①~⑧');
  ok(chk(src.slice(b,b+12000)),'인라인덕트팬 ESP 줄 순서 · ← 덕트설계 ①~⑧');}
-ok(src.includes('1.1 저수조·급수펌프 (급수 계통)')&&src.includes('1.2 덕트 정압 (환기 계통)')&&(src.match(/<tr style="font-weight:700"><td [^>]*>②<\/td><td [^>]*>용량부하/g)||[]).length===2,'안내 탭 순서표 2개 · 이 앱 단계 굵게');
+ok(src.includes('1.1 저수조·급수펌프 (급수 계통)')&&src.includes('1.2 덕트 정압 (환기 계통)')&&(src.match(/<tr style="font-weight:700"><td [^>]*>②<\/td><td [^>]*>용량부하/g)||[]).length===1&&src.includes('양정 항목(H1·H3·H5)과 MAIN 관경'),'안내 탭 순서표 2개 · 이 앱 단계 굵게');
 // ── CH-20261124-03 화면 개편 (웹앱_화면_기준.md) — 계산 불변 · 저장 호환 ──────
 console.log('CH-20261124-03 화면 개편');
 {const r=mkRoom(); const le0=app.calcLE(r);
@@ -396,5 +396,13 @@ ok(src.includes('zoom:.6')&&!src.includes('.lec{background:#fff;border:1px solid
 {const h=src.indexOf('>급수소요량 집계</div>'), w=src.indexOf('물탱크 용량 계산서'), b=src.indexOf("if(capTab==='부스터펌프')");
  ok(src.split('>급수소요량 집계</div>').length===2&&h>w&&h<b,'급수소요량 집계는 물탱크 탭에만 (부스터 탭에서 삭제)');}
 ok(!src.includes("${esc(r.capV.model)}</div>`:'')}</td>")&&!/<th style="background:#f(0fdf4|8fafc)">/.test(src),'선정 장비 모델명·연한 머리칸 없음 (CH-20261124-06)');
+// ── 2026-11-26 수정 대기 목록 일괄 (CH-20261125-01 · 11-26 순서 · 36건 대조 빠진 것) ──────
+ok(src.includes("const ESP_APPROX=['ductLen','ductPa','diffEa','diffPa','vdEa','vdPa','louEa','louPa'];")&&src.includes('개략값 기준 · 덕트설계 값 입력 후 확정')&&src.includes('espMarkRows(cc)'),'ESP 기본값 흐리게 · 개략값 판정');
+ok(src.includes('OA·EA 포함 값 — 2026-11-25 이전에 옮긴 값은 다시 옮길 것')&&!src.includes('B.D.D'),'전열교환기 DUCT 안내 · B.D.D 넣지 않음(사용자 결정)');
+ok((src.match(/;padding-left:12px">(?:전열교환기 장비 |FAN |장비 )상세 사양/g)||[]).length===5,'상세 사양 제목을 표 글자와 같은 위치로');
+ok(!src.includes('참고 (위생배관 값 우선)')&&!/L\/회 행'/.test(src)&&!src.includes("주방싱크(가정용) 행'"),'부스터 「참고」「행」 문구 삭제');
+ok(src.includes('H<sub>1</sub> 마찰손실<span')&&src.includes("'← 위생배관 MAIN'"),'H1·H3·H5·펌프 관경 받는 칸 표시');
+ok(src.includes('${fW(Math.round(t.w*1000))}×${fW(Math.round(t.l*1000))}'),'물탱크 치수 쉼표');
+ok(src.includes('압력 검토는 위생배관 앱 한 곳에서 한다. 밸브 앱은 P_max 만 받는다.'),'안내 탭 새 순서');
 console.log(`\n${pass} 통과 / ${fail} 실패`);
 process.exit(fail?1:0);
