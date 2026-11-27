@@ -209,6 +209,28 @@ td input:focus,td select:focus{outline:none;border-color:var(--bl)}
 </style>
 </head>
 <body>
+
+<!-- 2026-11-27 유료화 (웹앱_유료화_기준.md, CH-20261127-02) — 구글 로그인 → 7일 무료(+피드백 7일) → 앱별 평생이용권. 위생배관 앱과 같은 auth.js·관리 시트 -->
+<div id="auth-gate"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="auth.js?v=5"></script>
+<script>
+  // ====== 판매 설정 (기존 관리 시트를 네 앱이 같이 쓴다) ======
+  MEPAuth.init({
+    clientId:  "631559035777-ara2uhplj7ds41ehfrr97cef8jlj4rip.apps.googleusercontent.com",
+    apiUrl:    "https://script.google.com/macros/s/AKfycbzOwmnJdBeqkH4QMdbQRagHXFnOA7sXnkQDmGeerVi4mYUF9WL_vB3C8LIq1-AZekQX/exec",
+    appId:     "hvac",                  // 라이선스 시트의 「앱」 칸 값
+    appName:   "HVAC 부하계산서 + 용량계산서",
+    trialDays: 7, bonusDays: 7,         // 백엔드 CONFIG.TRIAL_DAYS · TRIAL_BONUS_DAYS 와 같게
+    priceSingle: 40000,                 // 앱별 평생이용권
+    priceBundle: 0,                     // 전 앱 팩 — 0 이면 표시하지 않음
+    bankInfo:  "카카오뱅크 3333-07-0554442 (최일권)"
+  });
+  // ================================================================================
+</script>
+
+<div id="app-content" style="display:none;">
 <div id="tab-bar">
   <button class="tb on" onclick="switchTab(0)">① 프로젝트 설정</button>
   <button class="tb" onclick="switchTab(1)">② 실 목록 관리</button>
@@ -4732,5 +4754,6 @@ init();
   });
 </script>
 
+</div><!-- /#app-content -->
 </body>
 </html>

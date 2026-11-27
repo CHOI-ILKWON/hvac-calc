@@ -392,7 +392,9 @@ ok((src.match(/\$\{dv\('MODEL',r\.capV\.model,''\)\}/g)||[]).length===1&&!src.in
 ok(src.includes("(r.capV.maxAf?fW(r.capV.maxAf)+' m³/h':'—')"),'인라인 선정 장비는 ㎥/h 만');
 ok((src.match(/class="card2"/g)||[]).length===3,'팬·유니트히터·라디에이터 상세 카드 한 줄에 두 개');
 ok(src.includes('zoom:.6')&&!src.includes('.lec{background:#fff;border:1px solid #555;border-top:3px solid var(--nv);margin-bottom:32px;width:210mm'),'인쇄 = 화면 폭 그대로 축소');
-{const vis=src.split('\n').filter((l,i)=>!(i>298&&i<500)&&!/^\s*(\/\/|\/\*|<!--)/.test(l)).map(l=>{const m=l.match(/(^|[\s;{(,])\/\//);return m?l.slice(0,m.index):l;}).join('\n');
+{const g0=src.slice(0,src.indexOf('<div class="tp" id="tab4">')).split('\n').length-1, g1=src.slice(0,src.indexOf('<!-- ③ 부하계산서 -->')>0?src.indexOf('<!-- ③ 부하계산서 -->'):src.indexOf('<div class="tp" id="tab2">')).split('\n').length;   // 사용 가이드 탭(적용 기준 표) 줄 범위
+ const gEnd=src.slice(0,src.indexOf('</div>',src.indexOf('적용 기준 및 참조 법령'))+6).split('\n').length+40;
+ const vis=src.split('\n').filter((l,i)=>!(i>=g0&&i<=gEnd)&&!/^\s*(\/\/|\/\*|<!--)/.test(l)).map(l=>{const m=l.match(/(^|[\s;{(,])\/\//);return m?l.slice(0,m.index):l;}).join('\n');
  ok(!/AC-\d{3}|KDS ?\d|RTS-SAREK|HW-001|IN-001/.test(vis.replace(/console\.log\([^)]*\)/g,'')),'화면 문자열에 기준 코드 없음 (사용 가이드 「적용 기준」 표 제외)');}
 {const h=src.indexOf('>급수소요량 집계</div>'), w=src.indexOf('물탱크 용량 계산서'), b=src.indexOf("if(capTab==='부스터펌프')");
  ok(src.split('>급수소요량 집계</div>').length===2&&h>w&&h<b,'급수소요량 집계는 물탱크 탭에만 (부스터 탭에서 삭제)');}
